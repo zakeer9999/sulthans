@@ -2408,6 +2408,7 @@ class Component extends DCLogic {
        write and a layout where the browser would compose the scroll off the main
        thread. Framed, the engine is still the only thing that scrolls at all. */
     if (window.top !== window.self) document.documentElement.setAttribute('data-touch-engine', '1');
+    this.perfProbe();
     this.unsub = db.subscribe(() => {
       this.setState(s => ({ tick: s.tick + 1 }));
       // Every route into the store lands here — this device's own writes, another
@@ -3981,6 +3982,40 @@ class Component extends DCLogic {
     this.setState({ toast: msg });
     clearTimeout(this.toastT);
     this.toastT = setTimeout(() => this.setState({ toast: '' }), 2200);
+  }
+
+  /* Temporary instrument, ?perf=1 only. Two wrong guesses at the iPhone stutter
+     came from reading the markup; this measures it instead. Worst frame in the
+     last second, plus a long-task count — a paint problem and a JS problem look
+     different here: paint pins the frame time high while long tasks stay at 0,
+     a re-render storm raises both. Built in JS rather than the template so it
+     touches no design markup and lifts out in one edit. */
+  perfProbe() {
+    if (!/[?&]perf=1\b/.test(location.search) || this._perfOn) return;
+    this._perfOn = true;
+    const el = document.createElement('div');
+    el.style.cssText = 'position:fixed;left:8px;bottom:8px;z-index:9999;padding:6px 9px;'
+      + 'border-radius:8px;font:11px ui-monospace,Menlo,monospace;color:#ffc27a;'
+      + 'background:rgba(6,5,4,.92);border:1px solid rgba(240,160,60,.4);pointer-events:none;'
+      + 'white-space:pre';
+    document.body.appendChild(el);
+    let worst = 0, frames = 0, tasks = 0, last = performance.now(), mark = last;
+    try {
+      new PerformanceObserver(l => { tasks += l.getEntries().length; })
+        .observe({ entryTypes: ['longtask'] });
+    } catch (e) {}
+    const tick = now => {
+      const dt = now - last; last = now;
+      if (dt > worst) worst = dt;
+      frames++;
+      if (now - mark >= 1000) {
+        el.textContent = 'worst ' + worst.toFixed(0) + 'ms\nfps ' + frames
+          + '\nlongtasks ' + tasks;
+        worst = 0; frames = 0; tasks = 0; mark = now;
+      }
+      requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
   }
 
   async bootHero() {
