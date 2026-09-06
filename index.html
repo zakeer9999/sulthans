@@ -2615,6 +2615,19 @@ class Component extends DCLogic {
     const v = this.refs.heroVideoRef.current;
     if (!v) return;
     const away = this.state.screen !== 'hero';
+    /* normalizeScroll belongs to the hero scrub and nothing else. Left on for the
+       whole session it synthesises every touch scroll on the main thread — which
+       is what made the floor display's panes and the alert stack stutter on
+       iPhone while Android, which never had it switched on, stayed smooth. The
+       frame probe read 60fps there precisely because the main thread was not the
+       bottleneck: the scroll was simply no longer being composited. */
+    if (away !== this._normOff) {
+      this._normOff = away;
+      const ST = window.ScrollTrigger;
+      if (ST && ST.normalizeScroll && /iP(hone|ad|od)/.test(navigator.userAgent)) {
+        try { ST.normalizeScroll(away ? false : { allowNestedScroll: true }); } catch (e) {}
+      }
+    }
     if (away === !!this._heroReleased) return;
     if (away) {
       this._heroSrc = v.getAttribute('src') || v.currentSrc || '';
@@ -4502,7 +4515,12 @@ class Component extends DCLogic {
     gsap.registerPlugin(ST);
     // Fixes iOS address-bar resize jumping the pin. On Android it synthesises
     // scroll on the main thread, which costs more than the bug it would fix.
-    if (/iP(hone|ad|od)/.test(navigator.userAgent)) ST.normalizeScroll(true);
+    /* allowNestedScroll so an inner pane still scrolls natively while the hero is
+       up; syncHeroDecoder switches this off entirely on every other screen. */
+    if (/iP(hone|ad|od)/.test(navigator.userAgent)) {
+      ST.normalizeScroll({ allowNestedScroll: true });
+      this._normOff = false;
+    }
     this.target = 0;
     const fill = this.refs.scrubFillRef.current, mark = this.refs.markRef.current, dev = this.refs.devRef.current;
     const cues = CUES.map(c => ({ ...c, el: this.refs[c.ref].current }));
