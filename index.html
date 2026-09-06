@@ -28,7 +28,11 @@
   html, body { touch-action: manipulation !important; overscroll-behavior: none; }
   /* React rewrites inline styles on every render, so touch behaviour cannot be
      set imperatively — it has to live in a rule that outlives a re-render. */
-  [data-nscroll] { -webkit-overflow-scrolling: touch; }
+  /* -webkit-overflow-scrolling: touch used to be set here on every scroller. It
+     has been iOS's default since iOS 13, and asking for it explicitly puts each
+     scroller on its own legacy compositing layer — which is what made the floor
+     display's two panes and the stacked alert cards stutter on iPhone while
+     Android stayed smooth. Nothing replaces it; the default is the smooth one. */
   /* Every scroller hands its gesture to the pointer engine: a host page can veto a
      native pan on an ancestor while still delivering taps, which is what froze
      these panes in the iOS webview. The engine writes scrollTop itself, so it needs
@@ -279,7 +283,7 @@
            scroll back, so the guest could not return to English. The toggle now
            holds its own slot at the end of the row and the rest scrolls under it. -->
       <div style="position: absolute; top: 0; left: 0; right: 0; z-index: 40; display: flex; align-items: center; gap: 4px; padding: calc(env(safe-area-inset-top, 0px) + 12px) calc(env(safe-area-inset-right, 0px) + 12px) 12px calc(env(safe-area-inset-left, 0px) + 12px); background: linear-gradient(180deg, rgba(7,6,5,.88), rgba(7,6,5,0))">
-        <div style="flex: 1 1 0; min-width: 0; display: flex; align-items: center; gap: 4px; flex-wrap: nowrap; overflow-x: auto; overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch; touch-action: pan-x; scrollbar-width: none">
+        <div style="flex: 1 1 0; min-width: 0; display: flex; align-items: center; gap: 4px; flex-wrap: nowrap; overflow-x: auto; overscroll-behavior-x: contain; touch-action: pan-x; scrollbar-width: none">
         <button onClick="{{ goHome }}" title="Home" aria-label="Home" style="width: 42px; height: 42px; flex: 0 0 auto; border-radius: 13px; display: flex; align-items: center; justify-content: center; backdrop-filter: {{ glass }}; -webkit-backdrop-filter: {{ glass }}; transition: transform 150ms cubic-bezier(.23,1,.32,1); background: rgba(28,22,17,.5); border: 1px solid rgba(240,160,60,.2); box-shadow: inset 0 1px 0 rgba(255,214,160,.16)" style-active="transform: scale(.94)">
           <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="rgba(245,239,228,.9)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M3.4 10.2 12 3.4l8.6 6.8V20a.9.9 0 0 1-.9.9h-4.4v-6.3H8.7v6.3H4.3a.9.9 0 0 1-.9-.9Z"></path>
@@ -423,7 +427,7 @@
       </sc-if>
 
       <sc-if value="{{ isCarousels }}" hint-placeholder-val="{{ false }}">
-        <div data-nscroll="y" ref="{{ bindMenuScroll }}" style="position: absolute; inset: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: none; touch-action: pan-y; padding: 84px 0 calc(env(safe-area-inset-bottom, 0px) + 30px); background: radial-gradient(120% 70% at 50% 0%, #16110c 0%, #070605 62%)">
+        <div data-nscroll="y" ref="{{ bindMenuScroll }}" style="position: absolute; inset: 0; overflow-y: auto; overscroll-behavior: none; touch-action: pan-y; padding: 84px 0 calc(env(safe-area-inset-bottom, 0px) + 30px); background: radial-gradient(120% 70% at 50% 0%, #16110c 0%, #070605 62%)">
           <div style="padding: 0 20px 22px; display: flex; align-items: flex-end; justify-content: space-between; gap: 14px">
             <div style="display: flex; flex-direction: column; gap: 8px">
               <div style="font-size: 9px; letter-spacing: .38em; color: rgba(240,160,60,.6); text-transform: uppercase">{{ routeLabel }}</div>
@@ -593,7 +597,7 @@
       </sc-if>
 
       <sc-if value="{{ isAdmin }}" hint-placeholder-val="{{ false }}">
-        <div data-nscroll="y" ref="{{ bindPaneScroll }}" style="position: absolute; inset: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: none; touch-action: pan-y; background: #0a0807; padding: calc(env(safe-area-inset-top, 0px) + 18px) 0 calc(env(safe-area-inset-bottom, 0px) + 40px)">
+        <div data-nscroll="y" ref="{{ bindPaneScroll }}" style="position: absolute; inset: 0; overflow-y: auto; overscroll-behavior: none; touch-action: pan-y; background: #0a0807; padding: calc(env(safe-area-inset-top, 0px) + 18px) 0 calc(env(safe-area-inset-bottom, 0px) + 40px)">
           <sc-if value="{{ needsAuth }}" hint-placeholder-val="{{ false }}">
             <div style="min-height: 78vh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px; padding: 0 24px">
               <div style="font-family: 'Cormorant Garamond', serif; font-size: 28px; font-weight: 300; color: #f2ece2">{{ L_staffOnly }}</div>
@@ -1031,7 +1035,7 @@
         <!-- The sheet grew a walk-in list, so it now overflows on a phone. It scrolls
              itself: pan-y claims the vertical gesture from the app shell, which sets
              touch-action: none on the panes behind it. -->
-        <div data-nscroll="y" ref="{{ bindSheetScroll }}" style="position: absolute; left: 0; right: 0; bottom: 0; z-index: 61; max-height: 84%; overflow-y: auto; -webkit-overflow-scrolling: touch; touch-action: pan-y; overscroll-behavior: contain; padding: 20px 20px calc(env(safe-area-inset-bottom, 0px) + 26px); border-radius: 22px 22px 0 0; background: linear-gradient(180deg, rgba(30,24,18,.94), rgba(12,10,8,.97)); backdrop-filter: blur(26px) saturate(170%); -webkit-backdrop-filter: blur(26px) saturate(170%); border-top: 1px solid rgba(240,160,60,.24); box-shadow: 0 -30px 90px rgba(0,0,0,.6); animation: slideUp 320ms cubic-bezier(.23,1,.32,1)">
+        <div data-nscroll="y" ref="{{ bindSheetScroll }}" style="position: absolute; left: 0; right: 0; bottom: 0; z-index: 61; max-height: 84%; overflow-y: auto; touch-action: pan-y; overscroll-behavior: contain; padding: 20px 20px calc(env(safe-area-inset-bottom, 0px) + 26px); border-radius: 22px 22px 0 0; background: linear-gradient(180deg, rgba(30,24,18,.94), rgba(12,10,8,.97)); backdrop-filter: blur(26px) saturate(170%); -webkit-backdrop-filter: blur(26px) saturate(170%); border-top: 1px solid rgba(240,160,60,.24); box-shadow: 0 -30px 90px rgba(0,0,0,.6); animation: slideUp 320ms cubic-bezier(.23,1,.32,1)">
           <div style="width: 38px; height: 3px; border-radius: 2px; background: rgba(240,160,60,.3); margin: 0 auto 18px"></div>
           <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 16px">
             <div style="font-family: 'Cormorant Garamond', serif; font-size: 24px; font-weight: 300; color: #f4eee4">{{ sheetTitle }}</div>
@@ -1577,7 +1581,7 @@
          simply off the bottom with no way to reach them — worst during the rush
          that produced five cards. Clear all also moves ABOVE the stack: it is the
          one control that must be reachable without scrolling. -->
-    <div data-nscroll="y" ref="{{ bindPaneScroll }}" style="position: fixed; top: calc(env(safe-area-inset-top, 0px) + 12px); left: 12px; right: 12px; max-height: calc(100vh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 24px); max-height: calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 24px); overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; touch-action: pan-y; z-index: 300; display: grid; gap: 8px; justify-items: stretch; align-content: start">
+    <div data-nscroll="y" ref="{{ bindPaneScroll }}" style="position: fixed; top: calc(env(safe-area-inset-top, 0px) + 12px); left: 12px; right: 12px; max-height: calc(100vh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 24px); max-height: calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 24px); overflow-y: auto; overscroll-behavior: contain; touch-action: pan-y; z-index: 300; display: grid; gap: 8px; justify-items: stretch; align-content: start">
       <sc-if value="{{ alertsMany }}" hint-placeholder-val="{{ false }}">
         <button onClick="{{ alertsClear }}" style="min-height: 42px; padding: 11px; border-radius: 12px; font-size: 9px; letter-spacing: .22em; text-transform: uppercase; color: #efe7db; background: rgba(12,10,8,.88); border: 1px solid rgba(240,160,60,.24)">{{ alertsClearLbl }}</button>
       </sc-if>
@@ -1681,7 +1685,7 @@
 
           <div style="flex: 1; min-width: 0; display: flex; align-items: center; gap: clamp(6px, .9vmin, 12px); padding: 0 clamp(8px, 1vmin, 14px); border-radius: 13px; background: rgba(255,122,24,.055); border: 1px solid rgba(240,160,60,.18)">
             <span style="flex: 0 0 auto; font-size: clamp(7.5px, .95vmin, 11px); letter-spacing: .28em; color: #ffc27a; text-transform: uppercase">Calls</span>
-            <div data-nscroll="x" ref="{{ bindTvRow }}" style="flex: 1; min-width: 0; display: flex; align-items: center; gap: clamp(5px, .8vmin, 10px); overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; touch-action: pan-x; cursor: grab; padding: clamp(5px, .7vmin, 10px) 0">
+            <div data-nscroll="x" ref="{{ bindTvRow }}" style="flex: 1; min-width: 0; display: flex; align-items: center; gap: clamp(5px, .8vmin, 10px); overflow-x: auto; scrollbar-width: none; touch-action: pan-x; cursor: grab; padding: clamp(5px, .7vmin, 10px) 0">
               <sc-for list="{{ tvCalls }}" as="c" hint-placeholder-count="2">
                 <button onClick="{{ c.clear }}" title="Tap when attended" style="flex: 0 0 auto; min-height: 44px; display: flex; align-items: center; gap: clamp(6px, .8vmin, 10px); padding: 0 clamp(9px, 1.1vmin, 15px); border-radius: 11px; background: rgba(255,122,24,.14); border: 1px solid rgba(240,160,60,.34); transition: transform 140ms cubic-bezier(.23,1,.32,1), background 140ms ease" style-active="transform: scale(.96); background: rgba(255,122,24,.24)">
                   <span style="width: 5px; height: 5px; border-radius: 50%; background: #f0a03c; animation: emberDrift 1.8s ease-in-out infinite"></span>
@@ -1701,7 +1705,7 @@
         </div>
 
         <sc-if value="{{ tvBagsOpen }}" hint-placeholder-val="{{ false }}">
-          <div data-nscroll="y" ref="{{ bindPaneScroll }}" style="flex: 0 1 auto; min-height: 0; max-height: 46%; overflow-y: auto; -webkit-overflow-scrolling: touch; touch-action: pan-y; scrollbar-width: thin; scrollbar-color: rgba(240,160,60,.28) transparent; padding: clamp(8px, 1.1vmin, 15px); border-radius: 14px; background: rgba(255,255,255,.022); border: 1px solid rgba(240,160,60,.12); display: flex; flex-direction: column; gap: clamp(7px, 1vmin, 13px)">
+          <div data-nscroll="y" ref="{{ bindPaneScroll }}" style="flex: 0 1 auto; min-height: 0; max-height: 46%; overflow-y: auto; touch-action: pan-y; scrollbar-width: thin; scrollbar-color: rgba(240,160,60,.28) transparent; padding: clamp(8px, 1.1vmin, 15px); border-radius: 14px; background: rgba(255,255,255,.022); border: 1px solid rgba(240,160,60,.12); display: flex; flex-direction: column; gap: clamp(7px, 1vmin, 13px)">
             <div style="flex: 0 0 auto; display: flex; align-items: center; gap: clamp(10px, 1.4vmin, 18px); font-size: clamp(7.5px, .95vmin, 11px); letter-spacing: .26em; text-transform: uppercase; color: #6f665c">
               <span style="display: flex; align-items: center; gap: 6px"><span style="width: 7px; height: 7px; border-radius: 2px; background: rgba(212,103,74,.75)"></span>Owing</span>
               <span style="display: flex; align-items: center; gap: 6px"><span style="width: 7px; height: 7px; border-radius: 2px; background: rgba(127,174,99,.7)"></span>Ready</span>
@@ -1740,7 +1744,7 @@
         </sc-if>
 
         <sc-if value="{{ tvFloorOpen }}" hint-placeholder-val="{{ false }}">
-          <div data-nscroll="y" ref="{{ bindPaneScroll }}" style="flex: 0 1 auto; min-height: 0; max-height: 46%; overflow-y: auto; -webkit-overflow-scrolling: touch; touch-action: pan-y; scrollbar-width: thin; scrollbar-color: rgba(240,160,60,.28) transparent; padding: clamp(8px, 1.1vmin, 15px); border-radius: 14px; background: rgba(255,255,255,.022); border: 1px solid rgba(240,160,60,.12); display: flex; flex-direction: column; gap: clamp(7px, 1vmin, 13px)">
+          <div data-nscroll="y" ref="{{ bindPaneScroll }}" style="flex: 0 1 auto; min-height: 0; max-height: 46%; overflow-y: auto; touch-action: pan-y; scrollbar-width: thin; scrollbar-color: rgba(240,160,60,.28) transparent; padding: clamp(8px, 1.1vmin, 15px); border-radius: 14px; background: rgba(255,255,255,.022); border: 1px solid rgba(240,160,60,.12); display: flex; flex-direction: column; gap: clamp(7px, 1vmin, 13px)">
             <div style="flex: 0 0 auto; display: flex; align-items: center; gap: clamp(10px, 1.4vmin, 18px); font-size: clamp(7.5px, .95vmin, 11px); letter-spacing: .26em; text-transform: uppercase; color: #6f665c">
               <span style="display: flex; align-items: center; gap: 6px"><span style="width: 7px; height: 7px; border-radius: 2px; background: rgba(212,103,74,.75)"></span>Assigned</span>
               <span style="display: flex; align-items: center; gap: 6px"><span style="width: 7px; height: 7px; border-radius: 2px; background: rgba(127,174,99,.7)"></span>Available</span>
@@ -1815,7 +1819,7 @@
               <span style="flex: 1; height: 1px; background: rgba(240,160,60,.12)"></span>
               <span style="font-size: clamp(11px, 1.4vmin, 17px); color: #8d8479; font-variant-numeric: tabular-nums; white-space: nowrap">{{ tvPendingCount }}</span>
             </div>
-            <div data-nscroll="y" ref="{{ bindPaneScroll }}" style="flex: 1; min-width: 0; min-height: 0; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; touch-action: pan-y; scrollbar-width: thin; scrollbar-gutter: stable; scrollbar-color: rgba(240,160,60,.28) transparent; display: grid; grid-template-columns: minmax(0, 1fr); grid-auto-rows: max-content; gap: clamp(6px, .9vmin, 12px); align-content: start">
+            <div data-nscroll="y" ref="{{ bindPaneScroll }}" style="flex: 1; min-width: 0; min-height: 0; overflow-y: auto; overflow-x: hidden; touch-action: pan-y; scrollbar-width: thin; scrollbar-gutter: stable; scrollbar-color: rgba(240,160,60,.28) transparent; display: grid; grid-template-columns: minmax(0, 1fr); grid-auto-rows: max-content; gap: clamp(6px, .9vmin, 12px); align-content: start">
               <sc-for list="{{ tvPending }}" as="p" hint-placeholder-count="3">
                 <div style="min-width: 0; max-width: 100%; box-sizing: border-box; overflow: hidden; padding: clamp(8px, 1.1vmin, 15px) clamp(9px, 1.1vmin, 15px); border-radius: 12px; background: {{ p.bg }}; border: 1px solid {{ p.border }}; display: flex; flex-direction: column; gap: clamp(6px, .8vmin, 10px)">
                   <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 8px">
@@ -1883,7 +1887,7 @@
             <!-- overflow-x hidden + a reserved gutter: once the list grew long enough
                  to need a scrollbar the track ate into the card and pushed the timer
                  and total past the right edge. -->
-            <div data-nscroll="y" ref="{{ bindPaneScroll }}" style="flex: 1; min-width: 0; min-height: 0; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; touch-action: pan-y; scrollbar-width: thin; scrollbar-gutter: stable; scrollbar-color: rgba(240,160,60,.28) transparent; display: grid; grid-template-columns: minmax(0, 1fr); grid-auto-rows: max-content; gap: clamp(6px, .9vmin, 12px); align-content: start">
+            <div data-nscroll="y" ref="{{ bindPaneScroll }}" style="flex: 1; min-width: 0; min-height: 0; overflow-y: auto; overflow-x: hidden; touch-action: pan-y; scrollbar-width: thin; scrollbar-gutter: stable; scrollbar-color: rgba(240,160,60,.28) transparent; display: grid; grid-template-columns: minmax(0, 1fr); grid-auto-rows: max-content; gap: clamp(6px, .9vmin, 12px); align-content: start">
               <sc-for list="{{ tvOrders }}" as="o" hint-placeholder-count="4">
                 <div style="min-width: 0; max-width: 100%; box-sizing: border-box; overflow: hidden; padding: clamp(8px, 1.1vmin, 15px) clamp(9px, 1.1vmin, 15px); border-radius: 12px; background: {{ o.bg }}; border: 1px solid {{ o.border }}; display: flex; flex-direction: column; gap: clamp(6px, .8vmin, 10px)">
                   <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 8px">
