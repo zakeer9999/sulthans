@@ -2400,10 +2400,14 @@ class Component extends DCLogic {
       window.visualViewport.addEventListener('resize', this.onReaim);
       window.visualViewport.addEventListener('scroll', this.onReaim);
     }
-    /* The engine owns every scroller on every platform. Native scrolling was worth
-       trying on iOS, but something in the webview vetoes a pan there while still
-       delivering taps — exactly the failure this engine exists to route around. */
-    document.documentElement.setAttribute('data-touch-engine', '1');
+    /* Only when framed. The veto this engine routes around is a framed-webview
+       behaviour: a host page can refuse a native pan on an ancestor while still
+       delivering taps. Running at its own address there is nothing to route
+       around, and a hand-written scroller cannot match the platform's — on
+       iPhone it dragged going up the list, because every frame costs a scrollTop
+       write and a layout where the browser would compose the scroll off the main
+       thread. Framed, the engine is still the only thing that scrolls at all. */
+    if (window.top !== window.self) document.documentElement.setAttribute('data-touch-engine', '1');
     this.unsub = db.subscribe(() => {
       this.setState(s => ({ tick: s.tick + 1 }));
       // Every route into the store lands here — this device's own writes, another
