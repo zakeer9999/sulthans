@@ -845,9 +845,17 @@
       const { data, error } = await this.sb.from('orders')
         .insert({
           restaurant_id: this.rid, table_label: label,
-          // Who opened it. security.sql lets a guest append only where this
-          // matches the x-device-id header their own requests carry.
-          device_id: (order && order.dev) || deviceId(),
+          /* This phone, never the hold's device. security.sql lets a guest
+             append items only where the ticket's device_id equals the
+             x-device-id header, and that header is always THIS device — so
+             stamping the row with order.dev (which arrives from the server
+             hydrate, or from a slot another phone holds) created a ticket the
+             ordering phone was then refused permission to add food to. The
+             insert itself is allowed, so the failure landed on order_items and
+             surfaced as a raw row-level-security line. The hold still travels
+             on hold_at below; who may append is a separate fact from who
+             holds the table. */
+          device_id: deviceId(),
           hold_at: new Date((order && order.holdAt) || Date.now()).toISOString(),
         }).select('id').single();
       if (error) throw error;
