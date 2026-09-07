@@ -131,7 +131,10 @@
   <sc-if value="{{ booting }}" hint-placeholder-val="{{ true }}">
     <div style="position: fixed; inset: 0; z-index: 300; background: #070605; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 30px">
       <div style="position: absolute; inset: 0; background: radial-gradient(120% 78% at 50% 42%, rgba(20,13,7,.5) 0%, rgba(7,6,5,1) 76%)"></div>
-      <img src="./assets/logo-light.png" onError="{{ imgFallback }}" alt="Sulthan's, Biriyani &amp; Much More" style="position: relative; width: min(232px, 62vw); height: auto; animation: emberDrift 3.4s ease-in-out infinite" />
+      <!-- The logo is also the escape hatch: three taps while the hero downloads
+           drops to the still hero. Deliberately unmarked — it is for staff and
+           for a guest who has been told, not an option offered to everyone. -->
+      <img src="./assets/logo-light.png" onClick="{{ bootLogoTap }}" onError="{{ imgFallback }}" alt="Sulthan's, Biriyani &amp; Much More" style="position: relative; width: min(232px, 62vw); height: auto; animation: emberDrift 3.4s ease-in-out infinite; -webkit-tap-highlight-color: transparent" />
       <div style="position: relative; width: 148px; height: 1px; background: rgba(240,160,60,.16); overflow: hidden">
         <div ref="{{ loadBarRef }}" style="position: absolute; inset: 0; transform-origin: left center; transform: scaleX(0); background: linear-gradient(90deg, #c2410c, #ffb347)"></div>
       </div>
@@ -149,6 +152,10 @@
       <div ref="{{ heroStillRef }}" style="position: absolute; inset: 0; background-position: center; background-size: cover; opacity: 0; transition: opacity 600ms ease"></div>
       <video ref="{{ heroVideoRef }}" muted="" playsinline="" preload="auto" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 100%; height: 100%; object-fit: cover"></video>
       <canvas ref="{{ heroCanvasRef }}" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 100%; height: 100%; object-fit: cover; background: #070605; display: none"></canvas>
+      <!-- Still-hero scrim. The interior shot is a bright white room, so the cream
+           copy needs its own ground to sit on; off entirely in video mode, where
+           the clip is already dark. -->
+      <div ref="{{ stillScrimRef }}" style="position: absolute; inset: 0; opacity: 0; pointer-events: none; transition: opacity 800ms ease; background: linear-gradient(180deg, rgba(7,6,5,.76) 0%, rgba(7,6,5,.34) 24%, rgba(7,6,5,.3) 52%, rgba(7,6,5,.84) 100%)"></div>
       <div style="position: absolute; inset: 0; background: radial-gradient(120% 78% at 50% 42%, rgba(7,6,5,0) 38%, rgba(7,6,5,.62) 100%)"></div>
 
       <!-- Post-reveal wayfinding: the hero is a scroll-scrub, so the one thing a
@@ -1981,7 +1988,7 @@
 </div>
 
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props="{&quot;bareReel&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Reel&quot;},&quot;reelGlass&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;full&quot;,&quot;light&quot;,&quot;flat&quot;],&quot;default&quot;:&quot;light&quot;,&quot;tsType&quot;:&quot;'full' | 'light' | 'flat'&quot;,&quot;section&quot;:&quot;Glass&quot;},&quot;heroTextOpacity&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:3,&quot;min&quot;:0.3,&quot;max&quot;:3,&quot;step&quot;:0.05,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Hero copy&quot;},&quot;heroTextBright&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:1.6,&quot;min&quot;:0.6,&quot;max&quot;:2,&quot;step&quot;:0.05,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Hero copy&quot;},&quot;heroTextSaturate&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:1.9,&quot;min&quot;:0,&quot;max&quot;:2.5,&quot;step&quot;:0.05,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Hero copy&quot;},&quot;heroTextHold&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:0,&quot;min&quot;:0,&quot;max&quot;:3,&quot;step&quot;:0.05,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Hero copy&quot;},&quot;heroTextWipe&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Hero copy&quot;}}">
+<script type="text/x-dc" data-dc-script data-props="{&quot;bareReel&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Reel&quot;},&quot;reelGlass&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;full&quot;,&quot;light&quot;,&quot;flat&quot;],&quot;default&quot;:&quot;light&quot;,&quot;tsType&quot;:&quot;'full' | 'light' | 'flat'&quot;,&quot;section&quot;:&quot;Glass&quot;},&quot;heroTextOpacity&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:3,&quot;min&quot;:0.3,&quot;max&quot;:3,&quot;step&quot;:0.05,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Hero copy&quot;},&quot;heroTextBright&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:1.4,&quot;min&quot;:0.6,&quot;max&quot;:2,&quot;step&quot;:0.05,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Hero copy&quot;},&quot;heroTextSaturate&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:1.7,&quot;min&quot;:0,&quot;max&quot;:2.5,&quot;step&quot;:0.05,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Hero copy&quot;},&quot;heroTextHold&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:0,&quot;min&quot;:0,&quot;max&quot;:3,&quot;step&quot;:0.05,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Hero copy&quot;},&quot;heroTextWipe&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Hero copy&quot;},&quot;heroStillMode&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Hero copy&quot;}}">
 /* ============================================================
    TWEAKABLE — swap per client. Nothing below the CONFIG block
    needs editing to re-skin this template for another restaurant.
@@ -2020,7 +2027,14 @@ const MEDIA = {
      sets heroVideoAlt once both renders are genuinely there. */
   heroVideoAlt: null,
   heroBytes: 0,
-  heroPoster: R2 + '/hero/hero-poster.jpeg',
+  /* No poster. The loading screen is the logo and the bar on the gradient —
+     a first frame behind it would be a thumbnail of the clip the guest is
+     already waiting for, and one more request racing it on a bad connection.
+     The way out of a slow load is the still hero, three taps on the logo.
+     Still hero: a photograph of the room, composed to hold copy on its own.
+     A bundled copy in ./assets covers a bucket that does not have it yet. */
+  heroStill: R2 + '/hero/hero-still.jpeg',
+  heroStillLocal: './assets/hero-still.jpeg',
   heroFrames: null,
   dishes: {},
 };
@@ -2033,8 +2047,32 @@ const CUES = [
   { ref: 'cue3Ref', in: 0.720, out: 0.800 },
 ];
 
+/* Still hero cues. No playhead to follow, so the copy is paced by even
+   intervals instead: each line arrives, holds, and clears inside its own third
+   of a much shorter scroll. Wider plateaus than the video cues — with nothing
+   moving behind the type, a fast ramp is the whole animation. */
+const STILL_CUES = [
+  { ref: 'cue0Ref', in: 0.040, out: 0.250 },
+  { ref: 'cue1Ref', in: 0.290, out: 0.500 },
+  { ref: 'cue2Ref', in: 0.540, out: 0.750 },
+  { ref: 'cue3Ref', in: 0.790, out: 0.985 },
+];
+
+/* Where each line sits on the photograph. The room is symmetrical with the
+   wall wordmark across its middle, so the copy alternates between the top and
+   bottom bands and never crosses it. */
+const STILL_LAYOUT = [
+  { align: 'flex-end',   pad: '0 26px 20vh',  size: 'clamp(30px, 8vw, 46px)',   width: 'min(84vw, 560px)' },
+  { align: 'flex-start', pad: '16vh 26px 0',  size: 'clamp(29px, 7.6vw, 44px)', width: 'min(82vw, 540px)' },
+  { align: 'flex-end',   pad: '0 26px 25vh',  size: 'clamp(26px, 6.9vw, 40px)', width: 'min(80vw, 520px)' },
+  { align: 'flex-start', pad: '19vh 26px 0',  size: 'clamp(28px, 7.4vw, 42px)', width: 'min(82vw, 540px)' },
+];
+
 // Wordmark rides the whole hero, then clears before the last cue lands.
 const MARK_OUT = { in: 0.760, out: 0.800 };
+/* Still hero runs its last cue at the top of the frame and much later in the
+   scroll, so the mark keeps its corner almost to the end. */
+const MARK_OUT_STILL = { in: 0.880, out: 0.945 };
 
 const D = (n, t, p, s, m, r, v, ing) => ({ n, t, p, s, m, r, v, ing });
 const MENU = [
@@ -2381,7 +2419,7 @@ class Component extends DCLogic {
   constructor(props) {
     super(props);
     this.refs = {};
-    ['loadBarRef','loadPctRef','bootStillRef','heroStillRef','swipeCueRef','dimRef','heroVideoRef','heroCanvasRef','markRef','cue0Ref','cue1Ref','cue2Ref','cue3Ref','scrubFillRef','rulerRef','gateRef','footRef','slideShellRef','slideTextRef','reelCueRef','devRef','pwRef','commentRef','feedRef','slideVideoRef','slidePosRef','slidePosterRef','slideVidBRef','slideVidCRef','assignRef','pcPillRef','ordRef','qrRef','dishCueRef']
+    ['loadBarRef','loadPctRef','heroStillRef','stillScrimRef','swipeCueRef','dimRef','heroVideoRef','heroCanvasRef','markRef','cue0Ref','cue1Ref','cue2Ref','cue3Ref','scrubFillRef','rulerRef','gateRef','footRef','slideShellRef','slideTextRef','reelCueRef','devRef','pwRef','commentRef','feedRef','slideVideoRef','slidePosRef','slidePosterRef','slideVidBRef','slideVidCRef','assignRef','pcPillRef','ordRef','qrRef','dishCueRef']
       .forEach(k => { this.refs[k] = React.createRef(); });
     db.init();
     this.lifted = false;
@@ -2418,12 +2456,6 @@ class Component extends DCLogic {
     // A staff home-screen icon carries its own grant, so this runs before
     // anything asks whether the panel is open.
     this.linkAuth();
-    /* Paint the hero still immediately, before config, media.js or the clip are
-       resolved. Everything downstream of here can fail — a published build that
-       does not carry config.js, a blocked fetch, a decoder that will not seek —
-       and the failure mode for all of them was a black hero. The still costs one
-       image request and removes that outcome. */
-    this.paintHeroStill();
     // Media manifest first: the hero URL may come from R2. Capped, then boot regardless.
     const start = () => { if (this.state.screen === 'tv') this.enterTv(); else this.bootHero(); };
     this.attachMedia().then(start, start);
@@ -4037,6 +4069,10 @@ class Component extends DCLogic {
     const setPct = p => {
       this._setPct(p);
     };
+    /* The still hero as a setting, not only as a rescue: a venue on a permanently
+       bad line can ship it, and it is the only way to look at this mode in the
+       editor without triple-tapping a splash that lasts half a second. */
+    if (this.props.heroStillMode || /[?&]herostill=1/.test(location.search)) return this.enterStillHero();
     if (MEDIA.heroFrames) {
       const ok = await this.bootFrames(setPct);
       if (ok) { this.reveal(); return; }
@@ -4268,25 +4304,6 @@ class Component extends DCLogic {
     for (let k = 1; k <= 3; k++) this.decodeFrame(i + dir * k);
   }
 
-  paintHeroStill() {
-    const url = MEDIA.heroPoster;
-    if (!url) return;
-    const apply = () => {
-      [this.refs.bootStillRef.current, this.refs.heroStillRef.current].forEach(el => {
-        if (!el) return;
-        el.style.backgroundImage = 'url("' + url + '")';
-        el.style.opacity = '1';
-      });
-    };
-    const img = new Image();
-    img.onload = apply;
-    img.onerror = () => console.warn('[hero] still missing at ' + url);
-    img.src = url;
-    // The hero layer mounts with the page but the splash layer may not be in the
-    // DOM yet on the first tick, so apply again once it is.
-    if (img.complete) apply();
-  }
-
   heroNote(msg, force) {
     /* Diagnostics, not product copy. Normally off — the failures this catches
        fall back to the poster, which reads fine, so a banner would be noise.
@@ -4310,40 +4327,15 @@ class Component extends DCLogic {
 
   async bootHeroVideo(setPct) {
     const v = this.refs.heroVideoRef.current;
-    const guard = setTimeout(() => this.reveal(), 8000);
+    /* The page waits for the hero, however long that takes. The old eight-second
+       release let the splash lift on whatever had arrived, which on a bad
+       connection was the poster racing the clip and neither of them landing — a
+       blank hero. A guest can wait; a broken first screen cannot be recovered.
+       Three minutes is not a budget, it is a stuck-forever backstop: the way out
+       of a genuinely slow load is the still hero, three taps on the logo. */
+    const guard = setTimeout(() => this.reveal(), 180000);
+    this._heroGuard = guard;
     if (!window.SULTHANS_CONFIG) console.warn('[hero] config.js did not load — using the built-in R2 defaults');
-    /* The R2 still carries the loading screen: the splash is opaque for the whole
-       download, so a poster on the <video> alone would never be seen. It is
-       painted behind the logo instead, and stays on the element as the reveal's
-       first frame — nothing strips it, so a failed decode also lands on the dish
-       rather than on black. */
-    if (MEDIA.heroPoster) {
-      v.poster = MEDIA.heroPoster;
-      const still = this.refs.bootStillRef.current;
-      const img = new Image();
-      img.onload = () => {
-        /* Two layers, because the splash one is inside the booting sc-if and is
-           destroyed at reveal. The hero's own layer sits under the <video> and
-           stays for the session: v.poster is inert once the element has data, so
-           this is the only thing between a non-painting video and black. */
-        if (still) {
-          still.style.backgroundImage = 'url("' + MEDIA.heroPoster + '")';
-          still.style.opacity = '1';
-        }
-        const behind = this.refs.heroStillRef.current;
-        if (behind) {
-          behind.style.backgroundImage = 'url("' + MEDIA.heroPoster + '")';
-          behind.style.opacity = '1';
-        }
-      };
-      // A missing poster is worth saying out loud: it is the only thing standing
-      // between the reader and a black hero if the clip is slow or blocked.
-      img.onerror = () => {
-        console.warn('[hero] poster missing at ' + MEDIA.heroPoster);
-        this.posterFailed = true;
-      };
-      img.src = MEDIA.heroPoster;
-    }
     /* Two ways to load the clip.
 
        Preferred: fetch the bytes and hand the video a blob. It gives an exact
@@ -4357,7 +4349,11 @@ class Component extends DCLogic {
        requests rather than a local blob, so it is the second choice, not the
        first. */
     const viaBlob = async (url) => {
-      const res = await fetch(url);
+      /* Held so the escape hatch can drop the download on the floor rather than
+         leaving 20MB streaming behind a hero the guest has already left. */
+      const ctrl = window.AbortController ? new AbortController() : null;
+      this._heroAbort = ctrl;
+      const res = await fetch(url, ctrl ? { signal: ctrl.signal } : undefined);
       if (!res.ok) throw new Error('HTTP ' + res.status + ' for ' + url);
       const total = Number(res.headers.get('content-length')) || MEDIA.heroBytes;
       const reader = res.body && res.body.getReader ? res.body.getReader() : null;
@@ -4384,7 +4380,9 @@ class Component extends DCLogic {
         if (v.readyState >= 1) return ok();
         v.addEventListener('loadedmetadata', ok, { once: true });
         v.addEventListener('error', () => { if (!done) { done = true; rej(new Error('blob would not decode (media error ' + (v.error && v.error.code) + ')')); } }, { once: true });
-        setTimeout(ok, 8000);
+        // The file is already local by here, so this only covers a decoder that
+        // never answers — generous, because giving up throws the download away.
+        setTimeout(ok, 45000);
       });
     };
 
@@ -4394,17 +4392,24 @@ class Component extends DCLogic {
       this.heroBlob = false;
       // No content-length to read, so the bar follows what the element has
       // actually buffered.
+      let moved = Date.now(), watch = 0;
+      const stop = () => { clearInterval(watch); v.removeEventListener('progress', tick); };
       const tick = () => {
         if (!v.duration || !v.buffered.length) return;
+        moved = Date.now();
         setPct(Math.min(1, v.buffered.end(v.buffered.length - 1) / v.duration));
       };
       v.addEventListener('progress', tick);
-      v.addEventListener('canplaythrough', () => { setPct(1); resolve(); }, { once: true });
-      v.addEventListener('error', () => reject(new Error('could not load ' + url + ' (media error ' + (v.error && v.error.code) + ')')), { once: true });
-      /* Enough of the file to scrub beats none at all, so a slow connection
-         resolves on time rather than failing. Short, because a dead source has
-         already fired `error` by now and the next candidate is waiting. */
-      setTimeout(resolve, 8000);
+      v.addEventListener('canplaythrough', () => { stop(); setPct(1); resolve(); }, { once: true });
+      v.addEventListener('error', () => { stop(); reject(new Error('could not load ' + url + ' (media error ' + (v.error && v.error.code) + ')')); }, { once: true });
+      /* No clock on the download itself: a slow connection is allowed all the
+         time it needs, because half a clip makes a scrub that sticks. What is
+         not allowed is a source that has stopped arriving — 45 seconds with
+         nothing new buffered and the next candidate gets its turn. */
+      watch = setInterval(() => {
+        if (this.stillHero) { stop(); return reject(new Error('escaped to the still hero')); }
+        if (Date.now() - moved > 45000) { stop(); reject(new Error('stalled: nothing new buffered for 45s on ' + url)); }
+      }, 2000);
       v.preload = 'auto';
       v.src = url;
       v.load();
@@ -4418,11 +4423,15 @@ class Component extends DCLogic {
     try {
       let loaded = null, why = [];
       for (const url of sources) {
+        // Every await below can land after the guest has escaped to the still
+        // hero; carrying on would re-point src and start the download again.
+        if (this.stillHero) return;
         try { await viaBlob(url); loaded = url; break; }
         catch (e1) {
+          if (this.stillHero) return;
           why.push('fetch ' + url + ': ' + (e1.message || e1));
           try { await viaSrc(url); loaded = url; break; }
-          catch (e2) { why.push('stream ' + url + ': ' + (e2.message || e2)); }
+          catch (e2) { if (this.stillHero) return; why.push('stream ' + url + ': ' + (e2.message || e2)); }
         }
       }
       if (!loaded) throw new Error(why.join(' | '));
@@ -4463,7 +4472,9 @@ class Component extends DCLogic {
         const go = ok => { if (!done) { done = true; v.onseeked = null; r(ok); } };
         v.onseeked = () => go(true);
         v.currentTime = 0.001;
-        setTimeout(() => go(false), 3000);
+        // Longer than it needs on a fast phone. The splash is still up, and the
+        // whole point of waiting is to reveal onto a painted frame.
+        setTimeout(() => go(false), 12000);
       });
       if (!painted) console.warn('[hero] initial paint seek did not complete — the scrub loop will recover it');
       if (v.readyState < 2) {
@@ -4473,10 +4484,125 @@ class Component extends DCLogic {
     } catch (e) {
       const why = e.message || String(e);
       console.warn('[hero] every source failed, showing typographic ground — ' + why);
-      this.heroNote('Hero could not load.\n' + why + (this.posterFailed ? '\nPoster also missing: ' + MEDIA.heroPoster : ''));
+      this.heroNote('Hero could not load.\n' + why);
+      /* Nothing decoded and no still chosen: the still hero is a better landing
+         than the typographic ground, so failure takes the same route the escape
+         hatch takes rather than revealing onto black. */
+      if (!this.stillHero) { clearTimeout(guard); return this.enterStillHero(); }
     }
     clearTimeout(guard);
+    if (this.stillHero) return;
     this.reveal();
+  }
+
+  /* Three taps on the splash logo inside a second and a half. Unmarked on
+     purpose: the video hero is the intended experience, and this is the way out
+     of it for a phone that is not going to finish the download. */
+  bootLogoTap() {
+    const now = Date.now();
+    if (!this._logoTapAt || now - this._logoTapAt > 1500) this._logoTaps = 0;
+    this._logoTapAt = now;
+    this._logoTaps = (this._logoTaps || 0) + 1;
+    if (this._logoTaps < 3) return;
+    this._logoTaps = 0;
+    this.enterStillHero();
+  }
+
+  /* Swap the scrub for a photograph. The hero keeps its structure — same four
+     lines, same fonts, same scroll — but the scroll now pages copy over a still
+     instead of driving a playhead, so the section is a fifth of its length and
+     nothing has to decode. */
+  enterStillHero() {
+    if (this.stillHero) return;
+    this.stillHero = true;
+    clearTimeout(this._heroGuard);
+    try { if (this._heroAbort) this._heroAbort.abort(); } catch (e) {}
+    const v = this.refs.heroVideoRef.current;
+    if (v) {
+      try { v.pause(); } catch (e) {}
+      v.removeAttribute('src');
+      v.removeAttribute('poster');
+      try { v.load(); } catch (e) {}
+      v.style.display = 'none';
+      const sec = v.closest('section');
+      /* 1200vh existed to give a 40-second clip room to scrub. Four cues need
+         only enough travel to read them at a normal thumb pace. */
+      if (sec) sec.style.height = '460vh';
+    }
+    const canvas = this.refs.heroCanvasRef.current;
+    if (canvas) canvas.style.display = 'none';
+    this.frames = null;
+    const scrim = this.refs.stillScrimRef.current;
+    if (scrim) scrim.style.opacity = '1';
+    this.applyStillLayout();
+    const paint = url => {
+      const el = this.refs.heroStillRef.current;
+      if (!el) return;
+      el.style.backgroundImage = 'url("' + url + '")';
+      el.style.opacity = '1';
+    };
+    /* The still is the one thing this mode cannot do without, so it is waited
+       for — and it is a photograph on a CDN, not 20MB of video. A bucket that
+       does not carry it yet falls back to the copy bundled beside the page. */
+    const img = new Image();
+    img.onload = () => { paint(MEDIA.heroStill); this.reveal(); };
+    img.onerror = () => {
+      console.warn('[hero] still image missing at ' + MEDIA.heroStill + ' — using the bundled copy');
+      const local = new Image();
+      local.onload = () => { paint(MEDIA.heroStillLocal); this.reveal(); };
+      local.onerror = () => this.reveal();
+      local.src = MEDIA.heroStillLocal;
+    };
+    img.src = MEDIA.heroStill;
+    /* Backstop only, not a budget: every branch of the chain above already
+       reveals, so this fires solely if an <img> neither loads nor errors. The
+       old 8s clock could pre-empt a slow-but-successful still and land the
+       guest on the blank hero this mode exists to prevent. */
+    setTimeout(() => this.reveal(), 120000);
+  }
+
+  // Re-anchors the four lines for the photograph: centred, alternating bands.
+  applyStillLayout() {
+    STILL_LAYOUT.forEach((s, i) => {
+      const el = this.refs['cue' + i + 'Ref'] && this.refs['cue' + i + 'Ref'].current;
+      if (!el) return;
+      el.style.alignItems = s.align;
+      el.style.justifyContent = 'center';
+      el.style.padding = s.pad;
+      const inner = el.firstElementChild;
+      if (!inner) return;
+      inner.style.textAlign = 'center';
+      inner.style.fontSize = s.size;
+      inner.style.maxWidth = s.width;
+    });
+  }
+
+  /* Still-mode cue paint. The video cues are wiped in by a mask because there is
+     motion behind them; here the type is the only thing moving, so it rises and
+     settles instead — and it carries the same brightness/saturation grade the
+     video copy is tweaked to, so the two heroes read as one piece of design. */
+  paintStillCues(p, cues, mark, fill) {
+    if (fill) fill.style.transform = 'scaleX(' + p.toFixed(4) + ')';
+    if (mark) mark.style.opacity = (p <= MARK_OUT_STILL.in ? 1 : Math.max(0, 1 - (p - MARK_OUT_STILL.in) / (MARK_OUT_STILL.out - MARK_OUT_STILL.in))).toFixed(3);
+    const tx = this._heroTx || { peak: 1, filter: 'none' };
+    const ease = x => (x <= 0 ? 0 : x >= 1 ? 1 : 1 - Math.pow(1 - x, 3));
+    cues.forEach(c => {
+      if (!c.el) return;
+      const live = p >= c.in && p <= c.out;
+      if (!live) {
+        if (c.el.style.opacity !== '0') c.el.style.opacity = '0';
+        return;
+      }
+      const t = Math.max(0, Math.min(1, (p - c.in) / (c.out - c.in)));
+      const rise = ease(Math.min(1, t / 0.28));
+      const leave = ease(Math.min(1, (1 - t) / 0.24));
+      const o = Math.max(0, Math.min(1, Math.min(rise, leave) * tx.peak));
+      const y = (1 - rise) * 30 - (1 - leave) * 18;
+      c.el.style.opacity = o.toFixed(3);
+      c.el.style.transform = 'translate3d(0,' + y.toFixed(1) + 'px,0) scale(' + (0.984 + 0.016 * rise).toFixed(4) + ')';
+      if (c.el.style.filter !== tx.filter) c.el.style.filter = tx.filter;
+      if (c.el.style.maskImage !== 'none') c.el.style.maskImage = c.el.style.webkitMaskImage = 'none';
+    });
   }
 
   reveal() {
@@ -4523,7 +4649,7 @@ class Component extends DCLogic {
     }
     this.target = 0;
     const fill = this.refs.scrubFillRef.current, mark = this.refs.markRef.current, dev = this.refs.devRef.current;
-    const cues = CUES.map(c => ({ ...c, el: this.refs[c.ref].current }));
+    const cues = (this.stillHero ? STILL_CUES : CUES).map(c => ({ ...c, el: this.refs[c.ref].current }));
     const ruler = this.refs.rulerRef.current;
     const rulerUI = ruler ? {
       head: ruler.querySelector('[data-r="head"]'),
@@ -4555,6 +4681,8 @@ class Component extends DCLogic {
       trigger: v.closest('section'), start: 'top top', end: 'bottom bottom', scrub: true,
       onUpdate: self => {
         const p = self.progress;
+        // Still hero: no playhead, no mask sweep, no ruler — just the copy.
+        if (this.stillHero) return this.paintStillCues(p, cues, mark, fill);
         if (this.frames) this.drawFrame(Math.round(p * (this.frames.count - 1)));
         this.target = p * (v.duration || 40.6);
         if (fill) fill.style.transform = 'scaleX(' + p.toFixed(4) + ')';
@@ -4607,7 +4735,7 @@ class Component extends DCLogic {
       },
     });
 
-    if (this.frames) return; // stills need no playhead chase
+    if (this.frames || this.stillHero) return; // stills need no playhead chase
 
     /* Last resort report. Everything above this point either works or falls
        back silently, and many rounds have gone into guessing at a hero that is
@@ -4631,10 +4759,7 @@ class Component extends DCLogic {
         '\nreadyState ' + v.readyState + '  networkState ' + v.networkState +
         '  buffered ' + (v.buffered.length ? v.buffered.end(v.buffered.length - 1).toFixed(1) + 's' : 'none') +
         '\nsize ' + v.videoWidth + '×' + v.videoHeight + '  duration ' + (v.duration || 0).toFixed(1) + 's' +
-        (err ? '\nerror ' + err.code + ' ' + (err.message || '') : '') +
-        /* Whether an ordinary image from the same bucket arrived separates a
-           media-specific block from the whole origin being unreachable. */
-        '\nposter from same bucket: ' + (this.posterFailed ? 'BLOCKED TOO' : 'loaded OK'),
+        (err ? '\nerror ' + err.code + ' ' + (err.message || '') : ''),
         true);
     }, 10000);
 
@@ -6486,8 +6611,8 @@ class Component extends DCLogic {
          brightness(1) at rest: an identity filter still promotes the element to
          its own layer, which on the hero costs a compositor pass per frame. */
       filter: (() => {
-        const b = Math.max(0.6, Math.min(2, this.props.heroTextBright ?? 1));
-        const s = Math.max(0, Math.min(2.5, this.props.heroTextSaturate ?? 1));
+        const b = Math.max(0.6, Math.min(2, this.props.heroTextBright ?? 1.4));
+        const s = Math.max(0, Math.min(2.5, this.props.heroTextSaturate ?? 1.7));
         return b === 1 && s === 1 ? 'none' : 'brightness(' + b + ') saturate(' + s + ')';
       })(),
     };
@@ -7204,7 +7329,9 @@ class Component extends DCLogic {
 
     return {
       booting: st.booting,
-      loadBarRef: this.refs.loadBarRef, loadPctRef: this.refs.loadPctRef, bootStillRef: this.refs.bootStillRef, heroStillRef: this.refs.heroStillRef, swipeCueRef: this.refs.swipeCueRef, dimRef: this.refs.dimRef,
+      bootLogoTap: () => this.bootLogoTap(),
+      stillScrimRef: this.refs.stillScrimRef,
+      loadBarRef: this.refs.loadBarRef, loadPctRef: this.refs.loadPctRef, heroStillRef: this.refs.heroStillRef, swipeCueRef: this.refs.swipeCueRef, dimRef: this.refs.dimRef,
       heroVideoRef: this.refs.heroVideoRef, heroCanvasRef: this.refs.heroCanvasRef,
       markRef: this.refs.markRef, gateRef: this.refs.gateRef, footRef: this.refs.footRef,
       cue0Ref: this.refs.cue0Ref, cue1Ref: this.refs.cue1Ref, cue2Ref: this.refs.cue2Ref, cue3Ref: this.refs.cue3Ref,
