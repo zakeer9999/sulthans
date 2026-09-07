@@ -2078,62 +2078,6 @@ const MARK_OUT_STILL = { in: 0.880, out: 0.945 };
 
 const D = (n, t, p, s, m, r, v, ing) => ({ n, t, p, s, m, r, v, ing });
 const MENU = [
-  { key: 'n-starters', en: 'Non-Veg Starters', ta: 'அசைவ தொடக்கம்', veg: false, items: [
-    D('Dragon Chicken', 'டிராகன் சிக்கன்', 310, 4, 16, 4.5, 4900, 'Boneless chicken strips, cornflour, egg, capsicum, onions, cashew nuts, red chilli sauce, soy sauce, tomato ketchup, garlic, dry red chillies'),
-    D('Hariyali Chicken', 'ஹரியாலி சிக்கன்', 290, 3, 22, 4.0, 1300, 'Boneless chicken, mint, coriander, green chillies, curd, ginger-garlic paste, lemon juice, garam masala, butter'),
-    D('Afghani Kabab', 'அஃப்கானி கபாப்', 320, 1, 25, 4.6, 3100, 'Chicken (bone/boneless), thick curd, fresh cream, cashew paste, ginger-garlic paste, black pepper, kasuri methi, butter'),
-    D('Chicken 555', 'சிக்கன் 555', 310, 4, 14, 4.2, 640, 'Boneless chicken strips, egg, cornflour, green chillies, curry leaves, garlic, soy sauce, red chilli flakes, coriander, mint'),
-    D('Iffa Chicken', 'இஃபா சிக்கன்', 310, 3, 15, 4.7, 15800, 'Boneless chicken strips, buttermilk/curd marinade, cornflour, garlic, green chillies, curry leaves, soy sauce, mint'),
-  ]},
-  { key: 'n-mandi', en: 'Mandi', ta: 'மந்தி', veg: false, items: [
-    D('Mutton Juicy Mandi', 'மட்டன் ஜூஸி மந்தி', 580, 2, 23, 4.6, 22100, 'Tender slow-cooked mutton with juice/gravy reduction, mandi rice, Arabic spice mix, fried onions, dry fruits'),
-    D('Chicken Barbeque Mandi', 'சிக்கன் பார்பிக்யூ மந்தி', 450, 3, 20, 4.1, 7400, 'Smokey BBQ-marinated roasted chicken, mandi spice rice, garlic sauce, fried nuts, raisins'),
-    D('Fish Mandi', 'மீன் மந்தி', 440, 3, 21, 4.7, 2900, 'Clay-oven tandoori marinated fish, mandi spice rice, fried onions, cashew nuts, mint dip'),
-    D('Chicken Juicy Mandi', 'சிக்கன் ஜூஸி மந்தி', 430, 2, 19, 4.3, 180, 'Oven/pan-roasted spiced chicken, aromatic mandi rice, fried onions, raisins, nuts'),
-    D('Mutton Turkish Mandi', 'மட்டன் துருக்கி மந்தி', 600, 3, 24, 4.4, 8200, 'Turkish-spiced tender mutton, long-grain rice, roasted tomatoes, garlic sauce, sumac, pine nuts/cashews'),
-  ]},
-  { key: 'e-starters', en: 'Egg Starters', ta: 'முட்டை தொடக்கம்', veg: true, items: [
-    D('Egg Chilli', 'முட்டை சில்லி', 210, 4, 12, 4.0, 412, 'Hard-boiled eggs, cornflour, flour, capsicum, onions, green chillies, soy sauce, red chilli sauce, garlic, ginger, oil'),
-    D('Egg Manchurian', 'முட்டை மஞ்சூரியன்', 210, 3, 15, 4.1, 185, 'Hard-boiled eggs, cornflour, ginger-garlic paste, soy sauce, tomato ketchup, green chillies, spring onions, coriander'),
-    D('Egg Fingers', 'முட்டை பிங்கர்ஸ்', 220, 5, 10, 4.4, 1800, 'Hard-boiled eggs, Schezwan sauce, garlic, green chillies, onions, red chilli flakes, soy sauce, pepper, spring onions'),
-    D('Egg 65', 'முட்டை 65', 220, 4, 14, 3.8, 76, 'Hard-boiled eggs, curd, ginger-garlic paste, curry leaves, red chilli powder, cornflour, rice flour, green chillies, lemon'),
-    D('Fried Eggs', 'வறுத்த முட்டை', 250, 3, 18, 4.1, 530, 'Hard-boiled eggs, cashew nuts, onions, green chillies, curry leaves, ginger-garlic paste, pepper powder, garam masala, ghee'),
-  ]},
-  { key: 'v-starters', en: 'Veg Starters', ta: 'சைவ தொடக்கம்', veg: true, items: [
-    D('Chilli Garlic Paneer', 'சில்லி கார்லிக் பனீர்', 260, 2, 16, 4.6, 2300, 'Paneer, lemon juice, garlic, butter/oil, green chillies, black pepper, cornflour, coriander'),
-    D('Baby Corn 65', 'பேபி கார்ன் 65', 220, 4, 11, 3.6, 42, 'Baby corn, curd, ginger-garlic paste, red chilli powder, curry leaves, cornflour, rice flour, lemon juice'),
-    D('Fried Mushroom', 'வறுத்த காளான்', 270, 3, 15, 3.9, 890, 'Mushrooms, cashew nuts, onions, green chillies, ginger-garlic paste, black pepper, curry leaves, garam masala, ghee'),
-    D('Paneer Malai Tikka', 'பனீர் மலாய் திக்கா', 280, 1, 20, 4.7, 6400, 'Paneer, fresh cream, hung curd, cashew paste, ginger-garlic paste, green cardamom powder, white pepper, butter'),
-    D('Paneer Mongolian', 'பனீர் மங்கோலியன்', 270, 3, 17, 4.9, 115, 'Paneer, soy sauce, brown sugar/honey, garlic, ginger, red chilli sauce, capsicum, spring onions, cornflour, sesame'),
-  ]},
-  { key: 'n-biriyani', en: 'Non-Veg Biryani', ta: 'அசைவ பிரியாணி', veg: false, items: [
-    D('Chicken Dum Biryani', 'சிக்கன் தம் பிரியாணி', 290, 4, 19, 4.7, 41200, 'Basmati rice, marinated chicken with bone, curd, ginger-garlic paste, whole spices, mint, coriander, fried onions, saffron, ghee'),
-    D('Spl Chicken Biryani', 'ஸ்பெஷல் சிக்கன் பிரியாணி', 320, 4, 22, 4.3, 12800, 'Basmati rice, chicken/mutton, ulavacharu (horse gram soup), curd, biryani spices, ginger-garlic paste, ghee, fried onions'),
-    D('Mutton Fry Piece Biryani', 'மட்டன் ஃபிரை பீஸ் பிரியாணி', 380, 5, 25, 4.6, 19400, 'Basmati rice, spiced pan-fried mutton, curd, ginger-garlic paste, mint, coriander, biryani masala, ghee'),
-    D('Prawns Biryani', 'இறால் பிரியாணி', 370, 3, 18, 4.8, 870, 'Basmati rice, prawns, onions, tomatoes, ginger-garlic paste, green chillies, mint, coriander, biryani spices, lemon, ghee'),
-    D('Fish Biryani', 'மீன் பிரியாணி', 350, 3, 21, 4.0, 130, 'Basmati rice, firm fish fillets, turmeric, red chilli powder, ginger-garlic paste, curd, mint, coriander, biryani spices, ghee'),
-  ]},
-  { key: 'v-biriyani', en: 'Veg & Egg Biryani', ta: 'சைவ & முட்டை பிரியாணி', veg: true, items: [
-    D('Veg Biryani', 'காய்கறி பிரியாணி', 230, 3, 22, 3.9, 3200, 'Basmati rice, mixed vegetables (carrots, peas, beans, potatoes), curd, whole spices, ginger-garlic, mint, fried onions, saffron, ghee'),
-    D('Egg Biryani', 'முட்டை பிரியாணி', 240, 3, 18, 4.3, 9100, 'Basmati rice, hard-boiled eggs, curd, whole spices, ginger-garlic paste, onions, tomatoes, mint, coriander, ghee'),
-    D('Mushroom Biryani', 'காளான் பிரியாணி', 260, 3, 24, 3.5, 480, 'Basmati rice, button mushrooms, curd, onions, tomatoes, ginger-garlic paste, mint, coriander, biryani masala, ghee'),
-    D('Paneer Biryani', 'பனீர் பிரியாணி', 270, 3, 21, 4.5, 14200, 'Basmati rice, paneer cubes, curd, ginger-garlic paste, mint, coriander, whole spices, fried onions, saffron, ghee'),
-    D('Kaju Biryani', 'காஜு பிரியாணி', 290, 2, 25, 3.8, 820, 'Basmati rice, whole cashews, curd, onions, ginger-garlic paste, mint, coriander, biryani masala, ghee, fried onions'),
-  ]},
-  { key: 'n-gravy', en: 'Non-Veg Gravies', ta: 'அசைவ குழம்பு', veg: false, items: [
-    D('Chicken Patiala', 'சிக்கன் பாட்டியாலா', 330, 3, 17, 4.2, 2800, 'Chicken, spiced omelette wrapping, cashew-tomato gravy, fresh cream, onions, ginger-garlic paste, kasuri methi, butter'),
-    D('Kadai Prawn Masala', 'கடாய் இறால் மசாலா', 360, 4, 19, 3.9, 940, 'Prawns, capsicum, onions, tomatoes, ground kadai spices (coriander seeds, dry red chillies), ginger, garlic, coriander'),
-    D('Keema Mutton Masala', 'கீமா மட்டன் மசாலா', 390, 4, 23, 4.6, 6300, 'Minced mutton, onions, tomatoes, ginger-garlic paste, green peas, whole spice masala, turmeric, coriander, ghee'),
-    D('Methi Chicken', 'மேத்தி சிக்கன்', 310, 3, 16, 4.8, 310, 'Chicken, fresh fenugreek leaves (methi), curd, onions, ginger-garlic paste, green chillies, coriander powder, fresh cream'),
-    D('Moghlai Chicken Curry', 'முகலாய் சிக்கன் குழம்பு', 330, 2, 20, 4.0, 3700, 'Chicken, cashew paste, poppy seed paste, curd, boiled egg garnish, almond/cream gravy, mild whole spices, ghee'),
-  ]},
-  { key: 'shakes', en: 'Milkshakes', ta: 'மில்க்ஷேக்', veg: true, items: [
-    D('Strawberry Milkshake', 'ஸ்ட்ராபெரி மில்க்ஷேக்', 140, 0, 7, 4.8, 94, 'Strawberries/syrup, milk, vanilla ice cream, sugar'),
-    D('Badam Milkshake', 'பாதாம் மில்க்ஷேக்', 160, 0, 5, 4.4, 1700, 'Almonds, milk, cardamom powder, saffron strands, sugar'),
-    D('Banana Milkshake', 'வாழை மில்க்ஷேக்', 130, 0, 6, 4.2, 610, 'Vanilla ice cream, milk, vanilla extract, sugar'),
-    D('Pista Milkshake', 'பிஸ்தா மில்க்ஷேக்', 160, 0, 8, 4.0, 38, 'Pistachios, milk, cardamom powder, green flavoring, sugar'),
-    D('Chocolate Milkshake', 'சாக்லேட் மில்க்ஷேக்', 150, 0, 7, 3.9, 8900, 'Cocoa powder/chocolate syrup, milk, chocolate or vanilla ice cream, sugar'),
-  ]},
   { key: 'dessert', en: 'Ice Creams & Desserts', ta: 'ஐஸ்கிரீம் & இனிப்பு', veg: true, items: [
     D('Arabian Delight', 'அரேபியன் டிலைட்', 210, 0, 9, 4.2, 1100, 'Mixed dry-fruit ice cream, dates, figs, honey, roasted nuts, cherry'),
     D('Truffle Treat', 'டிரஃபிள் ட்ரீட்', 220, 0, 6, 4.7, 3800, 'Triple chocolate ice cream (dark, milk, white), chocolate fudge, choco chips'),
@@ -2142,6 +2086,62 @@ const MENU = [
     D('Brownie', 'பிரௌனி', 190, 0, 9, 4.3, 5200, 'Baked chocolate brownie, vanilla ice cream, hot fudge chocolate sauce, nuts'),
     D('Basanti Icecream', 'பசந்தி ஐஸ்கிரீம்', 200, 0, 7, 4.8, 430, 'Rabri/Basundi (condensed sweet milk with cardamom and saffron), vanilla ice cream, chopped nuts'),
     D('Sundae Large', 'சண்டே லார்ஜ்', 230, 0, 11, 4.0, 2600, 'Multiple scoops of assorted ice cream, hot fudge/fruit sauces, whipped cream, roasted nuts, cherry'),
+  ]},
+  { key: 'shakes', en: 'Milkshakes', ta: 'மில்க்ஷேக்', veg: true, items: [
+    D('Strawberry Milkshake', 'ஸ்ட்ராபெரி மில்க்ஷேக்', 140, 0, 7, 4.8, 94, 'Strawberries/syrup, milk, vanilla ice cream, sugar'),
+    D('Badam Milkshake', 'பாதாம் மில்க்ஷேக்', 160, 0, 5, 4.4, 1700, 'Almonds, milk, cardamom powder, saffron strands, sugar'),
+    D('Banana Milkshake', 'வாழை மில்க்ஷேக்', 130, 0, 6, 4.2, 610, 'Vanilla ice cream, milk, vanilla extract, sugar'),
+    D('Pista Milkshake', 'பிஸ்தா மில்க்ஷேக்', 160, 0, 8, 4.0, 38, 'Pistachios, milk, cardamom powder, green flavoring, sugar'),
+    D('Chocolate Milkshake', 'சாக்லேட் மில்க்ஷேக்', 150, 0, 7, 3.9, 8900, 'Cocoa powder/chocolate syrup, milk, chocolate or vanilla ice cream, sugar'),
+  ]},
+  { key: 'n-gravy', en: 'Non-Veg Gravies', ta: 'அசைவ குழம்பு', veg: false, items: [
+    D('Chicken Patiala', 'சிக்கன் பாட்டியாலா', 330, 3, 17, 4.2, 2800, 'Chicken, spiced omelette wrapping, cashew-tomato gravy, fresh cream, onions, ginger-garlic paste, kasuri methi, butter'),
+    D('Kadai Prawn Masala', 'கடாய் இறால் மசாலா', 360, 4, 19, 3.9, 940, 'Prawns, capsicum, onions, tomatoes, ground kadai spices (coriander seeds, dry red chillies), ginger, garlic, coriander'),
+    D('Keema Mutton Masala', 'கீமா மட்டன் மசாலா', 390, 4, 23, 4.6, 6300, 'Minced mutton, onions, tomatoes, ginger-garlic paste, green peas, whole spice masala, turmeric, coriander, ghee'),
+    D('Methi Chicken', 'மேத்தி சிக்கன்', 310, 3, 16, 4.8, 310, 'Chicken, fresh fenugreek leaves (methi), curd, onions, ginger-garlic paste, green chillies, coriander powder, fresh cream'),
+    D('Moghlai Chicken Curry', 'முகலாய் சிக்கன் குழம்பு', 330, 2, 20, 4.0, 3700, 'Chicken, cashew paste, poppy seed paste, curd, boiled egg garnish, almond/cream gravy, mild whole spices, ghee'),
+  ]},
+  { key: 'n-biriyani', en: 'Non-Veg Biryani', ta: 'அசைவ பிரியாணி', veg: false, items: [
+    D('Chicken Dum Biryani', 'சிக்கன் தம் பிரியாணி', 290, 4, 19, 4.7, 41200, 'Basmati rice, marinated chicken with bone, curd, ginger-garlic paste, whole spices, mint, coriander, fried onions, saffron, ghee'),
+    D('Spl Chicken Biryani', 'ஸ்பெஷல் சிக்கன் பிரியாணி', 320, 4, 22, 4.3, 12800, 'Basmati rice, chicken/mutton, ulavacharu (horse gram soup), curd, biryani spices, ginger-garlic paste, ghee, fried onions'),
+    D('Mutton Fry Piece Biryani', 'மட்டன் ஃபிரை பீஸ் பிரியாணி', 380, 5, 25, 4.6, 19400, 'Basmati rice, spiced pan-fried mutton, curd, ginger-garlic paste, mint, coriander, biryani masala, ghee'),
+    D('Prawns Biryani', 'இறால் பிரியாணி', 370, 3, 18, 4.8, 870, 'Basmati rice, prawns, onions, tomatoes, ginger-garlic paste, green chillies, mint, coriander, biryani spices, lemon, ghee'),
+    D('Fish Biryani', 'மீன் பிரியாணி', 350, 3, 21, 4.0, 130, 'Basmati rice, firm fish fillets, turmeric, red chilli powder, ginger-garlic paste, curd, mint, coriander, biryani spices, ghee'),
+  ]},
+  { key: 'n-mandi', en: 'Mandi', ta: 'மந்தி', veg: false, items: [
+    D('Mutton Juicy Mandi', 'மட்டன் ஜூஸி மந்தி', 580, 2, 23, 4.6, 22100, 'Tender slow-cooked mutton with juice/gravy reduction, mandi rice, Arabic spice mix, fried onions, dry fruits'),
+    D('Chicken Barbeque Mandi', 'சிக்கன் பார்பிக்யூ மந்தி', 450, 3, 20, 4.1, 7400, 'Smokey BBQ-marinated roasted chicken, mandi spice rice, garlic sauce, fried nuts, raisins'),
+    D('Fish Mandi', 'மீன் மந்தி', 440, 3, 21, 4.7, 2900, 'Clay-oven tandoori marinated fish, mandi spice rice, fried onions, cashew nuts, mint dip'),
+    D('Chicken Juicy Mandi', 'சிக்கன் ஜூஸி மந்தி', 430, 2, 19, 4.3, 180, 'Oven/pan-roasted spiced chicken, aromatic mandi rice, fried onions, raisins, nuts'),
+    D('Mutton Turkish Mandi', 'மட்டன் துருக்கி மந்தி', 600, 3, 24, 4.4, 8200, 'Turkish-spiced tender mutton, long-grain rice, roasted tomatoes, garlic sauce, sumac, pine nuts/cashews'),
+  ]},
+  { key: 'n-starters', en: 'Non-Veg Starters', ta: 'அசைவ தொடக்கம்', veg: false, items: [
+    D('Dragon Chicken', 'டிராகன் சிக்கன்', 310, 4, 16, 4.5, 4900, 'Boneless chicken strips, cornflour, egg, capsicum, onions, cashew nuts, red chilli sauce, soy sauce, tomato ketchup, garlic, dry red chillies'),
+    D('Hariyali Chicken', 'ஹரியாலி சிக்கன்', 290, 3, 22, 4.0, 1300, 'Boneless chicken, mint, coriander, green chillies, curd, ginger-garlic paste, lemon juice, garam masala, butter'),
+    D('Afghani Kabab', 'அஃப்கானி கபாப்', 320, 1, 25, 4.6, 3100, 'Chicken (bone/boneless), thick curd, fresh cream, cashew paste, ginger-garlic paste, black pepper, kasuri methi, butter'),
+    D('Chicken 555', 'சிக்கன் 555', 310, 4, 14, 4.2, 640, 'Boneless chicken strips, egg, cornflour, green chillies, curry leaves, garlic, soy sauce, red chilli flakes, coriander, mint'),
+    D('Iffa Chicken', 'இஃபா சிக்கன்', 310, 3, 15, 4.7, 15800, 'Boneless chicken strips, buttermilk/curd marinade, cornflour, garlic, green chillies, curry leaves, soy sauce, mint'),
+  ]},
+  { key: 'v-starters', en: 'Veg Starters', ta: 'சைவ தொடக்கம்', veg: true, items: [
+    D('Chilli Garlic Paneer', 'சில்லி கார்லிக் பனீர்', 260, 2, 16, 4.6, 2300, 'Paneer, lemon juice, garlic, butter/oil, green chillies, black pepper, cornflour, coriander'),
+    D('Baby Corn 65', 'பேபி கார்ன் 65', 220, 4, 11, 3.6, 42, 'Baby corn, curd, ginger-garlic paste, red chilli powder, curry leaves, cornflour, rice flour, lemon juice'),
+    D('Fried Mushroom', 'வறுத்த காளான்', 270, 3, 15, 3.9, 890, 'Mushrooms, cashew nuts, onions, green chillies, ginger-garlic paste, black pepper, curry leaves, garam masala, ghee'),
+    D('Paneer Malai Tikka', 'பனீர் மலாய் திக்கா', 280, 1, 20, 4.7, 6400, 'Paneer, fresh cream, hung curd, cashew paste, ginger-garlic paste, green cardamom powder, white pepper, butter'),
+    D('Paneer Mongolian', 'பனீர் மங்கோலியன்', 270, 3, 17, 4.9, 115, 'Paneer, soy sauce, brown sugar/honey, garlic, ginger, red chilli sauce, capsicum, spring onions, cornflour, sesame'),
+  ]},
+  { key: 'e-starters', en: 'Egg Starters', ta: 'முட்டை தொடக்கம்', veg: true, items: [
+    D('Egg Chilli', 'முட்டை சில்லி', 210, 4, 12, 4.0, 412, 'Hard-boiled eggs, cornflour, flour, capsicum, onions, green chillies, soy sauce, red chilli sauce, garlic, ginger, oil'),
+    D('Egg Manchurian', 'முட்டை மஞ்சூரியன்', 210, 3, 15, 4.1, 185, 'Hard-boiled eggs, cornflour, ginger-garlic paste, soy sauce, tomato ketchup, green chillies, spring onions, coriander'),
+    D('Egg Fingers', 'முட்டை பிங்கர்ஸ்', 220, 5, 10, 4.4, 1800, 'Hard-boiled eggs, Schezwan sauce, garlic, green chillies, onions, red chilli flakes, soy sauce, pepper, spring onions'),
+    D('Egg 65', 'முட்டை 65', 220, 4, 14, 3.8, 76, 'Hard-boiled eggs, curd, ginger-garlic paste, curry leaves, red chilli powder, cornflour, rice flour, green chillies, lemon'),
+    D('Fried Eggs', 'வறுத்த முட்டை', 250, 3, 18, 4.1, 530, 'Hard-boiled eggs, cashew nuts, onions, green chillies, curry leaves, ginger-garlic paste, pepper powder, garam masala, ghee'),
+  ]},
+  { key: 'v-biriyani', en: 'Veg & Egg Biryani', ta: 'சைவ & முட்டை பிரியாணி', veg: true, items: [
+    D('Veg Biryani', 'காய்கறி பிரியாணி', 230, 3, 22, 3.9, 3200, 'Basmati rice, mixed vegetables (carrots, peas, beans, potatoes), curd, whole spices, ginger-garlic, mint, fried onions, saffron, ghee'),
+    D('Egg Biryani', 'முட்டை பிரியாணி', 240, 3, 18, 4.3, 9100, 'Basmati rice, hard-boiled eggs, curd, whole spices, ginger-garlic paste, onions, tomatoes, mint, coriander, ghee'),
+    D('Mushroom Biryani', 'காளான் பிரியாணி', 260, 3, 24, 3.5, 480, 'Basmati rice, button mushrooms, curd, onions, tomatoes, ginger-garlic paste, mint, coriander, biryani masala, ghee'),
+    D('Paneer Biryani', 'பனீர் பிரியாணி', 270, 3, 21, 4.5, 14200, 'Basmati rice, paneer cubes, curd, ginger-garlic paste, mint, coriander, whole spices, fried onions, saffron, ghee'),
+    D('Kaju Biryani', 'காஜு பிரியாணி', 290, 2, 25, 3.8, 820, 'Basmati rice, whole cashews, curd, onions, ginger-garlic paste, mint, coriander, biryani masala, ghee, fried onions'),
   ]},
 ];
 
@@ -2504,6 +2504,7 @@ class Component extends DCLogic {
     window.addEventListener('offline', this.onNet);
     if (db.remote) db.remote.onLive = this.onNet;
     this.bindFeedGestures();
+    this.applyHeroGrade();
     this.syncDev();
     if (this.state.screen === 'categories') this.seatGuide();
     this.paintQr();
@@ -2732,6 +2733,7 @@ class Component extends DCLogic {
     }
     this.bindFeedGestures();
     this.applyReelFilter();
+    this.applyHeroGrade();
     this.syncDev();
     if (this.state.screen === 'categories') this.seatGuide();
     else if (prev && prev.screen === 'categories') this.dropSeatGuide();
@@ -2881,14 +2883,24 @@ class Component extends DCLogic {
     };
     const stopWrite = () => { if (wraf) cancelAnimationFrame(wraf); wraf = null; want = null; };
 
+    /* Inertia integrated against the real frame interval, not an assumed 16ms.
+       A ProMotion iPhone runs rAF at ~8.3ms, so the old fixed step moved the
+       row twice as far per frame and decayed the velocity twice as fast: the
+       fling shot ahead of the finger and then stopped short. That mismatch is
+       the jank — the frames were on time, the distances were wrong. Friction is
+       re-based per frame from the same per-16ms constant so the feel is
+       identical at 60Hz, 90Hz and 120Hz. */
     const glide = () => {
       const t = target(), k = prop();
       if (!t) return;
-      const step = () => {
-        vel *= F;
+      let last = performance.now();
+      const step = now => {
+        const dt = Math.min(48, Math.max(1, now - last));
+        last = now;
+        vel *= Math.pow(F, dt / 16);
         if (Math.abs(vel) < MIN_V) { raf = null; return; }
         const before = t[k];
-        t[k] = before - vel * 16;
+        t[k] = before - vel * dt;
         if (t[k] === before) { raf = null; return; } // hit an edge
         raf = requestAnimationFrame(step);
       };
@@ -3091,15 +3103,37 @@ class Component extends DCLogic {
     /* Faster attack and a softer knee: at 4ms the first transient of the entrance
        chime went through untouched and the limiter then clamped down on the tail,
        which is the crackle Android was adding on top of the sound. */
-    lim.threshold.value = android ? -6.5 : -7;
-    lim.knee.value = android ? 6 : 9;
-    lim.ratio.value = android ? 6 : 12;
-    lim.attack.value = android ? .003 : .004;
-    lim.release.value = android ? .2 : .14;
+    /* Android was driven 2.5x into a 6:1 limiter with a 3ms attack. That is not
+       loudness, it is a compressor working through its whole range on every
+       strike — the pump on the attack and the clamp on the tail are the noise
+       under the order chime. Less make-up gain, more headroom, a gentler ratio
+       and a slower attack let the transient through and leave the tail alone. */
+    lim.threshold.value = android ? -9 : -7;
+    lim.knee.value = android ? 10 : 9;
+    lim.ratio.value = android ? 3.5 : 12;
+    lim.attack.value = android ? .008 : .004;
+    lim.release.value = android ? .26 : .14;
     this.master = ac.createGain();
     // Android output is quiet at the hardware level and needs the make-up gain.
-    this.master.gain.value = android ? 2.5 : 1.35;
-    this.master.connect(lim); lim.connect(ac.destination);
+    this.master.gain.value = android ? 1.9 : 1.35;
+    this.master.connect(lim);
+    /* A soft ceiling behind the limiter. With the ratio relaxed, a stacked chord
+       can still cross 0dBFS, and a hard digital clip is a click no amount of
+       compressor tuning removes. tanh rounds those peaks instead of squaring
+       them, which is inaudible on a phone speaker where clipping is not. */
+    if (android) {
+      const clip = ac.createWaveShaper();
+      const n = 1024, curve = new Float32Array(n);
+      for (let i = 0; i < n; i++) {
+        const x = (i / (n - 1)) * 2 - 1;
+        curve[i] = Math.tanh(x * 1.6) / Math.tanh(1.6);
+      }
+      clip.curve = curve;
+      clip.oversample = '2x';
+      lim.connect(clip); clip.connect(ac.destination);
+    } else {
+      lim.connect(ac.destination);
+    }
     /* Android powers its output stream down between sounds; the pop heard on the
        first tap — and intermittently after — is the stream being reopened under
        the strike. A silent looping source holds it open so every voice starts
@@ -6332,6 +6366,27 @@ class Component extends DCLogic {
   /* The clips were graded on an iPhone, and OnePlus/Samsung panels push that
      grade further — same file reads oversaturated on Android. A display-side
      correction, so nothing has to be re-encoded. iOS is left untouched. */
+  /* The hero carried no display correction at all while the reel had one, so on
+     an Android panel the clip behind the copy ran hot and the text grade — which
+     was dialled in on an iPhone — read as though it had never been applied. Same
+     correction, same two props, so the two video surfaces match and the copy
+     sits on the ground it was tuned against. iOS is left untouched. */
+  applyHeroGrade() {
+    const android = /android/i.test(navigator.userAgent || '');
+    const els = [this.refs.heroVideoRef.current, this.refs.heroCanvasRef.current, this.refs.heroStillRef.current];
+    if (!els.some(Boolean)) return;
+    let css = '';
+    if (android) {
+      const s = Math.max(0, Math.min(100, this.props.androidSaturation ?? 80));
+      const b = Math.max(50, Math.min(150, this.props.androidBrightness ?? 100));
+      const f = [];
+      if (s !== 100) f.push('saturate(' + s + '%)');
+      if (b !== 100) f.push('brightness(' + b + '%)');
+      css = f.join(' ');
+    }
+    els.forEach(el => { if (el && el.style.filter !== css) el.style.filter = css; });
+  }
+
   applyReelFilter() {
     /* All three elements, not just A: the clip rotates between them, so filtering
        one meant two slides in three showed the uncorrected grade — the correction
