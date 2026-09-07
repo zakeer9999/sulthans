@@ -6731,7 +6731,12 @@ class Component extends DCLogic {
           const q = v => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, '0');
           return '#' + q(r) + q(g) + q(bl);
         };
-        return { ink: grade('#fdf7ea'), accent: grade('#ff9d52'), stamp: b + '/' + s };
+        /* The accent base is pre-darkened rather than left at the old #ff9d52.
+           Run through brightness 1.25 / saturate 1.55, that swatch resolved to
+           a bright yellow gold on both platforms — correct arithmetic, wrong
+           colour. This base is chosen so the SAME two tweaks land on the deep
+           amber gold instead; raise heroTextBright if it reads too dim. */
+        return { ink: grade('#fdf7ea'), accent: grade('#8e7550'), stamp: b + '/' + s };
       })(),
     };
     const lift = () => this.lift();
