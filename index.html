@@ -4664,7 +4664,7 @@ class Component extends DCLogic {
       const y = (1 - rise) * 74 - (1 - leave) * 58;
       c.el.style.opacity = o.toFixed(3);
       c.el.style.transform = 'translate3d(0,' + y.toFixed(1) + 'px,0) scale(' + (0.972 + 0.028 * rise).toFixed(4) + ')';
-      if (c.el.style.filter !== tx.filter) c.el.style.filter = tx.filter;
+      this.paintCue(c.el);
       if (c.el.style.maskImage !== 'none') c.el.style.maskImage = c.el.style.webkitMaskImage = 'none';
     });
   }
@@ -4788,7 +4788,7 @@ class Component extends DCLogic {
              transform, so the scrub timing is the same with the tweak at any
              setting — only how solid the copy reads at rest. */
           o = Math.max(0, Math.min(1, o * tx.peak));
-          if (c.el.style.filter !== tx.filter) c.el.style.filter = tx.filter;
+          this.paintCue(c.el);
           const lead = (live ? Math.min(1, t / 0.5) : 1) * 132 - 16;
           c.el.style.opacity = o.toFixed(3);
           c.el.style.maskImage = c.el.style.webkitMaskImage = tx.wipe
@@ -6679,6 +6679,19 @@ class Component extends DCLogic {
     this.forceUpdate(); // fall back to the stored value, so an empty field refills
   }
 
+  /* Writes the graded colours onto one cue. Stamped so the scrub loop, which
+     calls this every frame, only touches the DOM when a tweak actually moved. */
+  paintCue(el) {
+    const tx = this._heroTx;
+    if (!el || !tx || el._cueStamp === tx.stamp) return;
+    el._cueStamp = tx.stamp;
+    const body = el.firstElementChild;
+    if (!body) return;
+    body.style.color = tx.ink;
+    body.querySelectorAll('span').forEach(s => { s.style.color = tx.accent; });
+    if (el.style.filter && el.style.filter !== 'none') el.style.filter = 'none';
+  }
+
   renderVals() {
     const L = this.L(), st = this.state;
     /* Cached for the scrub loop, which runs outside React and cannot read props
@@ -6695,16 +6708,30 @@ class Component extends DCLogic {
       /* One filter string, rebuilt only when a tweak moves. 'none' rather than
          brightness(1) at rest: an identity filter still promotes the element to
          its own layer, which on the hero costs a compositor pass per frame. */
-      filter: (() => {
+      /* The brightness/saturation tweaks are resolved to literal colours HERE
+         rather than handed to a CSS filter. Same two numbers, same base swatch,
+         and the iPhone and the Android still landed on different golds: reading
+         the pixels back, iOS produced exactly the arithmetic below while Chrome
+         on Android came out pale and yellow. Where in the pipeline it diverges
+         (intermediate clamping, filter colour space, wide-gamut promotion) is
+         not something the page can find out or steer. Doing the multiply here
+         removes the engine from the decision — every platform is handed one
+         finished hex. Note the tweaks now move the ink only, not its glow,
+         which is the intent anyway. */
+      ...(() => {
         const b = Math.max(0.6, Math.min(2, this.props.heroTextBright ?? 1.25));
         const s = Math.max(0, Math.min(2.5, this.props.heroTextSaturate ?? 1.55));
-        /* Deliberately NOT taking the Android video correction. That correction
-           exists to undo an over-vivid decode of the clip; this type is a flat
-           CSS colour with nothing to undo, so folding the same numbers in here
-           just multiplied its saturation by 0.8 and made the gold read dull and
-           dark next to the iPhone. Same absolute filter on every platform, so
-           the swatch is the swatch. */
-        return b === 1 && s === 1 ? 'none' : 'brightness(' + b + ') saturate(' + s + ')';
+        // Luma-preserving saturation, clamped only on the way out — the order
+        // and the coefficients CSS filters are specified with.
+        const grade = hex => {
+          const n = parseInt(hex.slice(1), 16);
+          let r = ((n >> 16) & 255) * b, g = ((n >> 8) & 255) * b, bl = (n & 255) * b;
+          const L = 0.2126 * r + 0.7152 * g + 0.0722 * bl;
+          r = L + s * (r - L); g = L + s * (g - L); bl = L + s * (bl - L);
+          const q = v => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, '0');
+          return '#' + q(r) + q(g) + q(bl);
+        };
+        return { ink: grade('#fdf7ea'), accent: grade('#ff9d52'), stamp: b + '/' + s };
       })(),
     };
     const lift = () => this.lift();
