@@ -1994,7 +1994,7 @@
 </div>
 
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props="{&quot;bareReel&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Reel&quot;},&quot;reelGlass&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;full&quot;,&quot;light&quot;,&quot;flat&quot;],&quot;default&quot;:&quot;light&quot;,&quot;tsType&quot;:&quot;'full' | 'light' | 'flat'&quot;,&quot;section&quot;:&quot;Glass&quot;},&quot;heroTextOpacity&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:3,&quot;min&quot;:0.3,&quot;max&quot;:3,&quot;step&quot;:0.05,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Hero copy&quot;},&quot;heroTextBright&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:1.4,&quot;min&quot;:0.6,&quot;max&quot;:2,&quot;step&quot;:0.05,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Hero copy&quot;},&quot;heroTextSaturate&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:1.7,&quot;min&quot;:0,&quot;max&quot;:2.5,&quot;step&quot;:0.05,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Hero copy&quot;},&quot;heroTextHold&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:0,&quot;min&quot;:0,&quot;max&quot;:3,&quot;step&quot;:0.05,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Hero copy&quot;},&quot;heroTextWipe&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Hero copy&quot;},&quot;heroStillMode&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Hero copy&quot;}}">
+<script type="text/x-dc" data-dc-script data-props="{&quot;bareReel&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Reel&quot;},&quot;reelGlass&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;full&quot;,&quot;light&quot;,&quot;flat&quot;],&quot;default&quot;:&quot;light&quot;,&quot;tsType&quot;:&quot;'full' | 'light' | 'flat'&quot;,&quot;section&quot;:&quot;Glass&quot;},&quot;heroTextOpacity&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:2.45,&quot;min&quot;:0.3,&quot;max&quot;:3,&quot;step&quot;:0.05,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Hero copy&quot;},&quot;heroTextBright&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:1.3,&quot;min&quot;:0.6,&quot;max&quot;:2,&quot;step&quot;:0.05,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Hero copy&quot;},&quot;heroTextSaturate&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:2.5,&quot;min&quot;:0,&quot;max&quot;:2.5,&quot;step&quot;:0.05,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Hero copy&quot;},&quot;heroTextHold&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:0,&quot;min&quot;:0,&quot;max&quot;:3,&quot;step&quot;:0.05,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Hero copy&quot;},&quot;heroTextWipe&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Hero copy&quot;},&quot;heroStillMode&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Hero copy&quot;}}">
 /* ============================================================
    TWEAKABLE — swap per client. Nothing below the CONFIG block
    needs editing to re-skin this template for another restaurant.
@@ -6701,7 +6701,7 @@ class Component extends DCLogic {
     this._heroTx = {
       // Above 1 the copy is already solid, so the extra range buys a steeper
       // arrival rather than more opacity; the paint still clamps at 1.
-      peak: Math.max(0.3, Math.min(3, this.props.heroTextOpacity ?? 1)),
+      peak: Math.max(0.3, Math.min(3, this.props.heroTextOpacity ?? 2.45)),
       inRamp: 0.22 / (1 + hold * 4),
       outRamp: 0.18 / (1 + hold * 4),
       wipe: this.props.heroTextWipe !== false,
@@ -6719,8 +6719,8 @@ class Component extends DCLogic {
          finished hex. Note the tweaks now move the ink only, not its glow,
          which is the intent anyway. */
       ...(() => {
-        const b = Math.max(0.6, Math.min(2, this.props.heroTextBright ?? 1.25));
-        const s = Math.max(0, Math.min(2.5, this.props.heroTextSaturate ?? 1.55));
+        const b = Math.max(0.6, Math.min(2, this.props.heroTextBright ?? 1.3));
+        const s = Math.max(0, Math.min(2.5, this.props.heroTextSaturate ?? 2.5));
         // Luma-preserving saturation, clamped only on the way out — the order
         // and the coefficients CSS filters are specified with.
         const grade = hex => {
