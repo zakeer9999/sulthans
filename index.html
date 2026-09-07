@@ -2058,14 +2058,16 @@ const STILL_CUES = [
   { ref: 'cue3Ref', in: 0.790, out: 0.985 },
 ];
 
-/* Where each line sits on the photograph. The room is symmetrical with the
-   wall wordmark across its middle, so the copy alternates between the top and
-   bottom bands and never crosses it. */
+/* Where each line sits on the photograph. All four land in the same lower
+   band: alternating top and bottom made the sequence read as juggled, and one
+   fixed stage keeps the eye still while the type moves through it. The band
+   clears the wall wordmark across the room's middle, and each line carries its
+   own bottom offset so the stack breathes rather than stamping in one spot. */
 const STILL_LAYOUT = [
-  { align: 'flex-end',   pad: '0 26px 20vh',  size: 'clamp(30px, 8vw, 46px)',   width: 'min(84vw, 560px)' },
-  { align: 'flex-start', pad: '16vh 26px 0',  size: 'clamp(29px, 7.6vw, 44px)', width: 'min(82vw, 540px)' },
-  { align: 'flex-end',   pad: '0 26px 25vh',  size: 'clamp(26px, 6.9vw, 40px)', width: 'min(80vw, 520px)' },
-  { align: 'flex-start', pad: '19vh 26px 0',  size: 'clamp(28px, 7.4vw, 42px)', width: 'min(82vw, 540px)' },
+  { align: 'flex-end', pad: '0 26px 19vh',   size: 'clamp(30px, 8vw, 46px)',   width: 'min(84vw, 560px)' },
+  { align: 'flex-end', pad: '0 26px 22vh',   size: 'clamp(29px, 7.6vw, 44px)', width: 'min(82vw, 540px)' },
+  { align: 'flex-end', pad: '0 26px 17.5vh', size: 'clamp(26px, 6.9vw, 40px)', width: 'min(80vw, 520px)' },
+  { align: 'flex-end', pad: '0 26px 21vh',   size: 'clamp(28px, 7.4vw, 42px)', width: 'min(82vw, 540px)' },
 ];
 
 // Wordmark rides the whole hero, then clears before the last cue lands.
@@ -4578,9 +4580,12 @@ class Component extends DCLogic {
   }
 
   /* Still-mode cue paint. The video cues are wiped in by a mask because there is
-     motion behind them; here the type is the only thing moving, so it rises and
-     settles instead — and it carries the same brightness/saturation grade the
-     video copy is tweaked to, so the two heroes read as one piece of design. */
+     motion behind them; here the type is the only thing moving, so it travels
+     with the gesture instead: scrolling down carries each line up through the
+     band — in from below the frame, out through the top — so the copy reads as
+     part of the page moving rather than as four separate entrances. It carries
+     the same brightness/saturation grade the video copy is tweaked to, so the
+     two heroes read as one piece of design. */
   paintStillCues(p, cues, mark, fill) {
     if (fill) fill.style.transform = 'scaleX(' + p.toFixed(4) + ')';
     if (mark) mark.style.opacity = (p <= MARK_OUT_STILL.in ? 1 : Math.max(0, 1 - (p - MARK_OUT_STILL.in) / (MARK_OUT_STILL.out - MARK_OUT_STILL.in))).toFixed(3);
@@ -4594,12 +4599,17 @@ class Component extends DCLogic {
         return;
       }
       const t = Math.max(0, Math.min(1, (p - c.in) / (c.out - c.in)));
-      const rise = ease(Math.min(1, t / 0.28));
-      const leave = ease(Math.min(1, (1 - t) / 0.24));
+      /* Asymmetric on purpose: a long entry so the line is legible for most of
+         its cue, a shorter exit so it clears before the next one arrives. */
+      const rise = ease(Math.min(1, t / 0.34));
+      const leave = ease(Math.min(1, (1 - t) / 0.26));
       const o = Math.max(0, Math.min(1, Math.min(rise, leave) * tx.peak));
-      const y = (1 - rise) * 30 - (1 - leave) * 18;
+      /* One continuous upward path: +74px below the band, through 0, out at
+         -58px. Travel is large enough to read as movement with the scroll and
+         small enough that the line is never cropped by the viewport. */
+      const y = (1 - rise) * 74 - (1 - leave) * 58;
       c.el.style.opacity = o.toFixed(3);
-      c.el.style.transform = 'translate3d(0,' + y.toFixed(1) + 'px,0) scale(' + (0.984 + 0.016 * rise).toFixed(4) + ')';
+      c.el.style.transform = 'translate3d(0,' + y.toFixed(1) + 'px,0) scale(' + (0.972 + 0.028 * rise).toFixed(4) + ')';
       if (c.el.style.filter !== tx.filter) c.el.style.filter = tx.filter;
       if (c.el.style.maskImage !== 'none') c.el.style.maskImage = c.el.style.webkitMaskImage = 'none';
     });
@@ -6611,8 +6621,8 @@ class Component extends DCLogic {
          brightness(1) at rest: an identity filter still promotes the element to
          its own layer, which on the hero costs a compositor pass per frame. */
       filter: (() => {
-        const b = Math.max(0.6, Math.min(2, this.props.heroTextBright ?? 1.4));
-        const s = Math.max(0, Math.min(2.5, this.props.heroTextSaturate ?? 1.7));
+        const b = Math.max(0.6, Math.min(2, this.props.heroTextBright ?? 1.25));
+        const s = Math.max(0, Math.min(2.5, this.props.heroTextSaturate ?? 1.55));
         return b === 1 && s === 1 ? 'none' : 'brightness(' + b + ') saturate(' + s + ')';
       })(),
     };
