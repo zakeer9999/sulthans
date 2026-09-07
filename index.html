@@ -449,7 +449,7 @@
                 <div style="flex: 1; height: 1px; background: linear-gradient(90deg, rgba(240,160,60,.22), transparent)"></div>
                 <div style="font-size: 9px; letter-spacing: .2em; color: #6f665c; text-transform: uppercase">{{ cat.count }}</div>
               </div>
-              <div data-nscroll="x" ref="{{ bindRow }}" style="display: flex; gap: 12px; overflow-x: auto; scrollbar-width: none; overscroll-behavior-x: contain; touch-action: pan-x; cursor: grab; padding: 4px 20px 8px">
+              <div data-nscroll="x" ref="{{ bindRow }}" style="display: flex; gap: 12px; overflow-x: auto; scrollbar-width: none; overscroll-behavior-x: contain; touch-action: pan-x pan-y; cursor: grab; padding: 4px 20px 8px">
                 <sc-for list="{{ cat.items }}" as="item" hint-placeholder-count="3">
                   <button onClick="{{ item.open }}" style="flex: 0 0 auto; width: 208px; scroll-snap-align: start; text-align: left; padding: 16px; border-radius: 16px; background: linear-gradient(150deg, rgba(255,255,255,.055), rgba(20,17,14,.66)); backdrop-filter: blur(18px) saturate(160%); -webkit-backdrop-filter: blur(18px) saturate(160%); border: 1px solid rgba(240,160,60,.16); box-shadow: inset 0 1px 0 rgba(255,214,160,.12), 0 16px 44px rgba(0,0,0,.42); transition: transform 180ms cubic-bezier(.23,1,.32,1)" style-active="transform: scale(.97)">
                     <span style="display: block; height: 96px; border-radius: 11px; margin-bottom: 13px; position: relative; overflow: hidden; background: linear-gradient(155deg, #2a1d12, #120d09 62%, #1d1409)">
