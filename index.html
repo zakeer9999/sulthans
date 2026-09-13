@@ -388,7 +388,7 @@
             <text x="18.1" y="22.3" text-anchor="middle" font-family="'Jost', system-ui, sans-serif" font-size="11.6" font-weight="500" fill="#ffc27a">&#8377;</text>
           </svg>
         </button>
-        <button onClick="{{ openOrder }}" ref="{{ ordRef }}" title="{{ L_order }}" aria-label="{{ L_order }}" style="position: relative; flex: 0 0 auto; width: 46px; height: 42px; border-radius: 13px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; background: rgba(28,22,17,.5); backdrop-filter: {{ glass }}; -webkit-backdrop-filter: {{ glass }}; border: 1px solid rgba(240,160,60,.2); transition: transform 150ms cubic-bezier(.23,1,.32,1)" style-active="transform: scale(.94)">
+        <button onClick="{{ openOrder }}" ref="{{ ordRef }}" title="{{ L_order }}" aria-label="{{ L_order }}" style="animation: {{ ordCoachPulse }}; position: relative; flex: 0 0 auto; width: 46px; height: 42px; border-radius: 13px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; background: rgba(28,22,17,.5); backdrop-filter: {{ glass }}; -webkit-backdrop-filter: {{ glass }}; border: 1px solid rgba(240,160,60,.2); transition: transform 150ms cubic-bezier(.23,1,.32,1)" style-active="transform: scale(.94)">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="rgba(245,239,228,.9)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M5.1 11.2h13.8l-1.2 7.05a1.5 1.5 0 0 1-1.48 1.25H7.78a1.5 1.5 0 0 1-1.48-1.25Z" fill="rgba(255,175,90,.14)"></path>
             <path d="M3.9 11.2h16.2" stroke="#ffc27a"></path>
@@ -583,9 +583,9 @@
                   </svg>
                   <span style="font-size: 7px; letter-spacing: .13em; text-transform: uppercase; color: rgba(239,231,219,.7); line-height: 1; white-space: nowrap">{{ L_ingShort }}</span>
                 </button>
-                <button onClick="{{ addCurrent }}" title="{{ L_orderShort }}" aria-label="{{ L_orderShort }}" style="min-width: 62px; height: 62px; padding: 0 10px; border-radius: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; background: linear-gradient(180deg, #ffcf92, #ef9c34); border: 1px solid rgba(255,226,186,.7); box-shadow: 0 0 0 4px rgba(240,160,60,.14), 0 14px 34px rgba(0,0,0,.42), inset 0 1px 0 rgba(255,247,235,.6); transition: transform 160ms cubic-bezier(.23,1,.32,1), box-shadow 160ms ease" style-active="transform: scale(.94); box-shadow: 0 0 0 7px rgba(240,160,60,.2), 0 8px 20px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,247,235,.6)">
+                <button onClick="{{ addCurrent }}" title="{{ L_addCart }}" aria-label="{{ L_addCart }}" style="min-width: 68px; height: 62px; padding: 0 10px; border-radius: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; background: linear-gradient(180deg, #ffcf92, #ef9c34); border: 1px solid rgba(255,226,186,.7); box-shadow: 0 0 0 4px rgba(240,160,60,.14), 0 14px 34px rgba(0,0,0,.42), inset 0 1px 0 rgba(255,247,235,.6); transition: transform 160ms cubic-bezier(.23,1,.32,1), box-shadow 160ms ease" style-active="transform: scale(.94); box-shadow: 0 0 0 7px rgba(240,160,60,.2), 0 8px 20px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,247,235,.6)">
                   <span style="position: relative; width: 21px; height: 21px"><span style="position: absolute; top: 9.6px; left: 0; width: 21px; height: 2.1px; border-radius: 2px; background: #1a1005"></span><span style="position: absolute; left: 9.6px; top: 0; width: 2.1px; height: 21px; border-radius: 2px; background: #1a1005"></span></span>
-                  <span style="font-size: 7px; letter-spacing: .16em; text-transform: uppercase; color: rgba(26,16,5,.72); line-height: 1; white-space: nowrap">{{ L_orderShort }}</span>
+                  <span style="font-size: 7px; letter-spacing: .12em; text-transform: uppercase; color: rgba(26,16,5,.72); line-height: 1.2; text-align: center">{{ L_addCart }}</span>
                 </button>
               </div>
               </sc-if>
@@ -731,6 +731,26 @@
                     </button>
                   </sc-for>
                 </div>
+                <!-- The house rule belongs to the parcel queue, so it lives in the
+                     parcel view: staff set it once for the evening, and the per-bag
+                     switches below are the exceptions to it. -->
+                <sc-if value="{{ ordKindParcel }}" hint-placeholder-val="{{ false }}">
+                <div style="display: grid; gap: 7px; margin-bottom: 13px; padding: 11px 13px; border-radius: 12px; background: rgba(240,160,60,.05); border: 1px solid rgba(240,160,60,.14)">
+                  <div style="display: flex; align-items: center; gap: 10px">
+                    <span style="flex: 1 1 auto; min-width: 0; font-size: 9px; letter-spacing: .2em; text-transform: uppercase; color: #8d8479">{{ L_dlvChargeDefLbl }}</span>
+                    <span style="flex: 0 0 auto; font-size: 9px; letter-spacing: .14em; text-transform: uppercase; text-align: right; color: {{ dlvDefInk }}">{{ dlvDefState }}</span>
+                    <button onClick="{{ toggleDlvChargeAll }}" title="{{ L_dlvChargeDefLbl }}" aria-label="{{ L_dlvChargeDefLbl }}" style="flex: 0 0 auto; position: relative; width: 48px; height: 30px; border-radius: 15px; background: {{ dlvDefBg }}; border: 1px solid rgba(240,160,60,.2); transition: background 200ms">
+                      <span style="position: absolute; top: 3px; left: {{ dlvDefKnob }}; width: 22px; height: 22px; border-radius: 50%; background: #f7f2e8; transition: left 180ms"></span>
+                    </button>
+                  </div>
+                  <div style="display: flex; align-items: center; gap: 10px">
+                    <span style="flex: 1 1 auto; min-width: 0; font-size: 9px; letter-spacing: .2em; text-transform: uppercase; color: #8d8479">{{ L_dlvFeeDefLbl }}</span>
+                    <input type="number" inputmode="numeric" value="{{ dlvFeeDefVal }}" onChange="{{ setDlvFeeDef }}" placeholder="0" style="flex: 0 0 92px; width: 92px; box-sizing: border-box; min-height: 44px; padding: 10px 12px; border-radius: 10px; font-family: inherit; font-size: 16px; text-align: right; color: #f0e8dc; background: rgba(255,255,255,.05); border: 1px solid rgba(240,160,60,.16); outline: none" />
+                  </div>
+                  <span style="font-size: 9.5px; font-weight: 300; letter-spacing: .04em; line-height: 1.5; color: #6f665d; text-wrap: pretty">{{ L_dlvChargeDefNote }}</span>
+                  <span style="font-size: 9.5px; font-weight: 300; letter-spacing: .04em; line-height: 1.5; color: #6f665d; text-wrap: pretty">{{ dlvFeeDefNote }}</span>
+                </div>
+                </sc-if>
                 <!-- Two columns once there is room for them: the same board is read on
                      a phone behind the counter and on a tablet at the pass, and on the
                      tablet a single 700px-wide column wastes the screen. -->
@@ -760,6 +780,74 @@
                                packed and unpaid, or paid and still cooking. -->
                           <button onClick="{{ row.togglePaid }}" style="flex: 0 0 auto; min-height: 44px; padding: 0 15px; border-radius: 12px; font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: {{ row.paidColor }}; background: {{ row.paidBg }}; border: 1px solid rgba(240,160,60,.14); transition: transform 140ms" style-active="transform: scale(.985)">{{ row.paidLabel }}</button>
                         </div>
+                        <!-- Door delivery. Only on bags that asked for it, so the
+                             counter can tell at a glance which ones leave the
+                             building. The tap hands off to the phone's own Maps
+                             app, which already knows how to navigate. -->
+                        <sc-if value="{{ row.dlvShow }}" hint-placeholder-val="{{ false }}">
+                          <div style="display: grid; gap: 9px; margin-bottom: 13px; padding: 12px 13px; border-radius: 12px; background: rgba(240,160,60,.06); border: 1px solid rgba(240,160,60,.16)">
+                            <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 10px">
+                              <span style="font-size: 9px; letter-spacing: .24em; text-transform: uppercase; color: #8d8479">{{ L_dlvTitle }}</span>
+                              <span style="flex: 0 0 auto; font-size: 9px; letter-spacing: .14em; text-transform: uppercase; color: {{ row.dlvPinColor }}">{{ row.dlvPinNote }}</span>
+                            </div>
+                            <span style="font-size: 12.5px; font-weight: 300; line-height: 1.5; color: #e8e0d4; text-wrap: pretty">{{ row.dlvAddr }}</span>
+                            <!-- The number, beside the address rather than three
+                                 screens away on the floor display: the rider rings
+                                 from the gate, and that is the same moment they are
+                                 reading the address. Same tel: handoff the floor
+                                 display uses. -->
+                            <sc-if value="{{ row.dlvTelShow }}" hint-placeholder-val="{{ false }}">
+                              <a href="{{ row.dlvTel }}" style="display: flex; align-items: center; justify-content: center; min-height: 44px; padding: 0 14px; border-radius: 11px; font-size: 11px; letter-spacing: .14em; text-decoration: none; color: #ffc27a; background: rgba(255,255,255,.045); border: 1px solid rgba(240,160,60,.22); transition: transform 140ms" style-active="transform: scale(.985)">{{ row.dlvTelLabel }}</a>
+                            </sc-if>
+                            <div style="display: flex; align-items: baseline; gap: 8px">
+                              <span style="font-size: 9px; letter-spacing: .18em; text-transform: uppercase; color: #6f665d">{{ L_dlvDist }}</span>
+                              <span style="font-size: 11px; letter-spacing: .06em; color: {{ row.dlvDistColor }}">{{ row.dlvDistText }}</span>
+                            </div>
+                            <sc-if value="{{ row.dlvFarShow }}" hint-placeholder-val="{{ false }}">
+                              <span style="font-size: 9.5px; letter-spacing: .06em; line-height: 1.5; color: #e0a83a; text-wrap: pretty">{{ row.dlvFarNote }}</span>
+                            </sc-if>
+                            <!-- Charging for delivery is a decision, not a tariff: some
+                                 bags go out with nothing added. Off is the default, and
+                                 off means this bill totals exactly as a collected
+                                 parcel's does. -->
+                            <div style="display: flex; align-items: center; gap: 10px">
+                              <span style="flex: 1 1 auto; font-size: 9px; letter-spacing: .18em; text-transform: uppercase; color: #6f665d">{{ L_dlvChargeLbl }}</span>
+                              <span style="flex: 0 0 auto; font-size: 9px; letter-spacing: .14em; text-transform: uppercase; color: {{ row.dlvChargeInk }}">{{ row.dlvChargeState }}</span>
+                              <button onClick="{{ row.toggleDlvCharge }}" title="{{ L_dlvChargeLbl }}" aria-label="{{ L_dlvChargeLbl }}" style="flex: 0 0 auto; position: relative; width: 48px; height: 30px; border-radius: 15px; background: {{ row.dlvChargeBg }}; border: 1px solid rgba(240,160,60,.2); transition: background 200ms">
+                                <span style="position: absolute; top: 3px; left: {{ row.dlvChargeKnob }}; width: 22px; height: 22px; border-radius: 50%; background: #f7f2e8; transition: left 180ms"></span>
+                              </button>
+                            </div>
+                            <!-- Both boxes carry the app's suggestion until someone
+                                 types over it. Distance is a guide, not a tariff —
+                                 a first-floor flat up a lane is not the same trip as
+                                 a shopfront the same distance away. -->
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px">
+                              <label style="display: grid; gap: 5px">
+                                <span style="font-size: 9px; letter-spacing: .18em; text-transform: uppercase; color: #6f665d">{{ L_dlvFeeLbl }}</span>
+                                <input type="number" inputmode="numeric" value="{{ row.dlvFeeVal }}" onChange="{{ row.setDlvFee }}" disabled="{{ row.dlvFeeOff }}" placeholder="{{ row.dlvFeeHint }}" style="width: 100%; min-width: 0; box-sizing: border-box; min-height: 44px; padding: 10px 12px; border-radius: 10px; font-family: inherit; font-size: 16px; color: {{ row.dlvFeeInk }}; background: {{ row.dlvFeeBg }}; border: 1px solid {{ row.dlvFeeEdge }}; outline: none" />
+                              </label>
+                              <label style="display: grid; gap: 5px">
+                                <span style="font-size: 9px; letter-spacing: .18em; text-transform: uppercase; color: #6f665d">{{ L_dlvMinsLbl }}</span>
+                                <input type="number" inputmode="numeric" value="{{ row.dlvMinsVal }}" onChange="{{ row.setDlvMins }}" placeholder="{{ row.dlvMinsHint }}" style="width: 100%; min-width: 0; box-sizing: border-box; min-height: 44px; padding: 10px 12px; border-radius: 10px; font-family: inherit; font-size: 16px; color: #f0e8dc; background: rgba(255,255,255,.05); border: 1px solid rgba(240,160,60,.16); outline: none" />
+                              </label>
+                            </div>
+                            <span style="font-size: 9.5px; letter-spacing: .06em; line-height: 1.5; color: #6f665d; text-wrap: pretty">{{ row.dlvFeeNote }}</span>
+                            <span style="font-size: 9.5px; letter-spacing: .06em; line-height: 1.5; color: #6f665d; text-wrap: pretty">{{ L_dlvBikeNote }}</span>
+                            <!-- A charge typed in after the guest has paid is a balance,
+                                 not a new bill: what they sent stays credited and the
+                                 difference is what the rider collects. -->
+                            <sc-if value="{{ row.dlvPartShow }}" hint-placeholder-val="{{ false }}">
+                              <div style="display: flex; align-items: baseline; gap: 9px; padding: 8px 10px; border-radius: 10px; background: rgba(224,168,58,.1); border: 1px solid rgba(224,168,58,.28)">
+                                <span style="flex: 1 1 auto; font-size: 9.5px; letter-spacing: .06em; line-height: 1.5; color: #e0a83a; text-wrap: pretty">{{ row.dlvPartText }}</span>
+                                <span style="flex: 0 0 auto; font-size: 12.5px; color: #e0a83a; font-variant-numeric: tabular-nums">{{ row.dlvPartAmt }}</span>
+                              </div>
+                            </sc-if>
+                            <sc-if value="{{ row.dlvEtaText }}" hint-placeholder-val="{{ false }}">
+                              <span style="font-size: 11px; letter-spacing: .08em; color: #9fd07f">{{ row.dlvEtaText }}</span>
+                            </sc-if>
+                            <a href="{{ row.dlvMapUrl }}" target="_blank" rel="noreferrer" style="display: flex; align-items: center; justify-content: center; min-height: 44px; padding: 0 16px; border-radius: 11px; font-size: 10px; letter-spacing: .2em; text-transform: uppercase; text-decoration: none; color: #1a1005; background: linear-gradient(180deg, #ffc27a, #f0a03c); transition: transform 140ms" style-active="transform: scale(.985)">{{ L_dlvOpen }}</a>
+                          </div>
+                        </sc-if>
                       </sc-if>
                       <sc-if value="{{ row.isTable }}" hint-placeholder-val="{{ true }}">
                       <div style="display: grid; gap: 6px; margin-bottom: 13px">
@@ -1214,6 +1302,11 @@
                     </sc-for>
                   </div>
                 </sc-if>
+                <sc-if value="{{ dlvNoteShow }}" hint-placeholder-val="{{ false }}">
+                  <div style="padding: 10px 16px 11px; border-top: 1px solid rgba(240,160,60,.16); background: {{ dlvNoteBg }}">
+                    <span style="font-size: 10.5px; font-weight: 300; letter-spacing: .04em; line-height: 1.6; color: {{ dlvNoteColor }}; text-wrap: pretty">{{ dlvNoteText }}</span>
+                  </div>
+                </sc-if>
                 <!-- The number the counter wrote on the paper slip. Shown so the guest
                      can quote it, and so the slip in their hand and the screen agree. -->
                 <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 14px; padding: 11px 16px; border-top: 1px solid rgba(240,160,60,.16)">
@@ -1269,6 +1362,11 @@
                          the counter actually confirms. -->
                     <span style="flex: 0 0 auto; font-family: 'Cormorant Garamond', serif; font-size: 26px; line-height: 1; color: #ffc27a; font-variant-numeric: tabular-nums">{{ parcelDueText }}</span>
                   </div>
+                  <sc-if value="{{ dlvNoteShow }}" hint-placeholder-val="{{ false }}">
+                    <div style="padding: 9px 11px; border-radius: 11px; background: {{ dlvNoteBg }}; border: 1px solid {{ dlvNoteEdge }}">
+                      <span style="font-size: 10.5px; font-weight: 300; letter-spacing: .04em; line-height: 1.6; color: {{ dlvNoteColor }}; text-wrap: pretty">{{ dlvNoteText }}</span>
+                    </div>
+                  </sc-if>
                   <button onClick="{{ openPay }}" style="width: 100%; padding: 14px; border-radius: 12px; font-size: 10.5px; letter-spacing: .24em; text-transform: uppercase; color: #1a1005; background: linear-gradient(180deg, #ffc27a, #f0a03c); transition: transform 150ms" style-active="transform: scale(.985)">{{ L_payNow }}</button>
                   <sc-if value="{{ upiClaimed }}" hint-placeholder-val="{{ false }}">
                     <span style="font-size: 9.5px; letter-spacing: .06em; line-height: 1.5; color: #9fd07f; text-wrap: pretty">{{ L_upiClaimNote }}</span>
@@ -1292,10 +1390,22 @@
                    marked. -->
               <sc-if value="{{ parcelDone }}" hint-placeholder-val="{{ false }}">
                 <div style="display: grid; gap: 12px; padding: 15px 16px 16px; border-radius: 15px; background: rgba(159,208,127,.08); border: 1px solid rgba(159,208,127,.3)">
-                  <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px">
-                    <span style="font-size: 8.5px; letter-spacing: .24em; text-transform: uppercase; color: rgba(159,208,127,.8)">{{ L_collectAt }}</span>
-                    <span style="flex: 0 0 auto; font-family: 'Cormorant Garamond', serif; font-size: 20px; line-height: 1; color: #9fd07f">{{ L_readyNow }}</span>
+                  <div style="display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px">
+                    <span style="min-width: 0; font-size: 8.5px; letter-spacing: .24em; text-transform: uppercase; color: rgba(159,208,127,.8)">{{ L_collectAt }}</span>
+                    <span style="min-width: 0; font-family: 'Cormorant Garamond', serif; font-size: 20px; line-height: 1.15; color: #9fd07f">{{ L_readyNow }}</span>
                   </div>
+
+                  <sc-if value="{{ pcDoorEtaShow }}" hint-placeholder-val="{{ false }}">
+                    <div style="display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px; padding: 10px 12px; border-radius: 12px; background: rgba(159,208,127,.09); border: 1px solid rgba(159,208,127,.22)">
+                      <span style="min-width: 0; font-size: 8.5px; letter-spacing: .22em; text-transform: uppercase; color: rgba(159,208,127,.85)">{{ pcDoorEtaLbl }}</span>
+                      <sc-if value="{{ pcDoorOnTime }}" hint-placeholder-val="{{ true }}">
+                        <span style="min-width: 0; font-family: 'Cormorant Garamond', serif; font-size: 25px; line-height: 1; color: #9fd07f; font-variant-numeric: tabular-nums">{{ pcDoorEtaVal }}</span>
+                      </sc-if>
+                      <sc-if value="{{ pcDoorLate }}" hint-placeholder-val="{{ false }}">
+                        <span style="flex: 1 1 100%; font-size: 11px; font-weight: 300; line-height: 1.5; color: rgba(232,224,212,.72); text-wrap: pretty">{{ L_dlvLateNote }}</span>
+                      </sc-if>
+                    </div>
+                  </sc-if>
 
                   <!-- The name the counter calls out, given the most weight on the
                        card. A guest who never left one gets the slot's own id here
@@ -1373,6 +1483,12 @@
               <sc-if value="{{ cartEmpty }}" hint-placeholder-val="{{ false }}">
                 <div style="padding: 26px 0; text-align: center; font-size: 12px; font-weight: 300; letter-spacing: .1em; color: #6f665c">{{ L_cartEmpty }}</div>
               </sc-if>
+              <sc-if value="{{ cartDlvShow }}" hint-placeholder-val="{{ false }}">
+                <div style="display: flex; align-items: center; gap: 12px; padding-top: 11px; border-top: 1px solid rgba(240,160,60,.1)">
+                  <span style="flex: 1; min-width: 0; font-size: 13px; font-weight: 300; color: #cfc6ba">{{ L_dlvChargeLbl }}</span>
+                  <span style="flex: 0 0 auto; font-size: 13px; color: #f0a03c">{{ cartDlvAmount }}</span>
+                </div>
+              </sc-if>
               <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 14px; border-top: 1px solid rgba(240,160,60,.14)">
                 <span style="font-size: 10px; letter-spacing: .24em; text-transform: uppercase; color: #7d746a">{{ L_total }}</span>
                 <span style="font-family: 'Cormorant Garamond', serif; font-size: 24px; color: #f0a03c">{{ cartTotal }}</span>
@@ -1415,6 +1531,30 @@
                     <input type="tel" inputmode="numeric" value="{{ pcMobile }}" onChange="{{ setPcMobile }}" placeholder="{{ L_pcMobPh }}" style="width: 100%; min-width: 0; padding: 12px 13px; border-radius: 11px; font-size: 16px; color: #f0e8dc; background: rgba(255,255,255,.05); border: 1px solid {{ pcMobBorder }}; outline: none; font-variant-numeric: tabular-nums" />
                   </div>
                   <span style="font-size: 9.5px; letter-spacing: .06em; line-height: 1.5; color: {{ pcNoteColor }}; text-wrap: pretty">{{ pcNote }}</span>
+                  <!-- A bag can leave the counter two ways, and the guest is the only
+                       one who knows which. Asked here, beside the name, because both
+                       answers are about how the counter finds the person. -->
+                  <div style="display: grid; gap: 8px; margin-top: 4px; padding-top: 12px; border-top: 1px solid rgba(240,160,60,.12)">
+                    <span style="font-size: 9px; letter-spacing: .24em; text-transform: uppercase; color: #8d8479">{{ L_pcHowTitle }}</span>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px">
+                      <button onClick="{{ pcPickCollect }}" style="min-height: 46px; padding: 11px 10px; border-radius: 11px; font-size: 9.5px; letter-spacing: .16em; line-height: 1.4; text-transform: uppercase; transition: transform 150ms; color: {{ pcColInk }}; background: {{ pcColBg }}; border: 1px solid {{ pcColBd }}" style-active="transform: scale(.985)">{{ L_pcCollect }}</button>
+                      <button onClick="{{ pcPickDoor }}" style="min-height: 46px; padding: 11px 10px; border-radius: 11px; font-size: 9.5px; letter-spacing: .16em; line-height: 1.4; text-transform: uppercase; transition: transform 150ms; color: {{ pcDoorInk }}; background: {{ pcDoorBg }}; border: 1px solid {{ pcDoorBd }}" style-active="transform: scale(.985)">{{ L_pcDoor }}</button>
+                    </div>
+                  </div>
+                  <sc-if value="{{ pcIsDoor }}" hint-placeholder-val="{{ false }}">
+                    <div style="display: grid; gap: 8px">
+                      <textarea rows="3" value="{{ pcAddr }}" onChange="{{ setPcAddr }}" placeholder="{{ L_pcAddrPh }}" style="width: 100%; min-width: 0; box-sizing: border-box; resize: none; padding: 12px 13px; border-radius: 11px; font-family: inherit; font-size: 16px; line-height: 1.45; color: #f0e8dc; background: rgba(255,255,255,.05); border: 1px solid {{ pcAddrBorder }}; outline: none"></textarea>
+                      <!-- Typed lines get a rider to the street; the pin gets them to
+                           the door. Offered as a second step rather than a
+                           replacement, because half the town navigates by landmark
+                           and the other half by map. -->
+                      <button onClick="{{ openPcMap }}" style="min-height: 46px; padding: 12px 14px; border-radius: 11px; display: flex; align-items: center; justify-content: center; gap: 9px; font-size: 9.5px; letter-spacing: .2em; text-transform: uppercase; transition: transform 150ms; color: {{ pcPinInk }}; background: rgba(255,255,255,.045); border: 1px solid {{ pcPinBd }}" style-active="transform: scale(.985)">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11Z"></path><circle cx="12" cy="10" r="2.6"></circle></svg>
+                        {{ pcPinLabel }}
+                      </button>
+                      <span style="font-size: 9.5px; letter-spacing: .06em; line-height: 1.5; color: #6f665d; text-wrap: pretty">{{ L_pcAddrNote }}</span>
+                    </div>
+                  </sc-if>
                   <!-- Reached from the table sheet, the cart is still empty, so
                        there is no Send below to close on. This keeps the name and
                        hands the guest back to the menu. -->
@@ -1737,12 +1877,53 @@
                     <span style="min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">{{ b.itemLine }}</span>
                     <span style="font-variant-numeric: tabular-nums; white-space: nowrap; color: #6f665c">{{ b.mobile }}</span>
                   </div>
+                  <div style="display: grid; gap: 2px; min-width: 0">
+                    <sc-for list="{{ b.lines }}" as="ln" hint-placeholder-count="2">
+                      <div style="display: flex; align-items: baseline; gap: clamp(6px, .8vmin, 10px); min-width: 0; font-size: clamp(9.5px, 1.1vmin, 13px); font-weight: 300; color: #cfc6ba">
+                        <span style="flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">{{ ln.label }}</span>
+                        <span style="flex: 0 0 auto; color: #8d8479; font-variant-numeric: tabular-nums">{{ ln.qty }}</span>
+                        <span style="flex: 0 0 auto; min-width: 3.4em; text-align: right; font-variant-numeric: tabular-nums">{{ ln.amount }}</span>
+                      </div>
+                    </sc-for>
+                  </div>
                   <!-- Money in terms the counter can act on: what was taken, what is
                        still owed. Tapping takes the balance. -->
                   <button onClick="{{ b.settle }}" style="display: flex; align-items: baseline; justify-content: space-between; gap: 10px; width: 100%; min-height: 40px; padding: clamp(6px, .8vmin, 10px) clamp(8px, 1vmin, 12px); border-radius: 9px; background: {{ b.payBg }}; border: 1px solid {{ b.payEdge }}; text-align: left; transition: transform 140ms" style-active="transform: scale(.97)">
                     <span style="font-size: clamp(7.5px, .9vmin, 10.5px); letter-spacing: .22em; text-transform: uppercase; color: {{ b.dueColor }}">{{ b.payLbl }}</span>
                     <span style="font-size: clamp(12px, 1.45vmin, 17px); color: {{ b.dueColor }}; font-variant-numeric: tabular-nums; white-space: nowrap">{{ b.payFigure }}</span>
                   </button>
+                  <sc-if value="{{ b.dlvShow }}" hint-placeholder-val="{{ false }}">
+                    <div style="display: grid; gap: 3px; min-width: 0; padding: clamp(6px, .8vmin, 10px) clamp(8px, 1vmin, 12px); border-radius: 9px; background: rgba(240,160,60,.07); border: 1px solid rgba(240,160,60,.2)">
+                      <div style="display: flex; align-items: baseline; gap: 8px; min-width: 0">
+                        <span style="flex: 1 1 auto; font-size: clamp(7.5px, .9vmin, 10.5px); letter-spacing: .22em; text-transform: uppercase; color: #8d8479">{{ L_dlvTitle }}</span>
+                        <span style="flex: 0 0 auto; font-size: clamp(7.5px, .9vmin, 10.5px); letter-spacing: .14em; text-transform: uppercase; color: {{ b.dlvPinColor }}">{{ b.dlvPinNote }}</span>
+                      </div>
+                      <span style="font-size: clamp(9.5px, 1.1vmin, 13px); font-weight: 300; line-height: 1.45; color: #e8e0d4; text-wrap: pretty">{{ b.dlvAddr }}</span>
+                      <span style="font-size: clamp(9px, 1.05vmin, 12px); letter-spacing: .06em; color: {{ b.dlvFeeColor }}">{{ b.dlvFeeText }}</span>
+                      <sc-if value="{{ b.dlvEtaShow }}" hint-placeholder-val="{{ false }}">
+                        <span style="font-size: clamp(9.5px, 1.1vmin, 13px); letter-spacing: .08em; color: #9fd07f; font-variant-numeric: tabular-nums">{{ b.dlvEta }}</span>
+                      </sc-if>
+                      <!-- The wall runs the pass, so the charge and the drive time
+                           are set here too rather than on a phone in the office. -->
+                      <div style="display: flex; align-items: center; gap: 8px; margin-top: 2px">
+                        <span style="flex: 1 1 auto; min-width: 0; font-size: clamp(7.5px, .9vmin, 10.5px); letter-spacing: .16em; text-transform: uppercase; color: {{ b.dlvChargeInk }}">{{ b.dlvChargeState }}</span>
+                        <button onClick="{{ b.toggleDlvCharge }}" aria-label="{{ L_dlvChargeLbl }}" style="flex: 0 0 auto; position: relative; width: 42px; height: 26px; border-radius: 13px; background: {{ b.dlvChargeBg }}; border: 1px solid rgba(240,160,60,.22); transition: background 200ms">
+                          <span style="position: absolute; top: 3px; left: {{ b.dlvChargeKnob }}; width: 18px; height: 18px; border-radius: 50%; background: #f7f2e8; transition: left 180ms"></span>
+                        </button>
+                      </div>
+                      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px">
+                        <label style="display: grid; gap: 3px; min-width: 0">
+                          <span style="font-size: clamp(7px, .85vmin, 9.5px); letter-spacing: .16em; text-transform: uppercase; color: #6f665c">{{ L_dlvFeeLbl }}</span>
+                          <input type="number" inputmode="numeric" value="{{ b.dlvFeeVal }}" onChange="{{ b.setDlvFee }}" disabled="{{ b.dlvFeeOff }}" placeholder="{{ b.dlvFeeHint }}" style="width: 100%; min-width: 0; box-sizing: border-box; padding: 6px 8px; border-radius: 8px; font-family: inherit; font-size: 16px; font-weight: 300; color: {{ b.dlvFeeInk }}; background: {{ b.dlvFeeBg }}; border: 1px solid {{ b.dlvFeeEdge }}; outline: none" />
+                        </label>
+                        <label style="display: grid; gap: 3px; min-width: 0">
+                          <span style="font-size: clamp(7px, .85vmin, 9.5px); letter-spacing: .16em; text-transform: uppercase; color: #6f665c">{{ L_dlvMinsLbl }}</span>
+                          <input type="number" inputmode="numeric" value="{{ b.dlvMinsVal }}" onChange="{{ b.setDlvMins }}" placeholder="{{ b.dlvMinsHint }}" style="width: 100%; min-width: 0; box-sizing: border-box; padding: 6px 8px; border-radius: 8px; font-family: inherit; font-size: 16px; font-weight: 300; color: #f0e8dc; background: rgba(255,255,255,.05); border: 1px solid rgba(240,160,60,.16); outline: none" />
+                        </label>
+                      </div>
+                      <a href="{{ b.dlvMapUrl }}" target="_blank" rel="noreferrer" style="display: flex; align-items: center; justify-content: center; min-height: 38px; margin-top: 2px; padding: 0 12px; border-radius: 9px; font-size: clamp(7.5px, .9vmin, 10.5px); letter-spacing: .18em; text-transform: uppercase; text-decoration: none; color: #1a1005; background: linear-gradient(180deg, #ffc27a, #f0a03c); transition: transform 140ms" style-active="transform: scale(.97)">{{ L_dlvOpen }}</a>
+                    </div>
+                  </sc-if>
                   <div style="display: flex; flex-wrap: nowrap; align-items: center; gap: clamp(6px, .8vmin, 10px); min-width: 0">
                     <input type="text" value="{{ b.bill }}" onChange="{{ b.setBill }}" placeholder="Bill no." size="6" style="flex: 1 1 0; min-width: 0; box-sizing: border-box; padding: 7px 9px; border-radius: 8px; font-size: 16px; font-weight: 300; color: #f0e8dc; background: rgba(255,255,255,.05); border: 1px solid rgba(240,160,60,.16); outline: none" />
                     <button onClick="{{ b.toggleReady }}" style="flex: 0 0 auto; white-space: nowrap; min-height: 40px; padding: 0 clamp(10px, 1.3vmin, 16px); border-radius: 9px; font-size: clamp(8px, .95vmin, 11px); letter-spacing: .2em; text-transform: uppercase; color: {{ b.readyInk }}; background: {{ b.readyBg }}; border: 1px solid rgba(240,160,60,.24); transition: transform 140ms" style-active="transform: scale(.96)">{{ b.readyLabel }}</button>
@@ -1993,8 +2174,42 @@
   </div>
 </div>
 
-</x-dc>
-<script type="text/x-dc" data-dc-script data-props="{&quot;bareReel&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Reel&quot;},&quot;reelGlass&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;full&quot;,&quot;light&quot;,&quot;flat&quot;],&quot;default&quot;:&quot;light&quot;,&quot;tsType&quot;:&quot;'full' | 'light' | 'flat'&quot;,&quot;section&quot;:&quot;Glass&quot;},&quot;heroTextOpacity&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:2.45,&quot;min&quot;:0.3,&quot;max&quot;:3,&quot;step&quot;:0.05,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Hero copy&quot;},&quot;heroTextBright&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:1.3,&quot;min&quot;:0.6,&quot;max&quot;:2,&quot;step&quot;:0.05,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Hero copy&quot;},&quot;heroTextSaturate&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:2.5,&quot;min&quot;:0,&quot;max&quot;:2.5,&quot;step&quot;:0.05,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Hero copy&quot;},&quot;heroTextHold&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:0,&quot;min&quot;:0,&quot;max&quot;:3,&quot;step&quot;:0.05,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Hero copy&quot;},&quot;heroTextWipe&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Hero copy&quot;},&quot;heroStillMode&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Hero copy&quot;}}">
+
+
+<!-- The pin picker. Lives at the root rather than inside the order sheet: the
+     sheet slides on a transform, and a transformed ancestor turns position:
+     fixed into position: relative — the map would scroll away with the card.
+     Leaflet and its stylesheet are fetched the first time this opens, so a
+     guest collecting at the counter never pays for a map they do not see. -->
+<sc-if value="{{ pcMapOpen }}" hint-placeholder-val="{{ false }}">
+  <div style="position: fixed; inset: 0; z-index: 400; display: flex; flex-direction: column; background: #070605; animation: fadeIn 180ms ease-out">
+    <div style="flex: 0 0 auto; display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-bottom: 1px solid rgba(240,160,60,.14)">
+      <button onClick="{{ closePcMap }}" aria-label="{{ L_pcMapBack }}" style="flex: 0 0 auto; width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; border-radius: 11px; color: #cfc6ba; background: rgba(255,255,255,.045); border: 1px solid rgba(240,160,60,.16)">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"></path></svg>
+      </button>
+      <span style="flex: 1 1 auto; min-width: 0; font-family: 'Cormorant Garamond', serif; font-size: 20px; line-height: 1.2; color: #f2ece2">{{ L_pcMapTitle }}</span>
+    </div>
+    <div style="position: relative; flex: 1 1 auto; min-height: 0">
+      <div ref="{{ pcMapNode }}" style="position: absolute; inset: 0; background: #14110d"></div>
+      <!-- The map moves under a fixed crosshair rather than the guest dragging a
+           marker: a thumb never covers the point being chosen. -->
+      <div style="position: absolute; left: 50%; top: 50%; width: 34px; height: 44px; margin: -44px 0 0 -17px; pointer-events: none; z-index: 500; filter: drop-shadow(0 3px 6px rgba(0,0,0,.5))">
+        <svg viewBox="0 0 34 44" width="34" height="44" fill="none" aria-hidden="true">
+          <path d="M17 43s13-13.6 13-24A13 13 0 1 0 4 19c0 10.4 13 24 13 24Z" fill="#f0a03c" stroke="#1a1005" stroke-width="1.6"></path>
+          <circle cx="17" cy="18" r="4.6" fill="#1a1005"></circle>
+        </svg>
+      </div>
+      <button onClick="{{ pcLocateMe }}" aria-label="{{ L_pcLocate }}" style="position: absolute; right: 14px; bottom: 14px; z-index: 500; width: 46px; height: 46px; display: flex; align-items: center; justify-content: center; border-radius: 13px; color: #1a1005; background: linear-gradient(180deg, #ffc27a, #f0a03c); box-shadow: 0 3px 12px rgba(0,0,0,.4); transition: transform 150ms" style-active="transform: scale(.95)">
+        <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="7"></circle><path d="M12 2v3M12 19v3M22 12h-3M5 12H2"></path><circle cx="12" cy="12" r="2.2" fill="currentColor" stroke="none"></circle></svg>
+      </button>
+    </div>
+    <div style="flex: 0 0 auto; display: grid; gap: 10px; padding: 14px 16px calc(14px + env(safe-area-inset-bottom)); border-top: 1px solid rgba(240,160,60,.14); background: #0d0b08">
+      <span style="min-height: 32px; font-size: 11px; font-weight: 300; line-height: 1.45; color: {{ pcResolvedInk }}; text-wrap: pretty">{{ pcResolved }}</span>
+      <button onClick="{{ pcConfirmPin }}" style="width: 100%; min-height: 50px; padding: 15px; border-radius: 13px; font-size: 10.5px; letter-spacing: .24em; text-transform: uppercase; color: #1a1005; background: linear-gradient(180deg, #ffc27a, #f0a03c); transition: transform 150ms" style-active="transform: scale(.99)">{{ L_pcUseSpot }}</button>
+    </div>
+  </div>
+</sc-if></x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;bareReel&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Reel&quot;},&quot;reelGlass&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;full&quot;,&quot;light&quot;,&quot;flat&quot;],&quot;default&quot;:&quot;light&quot;,&quot;tsType&quot;:&quot;'full' | 'light' | 'flat'&quot;,&quot;section&quot;:&quot;Glass&quot;},&quot;heroTextOpacity&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:2.45,&quot;min&quot;:0.3,&quot;max&quot;:3,&quot;step&quot;:0.05,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Hero copy&quot;},&quot;heroTextBright&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:1.3,&quot;min&quot;:0.6,&quot;max&quot;:2,&quot;step&quot;:0.05,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Hero copy&quot;},&quot;heroTextSaturate&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:2.5,&quot;min&quot;:0,&quot;max&quot;:2.5,&quot;step&quot;:0.05,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Hero copy&quot;},&quot;heroTextHold&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:3,&quot;min&quot;:0,&quot;max&quot;:3,&quot;step&quot;:0.05,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Hero copy&quot;},&quot;heroTextWipe&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Hero copy&quot;},&quot;heroStillMode&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Hero copy&quot;}}">
 /* ============================================================
    TWEAKABLE — swap per client. Nothing below the CONFIG block
    needs editing to re-skin this template for another restaurant.
@@ -2004,6 +2219,117 @@
 const IOS = /iP(hone|ad|od)/.test(navigator.platform || '')
   || (/Mac/.test(navigator.platform || '') && navigator.maxTouchPoints > 1)
   || (/iPad|iPhone|iPod/.test(navigator.userAgent || '') && !window.MSStream);
+
+/* The kitchen, as a coordinate. Used to centre a first-time pin and to draw
+   the restaurant on the picker; refine it by dropping a pin on the real
+   doorway in Google Maps and pasting the pair here. */
+const DELIVERY_ORIGIN = { lat: 9.5101, lng: 78.0970 };
+
+/* What a door delivery costs and how long it takes. Straight-line distance
+   from the kitchen, scaled by roadFactor because nobody drives in a straight
+   line — near enough for a town this size, and it costs nothing to compute.
+   Every figure it produces is a suggestion the counter can overwrite. */
+const DELIVERY = {
+  baseFee: 20, perKm: 8, roundTo: 5,
+  /* Travel time is a two-wheeler's, because a two-wheeler is what leaves this
+     counter. Town riding averages out near 22 km/h once junctions, lanes and
+     speed bumps are in it; handoverMins covers getting the bag on the bike and
+     off it at the door. A walking or four-wheeler figure would be the wrong
+     promise on the guest's screen. */
+  bikeKmph: 22, handoverMins: 4,
+  /* What a dispatched bag with no pin and no typed figure counts down from: a
+     ride across town plus the handover. Zero read as "already late". */
+  blindMins: 15,
+  roadFactor: 1.3, maxKm: 8,
+};
+
+function kmBetween(a, b) {
+  const R = 6371, rad = d => d * Math.PI / 180;
+  const dLat = rad(b.lat - a.lat), dLng = rad(b.lng - a.lng);
+  const h = Math.sin(dLat / 2) ** 2
+    + Math.cos(rad(a.lat)) * Math.cos(rad(b.lat)) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(h));
+}
+
+/* A pin gives a real quote. A typed-only address gives nothing — better an
+   empty field the counter fills in than a confident number built on no
+   coordinates at all. */
+function dlvQuote(pin) {
+  if (!pin || typeof pin.lat !== 'number') return null;
+  const km = kmBetween(DELIVERY_ORIGIN, pin) * DELIVERY.roadFactor;
+  return {
+    km: Math.round(km * 10) / 10,
+    fee: Math.ceil((DELIVERY.baseFee + km * DELIVERY.perKm) / DELIVERY.roundTo) * DELIVERY.roundTo,
+    mins: Math.max(5, Math.round(DELIVERY.handoverMins + (km / DELIVERY.bikeKmph) * 60)),
+    far: km > DELIVERY.maxKm,
+  };
+}
+
+/* One reading of the fee, used by every board. The admin panel, the pass and
+   the guest's own bill each used to total the same ticket their own way, and
+   a charge folded into one of them made the three disagree about what was
+   owed. Anything that needs the number asks here. */
+/* The house rule, kept with the floor settings rather than on each ticket:
+   some kitchens charge for every door bag and some for none, and staff should
+   not have to remember to flip a switch on each new order. */
+function dlvChargeDef() {
+  return !!(db.state.floor && db.state.floor.dlvChargeDef);
+}
+
+/* The house amount. Set, it is what every charged door bag costs the moment the
+   switch goes on — the counter types nothing. Zero or blank means the fee is
+   priced bag by bag, which is the state the guest gets told about. */
+function dlvFeeDef() {
+  const v = db.state.floor ? db.state.floor.dlvFeeDef : null;
+  return v != null && Number(v) > 0 ? Number(v) : 0;
+}
+
+function dlvChargeOn(o) {
+  return !!(o && o.dlv && o.dlv.mode === 'door' && o.dlv.charge);
+}
+
+/* A delivery charge is the counter's decision twice over: whether to charge at
+   all, and how much. So the distance quote is only ever a suggestion sitting in
+   the input — nothing reaches a bill until someone types it, and with the
+   charge switched off a door bag totals exactly as a collected one does. */
+/* Only what is stamped on the ticket, never the house default as a fallback:
+   floor is a per-device blob, so a fallback resolved to the amount on the
+   counter's phone and to zero on the guest's, and one ticket totalled two ways
+   on two screens. stampDlvHouse writes the default onto the ticket instead,
+   which is what the server carries. */
+function dlvFeeOf(o) {
+  if (!dlvChargeOn(o)) return 0;
+  return o.dlv.fee != null ? o.dlv.fee : 0;
+}
+
+// Charging, but nobody has priced it: the guest is told the amount is coming.
+function dlvFeeSoonOf(o) {
+  return dlvChargeOn(o) && o.dlv.fee == null;
+}
+
+/* When the bag left the counter. Inside dlv rather than beside it, because dlv
+   is the one field the server carries: a sibling `outAt` was app-local, so the
+   guest's "on the way" and the counter's countdown disagreed across phones. */
+function dlvOutOf(o) {
+  return (o && o.dlv && o.dlv.mode === 'door' && o.dlv.outAt) || 0;
+}
+
+function dlvMinsOf(o) {
+  if (!o || !o.dlv || o.dlv.mode !== 'door') return 0;
+  if (o.dlv.mins != null) return o.dlv.mins;
+  const q = dlvQuote(o.dlv.pin);
+  return q ? q.mins : DELIVERY.blindMins;
+}
+
+/* The picker's status line is either a resolved street or one of four states.
+   Keeping the states as keys rather than sentences lets the line stay
+   translated without the lookup result passing through a dictionary. */
+const PC_GEO_MSG = {
+  looking: 'pcGeoLooking',
+  none: 'pcGeoNone',
+  denied: 'pcGeoDenied',
+  'map-failed': 'pcGeoFail',
+};
 
 const IDENTITY = {
   name: "Sulthan's", tagline: 'Biriyani & Much More',
@@ -2178,6 +2504,75 @@ const SPICE = [
 /* The parcel send button's other face. Kept beside STR rather than inside it
    because the two language blocks are single lines and this is one string. */
 Object.assign(STR.en, {
+  dlvTitle: 'Door delivery',
+  dlvOpen: 'Open route in Maps',
+  dlvDist: 'Distance',
+  dlvNoPin: 'No pin — address only',
+  dlvFar: 'Beyond the usual delivery range.',
+  dlvFeeLbl: 'Charge \u20b9',
+  dlvMinsLbl: 'Travel min',
+  dlvSuggested: 'Suggested from the distance. Type over either to set your own.',
+  dlvSetByYou: 'Set at the counter.',
+  dlvChargeLbl: 'Delivery charge',
+  dlvChargeOnLbl: 'Charging',
+  dlvChargeOffLbl: 'Not charged',
+  dlvChargeOffNote: 'No delivery charge on this bag — the guest pays for the food only.',
+  dlvFeeAsk: 'The guest has been told a charge is coming. Type it in.',
+  addCart: 'Add to order',
+  dlvSoon: 'Updated soon',
+  dlvSoonNote: 'Pay for your order now. Staff set the delivery charge and it will be added here shortly.',
+  dlvAfterPay: 'Delivery charge added after your payment \u00b7 still to pay',
+  dlvPartAdmin: 'Charged after payment. Balance to collect at the door:',
+  dlvBikeNote: 'Two-wheeler time over that distance. It starts counting down when the bag goes out for delivery.',
+  dlvChargeDefLbl: 'Delivery charge · house default',
+  dlvFeeDefLbl: 'Default amount ₹',
+  dlvFeeDefSet: 'Added to every charged door bag as soon as the switch is on. A bag can still be given its own amount below.',
+  dlvFeeDefZero: 'Left at zero, each door bag is priced on its own card below and the guest is told the amount is coming.',
+  dlvFeeDefUsed: 'House default.',
+  dlvChargeAllOn: 'Charging on every door bag',
+  dlvChargeAllOff: 'No charge on door bags',
+  dlvChargeDefNote: 'Sets what new door orders start as, and switches every live one to match. Any single bag can still be changed on its own card below.',
+  dlvWhereLbl: 'Delivering to your address',
+  dlvPackedNow: 'Packed · leaving soon',
+  /* A door bag that is flagged ready but carries no departure stamp: an older
+     row from before the stamp existed. It is packed, and saying more than that
+     would promise a countdown that cannot be shown. */
+  dlvPackedOut: 'Packed · ready to leave',
+  dlvOutNow: 'Out for delivery',
+  dlvPassName: 'Bag name',
+  dlvPassShowDoor: 'The rider carries this bag to your address. Keep this screen for the handover.',
+  /* The old wording described the counter's bookkeeping ("staff match it
+     against their own record"), which reads to a guest like their payment
+     might be wrong. What they need is the state of it and permission to stop
+     waiting. */
+  upiClaimTitle: 'Waiting for staff to verify',
+  upiClaimNote: 'Staff are yet to verify your payment. If you have already completed it, you can skip this — it will be confirmed here shortly.',
+  dlvSendOut: 'Out for delivery',
+  dlvOnRoad: 'On the road',
+  dlvIn: 'Arrives in',
+  dlvAnyMoment: 'Package arriving soon',
+  dlvLateNote: 'Running a little later than usual.',
+  dlvOver: 'over',
+  pcBanTitleDoor: 'Your parcel is on the way',
+  pcBanNoteDoor: 'The rider is heading to your address',
+  dlvPinned: 'Pinned',
+  dlvTypedOnly: 'Typed only',
+  dlvNoAddr: 'No address given',
+  pcHowTitle: 'How will you get it?',
+  pcCollect: 'Collect at counter',
+  pcDoor: 'Door delivery',
+  pcAddrPh: 'Door number, street, landmark',
+  pcAddrNote: 'The rider carries this address with the bag.',
+  pcPinAdd: 'Set the spot on a map',
+  pcPinSet: 'Spot set — tap to adjust',
+  pcMapTitle: 'Move the map to your door',
+  pcMapBack: 'Back',
+  pcLocate: 'Use my location',
+  pcUseSpot: 'Use this spot',
+  pcGeoLooking: 'Reading the map…',
+  pcGeoNone: 'No street name here. The pin still works.',
+  pcGeoDenied: 'Location is off. Move the map by hand.',
+  pcGeoFail: 'The map did not load. Type the address instead.',
   pcBanTitle: 'Your parcel is ready',
   pcBanNote: 'Collect it at the counter',
   pcPaySend: 'Continue to payment',
@@ -2189,6 +2584,66 @@ Object.assign(STR.en, {
   pcSplitKeep: 'Same bag, rename it',
 });
 Object.assign(STR.ta, {
+  dlvTitle: 'வீட்டிற்கு டெலிவரி',
+  dlvOpen: 'வரைபடத்தில் வழியைத் திற',
+  dlvDist: 'தூரம்',
+  dlvNoPin: 'இடம் குறிக்கப்படவில்லை — முகவரி மட்டும்',
+  dlvFar: 'வழக்கமான டெலிவரி எல்லைக்கு வெளியே.',
+  dlvFeeLbl: 'கட்டணம் \u20b9',
+  dlvMinsLbl: 'பயண நிமிடம்',
+  dlvSuggested: 'தூரத்திலிருந்து பரிந்துரை. நீங்களே மாற்றித் தட்டச்சு செய்யலாம்.',
+  dlvChargeLbl: 'டெலிவரி கட்டணம்',
+  dlvChargeOnLbl: 'கட்டணம் உள்ளது',
+  dlvChargeOffLbl: 'கட்டணம் இல்லை',
+  dlvChargeOffNote: 'இந்த பார்சலுக்கு டெலிவரி கட்டணம் இல்லை.',
+  dlvFeeAsk: 'கட்டணம் வரும் என்று வாடிக்கையாளருக்கு தெரிவிக்கப்பட்டது. தொகையை இடுங்கள்.',
+  addCart: 'ஆர்டரில் சேர்',
+  dlvSoon: 'விரைவில் தெரியவரும்',
+  dlvSoonNote: 'இப்போது ஆர்டருக்கு மட்டும் பணம் செலுத்துங்கள். டெலிவரி கட்டணத்தை ஊழியர்கள் நிர்ணயித்து விரைவில் இங்கே சேர்ப்பார்கள்.',
+  dlvAfterPay: 'பணம் செலுத்திய பின் டெலிவரி கட்டணம் சேர்க்கப்பட்டது · செலுத்த வேண்டியது',
+  dlvPartAdmin: 'பணம் செலுத்திய பின் கட்டணம். வாசலில் வாங்க வேண்டிய தொகை:',
+  dlvChargeDefLbl: 'டெலிவரி கட்டணம் · இயல்பு',
+  dlvFeeDefLbl: 'இயல்பு தொகை ₹',
+  dlvFeeDefSet: 'கட்டணம் இயக்கப்பட்ட ஒவ்வொரு டெலிவரிக்கும் இந்தத் தொகை சேர்க்கப்படும். தனி ஆர்டருக்கு கீழே மாற்றலாம்.',
+  dlvFeeDefZero: 'பூஜ்ஜியமாக இருந்தால், ஒவ்வொரு ஆர்டருக்கும் கீழே தனியாக கட்டணம் சேர்க்க வேண்டும்.',
+  dlvFeeDefUsed: 'இயல்பு தொகை.',
+  dlvChargeAllOn: 'அனைத்து டெலிவரிக்கும் கட்டணம்',
+  dlvChargeAllOff: 'டெலிவரி கட்டணம் இல்லை',
+  dlvWhereLbl: 'முகவரிக்கு டெலிவரி',
+  dlvPackedNow: 'பேக் செய்யப்பட்டது · விரைவில் புறப்படும்',
+  dlvPackedOut: 'பேக் செய்யப்பட்டது · புறப்பட தயார்',
+  dlvOutNow: 'டெலிவரிக்கு புறப்பட்டது',
+  dlvPassName: 'பார்சல் பெயர்',
+  upiClaimTitle: 'பணம் சரிபார்க்கப்பட காத்திருக்கிறது',
+  upiClaimNote: 'உங்கள் பணம் இன்னும் சரிபார்க்கப்படவில்லை. நீங்கள் ஏற்கனவே செலுத்திவிட்டால் இதை தவிர்க்கலாம் — விரைவில் உருதி செய்யப்படும்.',
+  dlvBikeNote: 'இருசக்கர வாகனத்திற்கான நேரம். பார்சல் புறப்பட்டபின் நேரம் எண்ணத் தொடங்கும்.',
+  dlvSetByYou: 'கவுண்டரில் நிர்ணயிக்கப்பட்டது.',
+  dlvSendOut: 'டெலிவரிக்கு அனுப்பு',
+  dlvOnRoad: 'வழியில் உள்ளது',
+  dlvIn: 'வந்து சேரும்',
+  dlvAnyMoment: 'இப்போது வந்துவிடும்',
+  dlvLateNote: 'வழக்கத்தை விட சற்று தாமதம்.',
+  dlvOver: 'தாமதம்',
+  pcBanTitleDoor: 'உங்கள் பார்சல் வழியில் உள்ளது',
+  pcBanNoteDoor: 'டெலிவரி நபர் உங்கள் முகவரிக்கு வருகிறார்',
+  dlvPinned: 'இடம் குறித்தது',
+  dlvTypedOnly: 'முகவரி மட்டும்',
+  dlvNoAddr: 'முகவரி தரப்படவில்லை',
+  pcHowTitle: 'எப்படிப் பெறுவீர்கள்?',
+  pcCollect: 'கவுண்டரில் பெற',
+  pcDoor: 'வீட்டிற்கு டெலிவரி',
+  pcAddrPh: 'வீட்டு எண், தெரு, அடையாளம்',
+  pcAddrNote: 'இந்த முகவரி பார்சலுடன் டெலிவரி நபருக்குச் செல்லும்.',
+  pcPinAdd: 'வரைபடத்தில் இடத்தைக் குறிக்க',
+  pcPinSet: 'இடம் குறிக்கப்பட்டது — மாற்ற தட்டவும்',
+  pcMapTitle: 'உங்கள் வீட்டு வாசலுக்கு வரைபடத்தை நகர்த்துங்கள்',
+  pcMapBack: 'பின்',
+  pcLocate: 'என் இருப்பிடம்',
+  pcUseSpot: 'இந்த இடம் சரி',
+  pcGeoLooking: 'வரைபடத்தைப் படிக்கிறது…',
+  pcGeoNone: 'இங்கே தெரு பெயர் இல்லை. குறி வேலை செய்யும்.',
+  pcGeoDenied: 'இருப்பிடம் அணைக்கப்பட்டுள்ளது. வரைபடத்தைக் கையால் நகர்த்துங்கள்.',
+  pcGeoFail: 'வரைபடம் ஏற்றப்படவில்லை. முகவரியைத் தட்டச்சு செய்யுங்கள்.',
   pcBanTitle: 'உங்கள் பார்சல் தயார்',
   pcBanNote: 'கவுண்டரில் பெற்றுக்கொள்ளுங்கள்',
   pcPaySend: 'பணம் செலுத்த தொடரவும்',
@@ -2415,6 +2870,8 @@ class Component extends DCLogic {
   state = {
     booting: true, lang: 'en', screen: 'hero', route: 'all',
     feedIds: [], feedIndex: 0, table: null, cart: [], sendArmed: false,
+    pcFulfil: 'collect', pcFulfilSet: false, pcAddr: '', pcPin: null, pcMapOpen: false, pcResolvedText: 'looking',
+    dlvEdit: {},
     skipTable: false, seatlessAsk: false, pulseAssign: false, pcCoach: false, tblCoach: false, ordCoach: false, addCoach: false, seatCoach: false, bellCoach: false, upiSent: false, coachCaret: '20px', coachLeft: null, paidArm: null, ordKind: 'all', pcKind: 'parcel', pcName: '', pcMobile: '', pcSplitAsk: false, linkCopied: false,
     sheet: null, adminTab: 'orders', fbSort: 'latest', fbOpenDish: null, fbDishOrder: 'cat', newSlotName: '',
     alerts: [], alertOver: 0, alertBell: false, atFooter: false,
@@ -2453,13 +2910,23 @@ class Component extends DCLogic {
        iPhone it dragged going up the list, because every frame costs a scrollTop
        write and a layout where the browser would compose the scroll off the main
        thread. Framed, the engine is still the only thing that scrolls at all. */
-    if (window.top !== window.self) document.documentElement.setAttribute('data-touch-engine', '1');
+    /* Never on iOS. bindGestures hands touch back to the platform there (the
+       engine cannot match compositor scrolling), so if the attribute were set
+       the rule above would forbid the platform from panning while the engine
+       declined to pan either — every pane frozen, which is what iPhone saw.
+       The attribute and the engine have to agree about who is scrolling. */
+    const iosTouch = /iP(hone|ad|od)/.test(navigator.userAgent) ||
+      (/Mac/.test(navigator.userAgent) && (navigator.maxTouchPoints || 0) > 1);
+    if (window.top !== window.self && !iosTouch) {
+      document.documentElement.setAttribute('data-touch-engine', '1');
+    }
     this.perfProbe();
     this.unsub = db.subscribe(() => {
       this.setState(s => ({ tick: s.tick + 1 }));
       // Every route into the store lands here — this device's own writes, another
       // phone's, and the realtime feed — so one hook catches all of them.
       this.scanAlerts();
+      this.stampDlvHouse();
     });
     // A staff home-screen icon carries its own grant, so this runs before
     // anything asks whether the panel is open.
@@ -2783,6 +3250,294 @@ class Component extends DCLogic {
     /* Longer than the interaction buzzes in buzz(): this one has to register
        through a pocket, and it is the only unprompted one a guest ever gets. */
     try { if (navigator.vibrate) navigator.vibrate([0, 160, 90, 160, 90, 240]); } catch (e) {}
+  }
+
+  /* ============================================================
+     DELIVERY PIN
+     Leaflet from the CDN, OpenStreetMap tiles, Nominatim for the
+     address. All three are free and keyless; none of them load
+     until a guest actually taps through to the map.
+     ============================================================ */
+  loadLeaflet() {
+    if (window.L) return Promise.resolve(window.L);
+    if (this._leafletP) return this._leafletP;
+    this._leafletP = new Promise((res, rej) => {
+      /* Both files, not just the script. Leaflet positions every tile with
+         classes from its stylesheet, so a map built before the CSS arrives
+         stacks all 20 tiles at the origin and paints an empty container —
+         the black rectangle. The script alone is not enough to start. */
+      let cssDone = false, jsDone = false;
+      const go = () => { if (cssDone && jsDone) res(window.L); };
+      const css = document.createElement('link');
+      css.rel = 'stylesheet';
+      css.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+      css.onload = () => { cssDone = true; go(); };
+      css.onerror = () => { cssDone = true; go(); };
+      document.head.appendChild(css);
+      const s = document.createElement('script');
+      s.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+      s.onload = () => { jsDone = true; go(); };
+      s.onerror = () => rej(new Error('leaflet'));
+      document.head.appendChild(s);
+      /* A phone on a bad connection should get the typed-address fallback
+         rather than a container that never resolves either way. */
+      setTimeout(() => { if (!window.L) rej(new Error('leaflet-timeout')); }, 12000);
+    });
+    return this._leafletP;
+  }
+
+  /* The node arrives from the template's ref; the map is built once against
+     it and torn down when the overlay closes, so reopening is a clean start
+     rather than a stale canvas sized to the previous viewport. */
+  pcMapMount(node) {
+    /* A null node means the overlay just closed. Leaflet keeps document-level
+       touch handlers alive for as long as its map object exists, and a map
+       whose element has been unmounted goes on swallowing touchmove — which is
+       what froze every scroller in the app on iOS. The map has to die with the
+       node, not merely lose sight of it. */
+    if (!node) { this.pcMapTeardown(); return; }
+    this._pcMapEl = node;
+    if (this._pcMap) return;
+    this.loadLeaflet().then(L => {
+      if (!this._pcMapEl || this._pcMap) return;
+      const st = this.state;
+      const start = st.pcPin || DELIVERY_ORIGIN;
+      const map = L.map(this._pcMapEl, { zoomControl: false, attributionControl: true })
+        .setView([start.lat, start.lng], st.pcPin ? 17 : 15);
+      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; OpenStreetMap',
+      }).addTo(map);
+      /* A small mark for the kitchen, so the guest can see how far out they are
+         before committing a pin the counter will have to refuse. */
+      L.circleMarker([DELIVERY_ORIGIN.lat, DELIVERY_ORIGIN.lng], {
+        radius: 6, color: '#9fd07f', weight: 2, fillColor: '#9fd07f', fillOpacity: .5,
+      }).addTo(map).bindTooltip(IDENTITY.name);
+      map.on('moveend', () => this.pcPinMoved());
+      this._pcMap = map;
+      /* Twice: once on the next frame, once after the overlay's fade. The
+         container is mid-animation on mount, so a single early measure gives
+         Leaflet the wrong size and it requests tiles for a viewport that is
+         not there. */
+      requestAnimationFrame(() => { try { map.invalidateSize(); } catch (e) {} });
+      setTimeout(() => { try { map.invalidateSize(); } catch (e) {} }, 260);
+      this.pcPinMoved();
+    }).catch(() => this.setState({ pcResolvedText: 'map-failed' }));
+  }
+
+  pcMapTeardown() {
+    if (this._pcMap) {
+      try { this._pcMap.remove(); } catch (e) {}
+      this._pcMap = null;
+    }
+    this._pcMapEl = null;
+    clearTimeout(this._pcGeoT);
+    /* Leaflet turns off text selection and image drag on the document while a
+       pan is in flight, and turns them back on at touchend. A map torn down
+       mid-drag — tapping Use this spot with a thumb still down — never gets
+       that touchend, so the undo happens here instead. */
+    if (window.L && window.L.DomUtil) {
+      try { window.L.DomUtil.enableTextSelection(); window.L.DomUtil.enableImageDrag(); } catch (e) {}
+    }
+    const de = document.documentElement.style;
+    de.removeProperty('user-select');
+    de.removeProperty('-webkit-user-select');
+  }
+
+  /* The address on the ticket, kept level with the address in the guest's
+     hands. It used to be written only by a send, so a guest who fixed a wrong
+     pin — or typed a landmark after ordering — changed nothing the counter
+     could see, and the rider drove to the old spot. Any edit now writes
+     through to the open ticket, debounced so a typed line is one write. */
+  syncDlv() {
+    clearTimeout(this._dlvT);
+    this._dlvT = setTimeout(() => {
+      const k = this.state.table;
+      if (!k || !/^U/.test(k)) return;
+      const o = db.state.orders[k];
+      if (!o || !(o.items || []).length) return;
+      const door = this.state.pcFulfil === 'door';
+      const addr = this.state.pcAddr.trim();
+      const pin = this.state.pcPin || null;
+      const prev = o.dlv || null;
+      /* Anything the counter has typed or stamped belongs to the counter, and an
+         address edit from this phone must not take it with it. The address and
+         the pin still write through — a rider on a wrong street is the whole
+         reason this function exists. */
+      const priced = !!(prev && (prev.outAt || prev.fee != null || prev.mins != null));
+      const same = door
+        ? prev && prev.mode === 'door' && prev.addr === addr
+          && JSON.stringify(prev.pin || null) === JSON.stringify(pin)
+        : !prev;
+      if (same) return;
+      db.patch(s => {
+        const t = s.orders[k];
+        if (!t) return;
+        /* Dropping the record is only ever the guest changing their mind about
+           delivery before the counter has acted. Once it is priced or on the
+           road, this phone's fulfilment toggle — which comes back from a reload
+           on collection — cannot delete the fee, the charge decision and the
+           departure stamp out from under the admin's balance. */
+        if (!door) { if (!priced) t.dlv = null; return; }
+        /* A bag already on the road keeps its departure stamp through an
+           address edit: the guest correcting a landmark has not un-sent it. */
+        const outAt = (prev && prev.outAt) || null;
+        /* The counter's own fee and travel time survive an address edit only
+           while the address is the same. Move the pin and the quote is stale,
+           so it goes back to being derived. */
+        /* — unless the counter already priced this bag or sent it out, in which
+           case its figures stand: a re-derived quote would silently rewrite a
+           balance the guest has already been shown. */
+        const moved = !priced && (!prev || JSON.stringify(prev.pin || null) !== JSON.stringify(pin));
+        t.dlv = {
+          mode: 'door', addr, pin, outAt,
+          fee: moved ? null : (prev && prev.fee != null ? prev.fee : null),
+          mins: moved ? null : (prev && prev.mins != null ? prev.mins : null),
+          /* Whether this bag is charged for is not a property of the address:
+             moving the pin drops the amount, never the decision. */
+          charge: prev && prev.charge != null ? !!prev.charge : dlvChargeDef(),
+          // Carried, or the counter's charge decision would be swept again.
+          houseAt: (prev && prev.houseAt) || 0,
+        };
+      });
+    }, 600);
+  }
+
+  /* Reverse geocoding is rate-limited to one call a second, and a pan fires
+     dozens of moveends, so the lookup waits for the map to settle. */
+  pcPinMoved() {
+    if (!this._pcMap) return;
+    this.setState({ pcResolvedText: 'looking' });
+    clearTimeout(this._pcGeoT);
+    this._pcGeoT = setTimeout(() => this.pcReverse(), 700);
+  }
+
+  pcReverse() {
+    if (!this._pcMap) return;
+    const c = this._pcMap.getCenter();
+    const seq = (this._pcGeoSeq = (this._pcGeoSeq || 0) + 1);
+    const url = 'https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=18&lat='
+      + c.lat.toFixed(6) + '&lon=' + c.lng.toFixed(6);
+    fetch(url, { headers: { 'Accept-Language': this.state.lang === 'ta' ? 'ta,en' : 'en' } })
+      .then(r => r.json())
+      .then(d => {
+        if (seq !== this._pcGeoSeq) return;
+        this.setState({ pcResolvedText: (d && d.display_name) || 'none' });
+      })
+      .catch(() => { if (seq === this._pcGeoSeq) this.setState({ pcResolvedText: 'none' }); });
+  }
+
+  /* Counter-entered figures for one ticket. Blank clears the override rather
+     than storing a zero, so an emptied box goes back to the suggestion
+     instead of promising a free delivery. */
+  setDlvNum(k, field, raw) {
+    const s = String(raw).replace(/[^0-9]/g, '');
+    const v = s === '' ? null : Math.max(0, Math.min(9999, parseInt(s, 10)));
+    db.patch(st2 => {
+      const t = st2.orders[k];
+      if (t && t.dlv) t.dlv[field] = v;
+    });
+  }
+
+  /* The house switch and amount live on this device (floor is not carried by
+     the server), and a door bag is opened on the guest's phone, which knows
+     neither. So the signed-in counter stamps the rule onto any bag that has not
+     had it yet; houseAt marks that it has, so a bag staff then switched by hand
+     is never swept back. Without this, a bag placed after the default was set
+     arrived uncharged on both screens until someone toggled it. */
+  stampDlvHouse() {
+    if (!this.staffMode()) return;
+    const on = dlvChargeDef(), fee = dlvFeeDef();
+    const pending = Object.keys(db.state.orders || {}).filter(k => {
+      const t = db.state.orders[k];
+      return t && t.dlv && t.dlv.mode === 'door' && !t.dlv.houseAt;
+    });
+    if (!pending.length) return;
+    db.patch(st2 => {
+      pending.forEach(k => {
+        const t = st2.orders[k];
+        if (!t || !t.dlv) return;
+        /* An amount, a departure stamp, a charge flag or money already taken all
+           mean this bag was decided before the sweep existed — every bag in
+           flight predates houseAt, so an unconditional sweep would null a fee
+           the counter had typed and drop the guest's total by it. Mark them
+           decided and leave the figures alone. */
+        const decided = t.dlv.fee != null || t.dlv.outAt || t.dlv.charge
+          || t.paidAmt != null || t.paid;
+        t.dlv.houseAt = Date.now();
+        if (decided) return;
+        t.dlv.charge = on;
+        if (on && fee) t.dlv.fee = fee;
+      });
+    });
+  }
+
+  /* The house amount, kept beside the house switch. Blank clears it rather than
+     storing a zero, so an emptied box goes back to pricing bag by bag. */
+  setDlvFeeDef(raw) {
+    const str = String(raw).replace(/[^0-9]/g, '');
+    const v = str === '' ? null : Math.max(0, Math.min(9999, parseInt(str, 10)));
+    const was = dlvFeeDef();
+    db.patch(st2 => {
+      st2.floor = { ...(st2.floor || {}), dlvFeeDef: v };
+      /* The amount is written onto each live door bag, not just kept as a house
+         setting. floor is a per-device blob — only the table count is carried by
+         the server — so a default read at bill time showed on the counter's own
+         phone and on nobody else's, and the guest's total stayed short by
+         exactly the fee. A bag's own typed amount is left alone: only unpriced
+         bags and ones still carrying the old default follow the new one. */
+      Object.keys(st2.orders || {}).forEach(k => {
+        const t = st2.orders[k];
+        if (!t || !t.dlv || t.dlv.mode !== 'door' || !t.dlv.charge) return;
+        if (t.dlv.fee == null || (was && t.dlv.fee === was)) t.dlv.fee = v;
+      });
+    });
+  }
+
+  /* Charging for delivery is off until the counter says otherwise, and turning
+     it off again clears the amount with it — a stored fee under a switched-off
+     charge is the one state that would total differently from what it says. */
+  /* One switch over every door bag at once, plus the default new ones inherit.
+     Turning it off clears the amounts with it, for the same reason the
+     per-ticket switch does. */
+  toggleDlvChargeAll() {
+    const on = !dlvChargeDef();
+    this.chime('toggle');
+    db.patch(s => {
+      s.floor = { ...(s.floor || {}), dlvChargeDef: on };
+      Object.keys(s.orders || {}).forEach(k2 => {
+        const t2 = s.orders[k2];
+        if (!t2 || !t2.dlv || t2.dlv.mode !== 'door') return;
+        t2.dlv.charge = on;
+        // The house amount lands on the ticket itself, where every phone reads it.
+        if (!on) t2.dlv.fee = null;
+        else if (t2.dlv.fee == null && dlvFeeDef()) t2.dlv.fee = dlvFeeDef();
+        t2.dlv.houseAt = Date.now();
+      });
+    });
+  }
+
+  toggleDlvCharge(k) {
+    this.chime('toggle');
+    db.patch(st2 => {
+      const t = st2.orders[k];
+      if (!t || !t.dlv) return;
+      const on = !t.dlv.charge;
+      t.dlv.charge = on;
+      if (!on) t.dlv.fee = null;
+      else if (t.dlv.fee == null && dlvFeeDef()) t.dlv.fee = dlvFeeDef();
+      t.dlv.houseAt = Date.now();
+    });
+  }
+
+  /* "in 12 min", then "any moment", then how late it is. Riders are held up,
+     and a countdown that sticks at zero tells the counter nothing. */
+  dlvEtaLabel(outAt, mins) {
+    const L = this.L();
+    const left = Math.round((outAt + (mins || 0) * 60000 - Date.now()) / 60000);
+    if (left > 0) return (L.dlvIn || STR.en.dlvIn) + ' ' + left + ' min';
+    if (left > -3) return L.dlvAnyMoment || STR.en.dlvAnyMoment;
+    return (-left) + ' min ' + (L.dlvOver || STR.en.dlvOver);
   }
 
   parcelStillReady() {
@@ -5414,7 +6169,22 @@ class Component extends DCLogic {
      app-local — the orders table carries no column for it, so a Supabase refresh
      drops it. `at` (opened_at) survives, so fall back to that plus the longest
      prep time in the bag: the same number the guest was promised, recomputed. */
+  /* Two different questions. The pass asks when the food is packed; the guest
+     asks when it reaches them, which for a door order is the packing time plus
+     the drive. Splitting them stops the kitchen board from quietly running
+     fifteen minutes slow on every delivery ticket. */
   etaAtOf(o, key) {
+    const base = this.etaKitchenAt(o, key);
+    if (!base || !o || !o.dlv || o.dlv.mode !== 'door') return base;
+    const mins = dlvMinsOf(o);
+    if (!mins) return base;
+    /* Once the bag is actually on the road the departure time is the honest
+       anchor — a kitchen estimate from twenty minutes ago is not. */
+    const out = dlvOutOf(o);
+    return out ? out + mins * 60000 : base + mins * 60000;
+  }
+
+  etaKitchenAt(o, key) {
     if (!o) return 0;
     if (o.readyAt) return o.readyAt;
     /* The promise the guest was actually shown, kept on their own phone. A
@@ -5729,6 +6499,20 @@ class Component extends DCLogic {
     const p = {};
     if (!this.state.pcName.trim() && sl.name) p.pcName = sl.name;
     if (!this.state.pcMobile.trim() && sl.mobile) p.pcMobile = sl.mobile;
+    /* The delivery answer comes back too. It lives on the ticket, not in the
+       form, and a reload that forgot it put the card back to "Collect at
+       counter" — then the next round wrote that fresh answer over a real
+       address, wiping the pin the rider was driving to. */
+    if (!this.state.pcFulfilSet) {
+      const o = db.state.orders[sl.id];
+      const d = o && o.dlv;
+      if (d && d.mode === 'door') {
+        p.pcFulfil = 'door';
+        p.pcFulfilSet = true;
+        if (!this.state.pcAddr.trim() && d.addr) p.pcAddr = d.addr;
+        if (!this.state.pcPin && d.pin) p.pcPin = d.pin;
+      }
+    }
     if (Object.keys(p).length) this.setState(p);
   }
 
@@ -5955,6 +6739,33 @@ class Component extends DCLogic {
         if (ex) ex.qty += nl.qty; else cur.items.push(nl); // append, never replace
       });
       cur.at = Date.now();
+      /* Where the bag is going, written onto the ticket rather than the slot:
+         the counter reads it beside the food, and a guest who switches to
+         collection on a second round clears it rather than leaving a stale
+         address for a rider to drive to. */
+      /* Only when the guest actually answered. An untouched form defaults to
+         collection, and treating that default as a decision is what let a
+         second round silently delete an address nobody had changed. */
+      if (/^U/.test(key) && (this.state.pcFulfilSet || this.state.pcFulfil === 'door')) {
+        if (this.state.pcFulfil !== 'door') {
+          cur.dlv = null;
+        } else {
+          const prev = cur.dlv || {};
+          const pin = this.state.pcPin || null;
+          const moved = JSON.stringify(prev.pin || null) !== JSON.stringify(pin);
+          cur.dlv = {
+            mode: 'door',
+            addr: this.state.pcAddr.trim(),
+            pin,
+            // The counter's figures survive a reorder to the same address.
+            fee: moved ? null : (prev.fee != null ? prev.fee : null),
+            mins: moved ? null : (prev.mins != null ? prev.mins : null),
+            outAt: prev.outAt || null,
+            // Only the counter sets this; a reorder must not clear it.
+            charge: !!prev.charge,
+          };
+        }
+      }
       /* A second round on a table that was already served makes the ticket
          pending again. `sent` per line is what survives the merge — a single
          `served` flag on the order got carried over by it, so new food went
@@ -6457,15 +7268,42 @@ class Component extends DCLogic {
     this.setState({ screen: 'carousels', sheet: null });
   }
 
+  /* What delivery will cost the bag the guest is building. The ticket's own
+     figure once it has one; until then the house rule, so the charge is on the
+     bill while the guest is deciding rather than appearing after they pay. */
+  dlvDue(order) {
+    const rec = order && order.dlv && order.dlv.mode === 'door' ? order.dlv : null;
+    if (rec) return dlvChargeOn(order) ? (rec.fee != null ? rec.fee : 0) : 0;
+    if (this.state.pcFulfil !== 'door') return 0;
+    return dlvChargeDef() ? dlvFeeDef() : 0;
+  }
+
+  // Is delivery being charged at all, ticket first and the house rule after.
+  dlvDueOn(order) {
+    const rec = order && order.dlv && order.dlv.mode === 'door' ? order.dlv : null;
+    if (rec) return dlvChargeOn(order);
+    return this.state.pcFulfil === 'door' && dlvChargeDef();
+  }
+
   // Running bill for the seated table: sent items plus whatever is still in the cart.
-  tableBill() {
-    const order = this.state.table ? db.state.orders[this.state.table] : null;
-    const sent = order ? order.items.reduce((n, i) => n + (i.price || 0) * i.qty, 0) : 0;
+  tableBill(key) {
+    const k = key === undefined ? this.state.table : key;
+    const order = k ? db.state.orders[k] : null;
+    /* The delivery charge rides with the bill the guest is shown and pays by
+       UPI. Left out, the counter's total and the amount claimed differed by
+       exactly the fee on every door order. */
+    const sent = order ? order.items.reduce((n, i) => n + (i.price || 0) * i.qty, 0) + dlvFeeOf(order) : 0;
     const pending = this.state.cart.reduce((n, l) => {
       const d = DISHES.find(x => x.id === l.id);
       return n + (d ? this.priceOf(d) * l.qty : 0);
     }, 0);
-    return sent + pending;
+    /* No delivery record yet — a bag being built, or one the counter has not
+       stamped — so the house rule stands in. Without it the total jumped by the
+       fee the moment staff touched the ticket, which is what the guest saw as
+       the charge appearing only after they had paid. */
+    const noRec = !(order && order.dlv && order.dlv.mode === 'door');
+    const ahead = noRec && (!k || /^U/.test(String(k))) ? this.dlvDue(null) : 0;
+    return sent + pending + ahead;
   }
 
   // Step the staff rating queue; the order clears only after the last dish.
@@ -6740,6 +7578,21 @@ class Component extends DCLogic {
     const lift = () => this.lift();
     const cur = this.currentDish();
     const rateDish = st.sheet === 'staffRate' && !st.rateSvc ? DISHES.find(d => d.id === st.rateQueue[st.rateIdx]) : null;
+    /* The bag belongs to the device, not to whatever is currently selected. A
+       guest who is dining and also taking food home switches between the table
+       number and the parcel tab, and reading the bag off st.table meant the
+       timer vanished the moment they picked a table — the food was still being
+       packed, the strip just stopped saying so. So: the selected slot if it is a
+       bag, otherwise this device's own live bag if it has one. */
+    const pcKey = st.table && /^U/.test(st.table) ? st.table
+      : ((this.slots().find(sl => /^U/.test(sl.id) && !sl.staff && sl.dev === this.deviceId()
+          && ((db.state.orders[sl.id] || {}).items || []).length) || {}).id || null);
+    /* The bag on screen, not just the selected slot. All of the figures below
+       used to read st.table alone, so a guest whose selection had lapsed — a
+       reload, a released table — was shown their own bag in the pass with a
+       total of zero beside it, and a delivery charge typed after that never
+       appeared on their bill however often the counter set it. */
+    const billKey = st.table && db.state.orders[st.table] ? st.table : (pcKey || st.table);
     const cartLines = st.cart.map(l => {
       const d = DISHES.find(x => x.id === l.id);
       const price = this.priceOf(d);
@@ -6752,7 +7605,20 @@ class Component extends DCLogic {
         soldOut: !this.availOf(d),
       };
     });
-    const cartTotal = st.cart.reduce((n, l) => n + this.priceOf(DISHES.find(x => x.id === l.id)) * l.qty, 0);
+    const cartItems = st.cart.reduce((n, l) => n + this.priceOf(DISHES.find(x => x.id === l.id)) * l.qty, 0);
+    /* Delivery is its own line in the order sheet, not a difference the guest
+       has to find between the items and the total. */
+    // The same bag the pass reads: a seatless parcel is keyed by pcKey, so an
+    // st.table lookup left cartSent false and charged delivery again per round.
+    const cartTicket = billKey ? db.state.orders[billKey] : null;
+    /* Delivery rides on the first round only: it is one charge per bag, and by
+       the second round it is already inside the balance above. With an empty
+       cart it must not show at all — TOTAL read ₹30 beside "nothing added yet"
+       while the real bill sat at ₹450 in the balance card. */
+    const cartSent = cartTicket ? ((cartTicket.items || []).length > 0) : false;
+    const cartDlvOn = !cartSent && !!st.cart.length && this.dlvDueOn(cartTicket);
+    const cartDlvFee = cartDlvOn ? this.dlvDue(cartTicket) : 0;
+    const cartTotal = cartItems + cartDlvFee;
     /* Sent lines and cart lines merged by dish, because a guest who ordered a
        dosa twice in two rounds is holding one bill for two dosas, not two bills. */
     const billMap = new Map();
@@ -6762,22 +7628,22 @@ class Component extends DCLogic {
       if (cur) { cur.qty += qty; cur.amt += price * qty; }
       else billMap.set(k, { name: d ? this.nameOf(d) : id, qty, amt: price * qty });
     };
-    const billOrder = st.table ? db.state.orders[st.table] : null;
+    const billOrder = billKey ? db.state.orders[billKey] : null;
     (billOrder ? billOrder.items : []).forEach(i => addBill(i.id, i.qty, i.price || 0));
     st.cart.forEach(l => addBill(l.id, l.qty, this.priceOf(DISHES.find(x => x.id === l.id))));
     const billRows = [...billMap.values()].map(r => ({ name: r.name, qty: '\u00d7' + r.qty, amount: money(r.amt) }));
+    /* The charge is a named row on the guest's own bill, not something folded
+       into a total. It appears before anyone has priced it too, because "a
+       delivery charge is coming" is exactly what a guest needs to know at the
+       moment they are deciding to pay. */
+    if (this.dlvDueOn(billOrder)) billRows.push({
+      name: L.dlvChargeLbl || STR.en.dlvChargeLbl,
+      qty: '',
+      amount: this.dlvDue(billOrder) ? money(this.dlvDue(billOrder)) : (L.dlvSoon || STR.en.dlvSoon),
+    });
     /* The countdown is an estimate that runs out on its own and then waits: it
        never flips itself to ready, because only the counter knows whether the
        bag is actually packed. */
-    /* The bag belongs to the device, not to whatever is currently selected. A
-       guest who is dining and also taking food home switches between the table
-       number and the parcel tab, and reading the bag off st.table meant the
-       timer vanished the moment they picked a table — the food was still being
-       packed, the strip just stopped saying so. So: the selected slot if it is a
-       bag, otherwise this device's own live bag if it has one. */
-    const pcKey = st.table && /^U/.test(st.table) ? st.table
-      : ((this.slots().find(sl => /^U/.test(sl.id) && !sl.staff && sl.dev === this.deviceId()
-          && ((db.state.orders[sl.id] || {}).items || []).length) || {}).id || null);
     const pcOrder = pcKey ? db.state.orders[pcKey] : null;
     // Read off the slot, not off state: the slot is what survives a reload.
     const pcKind = pcKey ? ((this.slots().find(x => x.id === pcKey) || {}).kind || st.pcKind) : null;
@@ -6785,8 +7651,8 @@ class Component extends DCLogic {
     /* Read off whichever ticket the guest is on, not just a parcel one: a seated
        table can be part paid too, and the QR must ask for the balance there as
        well. (paid: true is the pre-amount shape.) */
-    const myTicket = st.table ? db.state.orders[st.table] : null;
-    const pcTot = this.tableBill();
+    const myTicket = billKey ? db.state.orders[billKey] : null;
+    const pcTot = this.tableBill(billKey);
     const pcSettled = myTicket ? (myTicket.paidAmt != null ? myTicket.paidAmt : (myTicket.paid ? pcTot : 0)) : 0;
     const pcDue = Math.max(0, pcTot - pcSettled);
     /* A claim carries the amount it was made for, not just a timestamp. Without
@@ -6805,9 +7671,19 @@ class Component extends DCLogic {
       ? (myTicket.claimTot != null ? myTicket.claimTot : pcTot) : 0;
     const pcClaim = Math.max(0, Math.min(pcDue, pcClaimTot - pcSettled));
     const pcAsk = Math.max(0, pcDue - pcClaim);
-    // Nothing new owed but a claim outstanding: the only reason to open an app
-    // again is that the earlier transfer did not land, so it asks for that.
-    const askAmt = pcAsk > 0 ? pcAsk : pcDue;
+    /* Only the counter's confirmation reduces what the app is opened for. A
+       claim is the guest's word that a transfer was sent, so the second tap —
+       which exists for a first attempt that did not land — asks for the full
+       unconfirmed balance, not the sliver added since the claim was made. */
+    const askAmt = pcDue;
+    /* Two things the guest is owed an explanation for. Either the counter has
+       said it will charge and not yet said how much, or it priced the delivery
+       after the money was already sent — in which case what they paid stays
+       credited and only the difference is asked for, which is the same figure
+       the counter and the rider are both looking at. */
+    const dlvFeeNow = myTicket ? dlvFeeOf(myTicket) : 0;
+    const dlvSoonShow = !!(myTicket && dlvFeeSoonOf(myTicket));
+    const dlvAfterPay = dlvFeeNow > 0 && pcSettled > 0 && pcDue > 0 && Math.abs(pcDue - dlvFeeNow) < 0.5;
     const pcLive = !!(pcOrder && (pcOrder.items || []).length);
     const pcChosen = !!st.skipTable && st.pcKind === 'parcel';
     // The bill number rides in the UPI note so the transfer and the paper slip
@@ -6829,6 +7705,14 @@ class Component extends DCLogic {
     // same row staff are reading.
     const pcSlotLabel = String(pcSlotNow.label || pcSlotNow.id || pcKey || '').trim();
     const passBillNo = String(pcSlotNow.bill || billNo || '').trim();
+    const pcIsDoor = !!(pcOrder && pcOrder.dlv && pcOrder.dlv.mode === 'door');
+    const pcDoorOut = !!dlvOutOf(pcOrder);
+    const pcDoorLeft = pcDoorOut
+      ? Math.round((dlvOutOf(pcOrder) + dlvMinsOf(pcOrder) * 60000 - Date.now()) / 60000)
+      : 0;
+    const pcDoorEta = !pcDoorOut ? ''
+      : pcDoorLeft > 0 ? (L.dlvIn || STR.en.dlvIn) + ' ' + pcDoorLeft + ' min'
+      : (L.dlvAnyMoment || STR.en.dlvAnyMoment);
     const pcEtaAt = this.etaAtOf(pcOrder, pcKey);
     const pcMins = pcEtaAt ? Math.ceil((pcEtaAt - Date.now()) / 60000) : 0;
     /* "A little longer than usual" is a late notice, not a default: it waits for a
@@ -6926,10 +7810,22 @@ class Component extends DCLogic {
     });
     const orderRows = orderKeys.map(k => {
       const o = db.state.orders[k];
-      const total = o.items.reduce((n, i) => n + i.price * i.qty, 0);
+      /* The delivery charge is part of what the counter has to take, so it
+         belongs in the total the paid/due arithmetic runs on — not bolted on
+         as a display line that settlement would quietly ignore. A counter
+         figure wins over the derived one; a null means nobody has overridden. */
+      const door = !!(o.dlv && o.dlv.mode === 'door');
+      const quote = door ? dlvQuote(o.dlv.pin) : null;
+      const dlvFee = dlvFeeOf(o);
+      const dlvMins = dlvMinsOf(o);
+      const total = o.items.reduce((n, i) => n + i.price * i.qty, 0) + dlvFee;
       const outstanding = o.items.reduce((n, i) => n + (i.qty - (i.sent || 0)), 0);
       const parcel = /^U/.test(k);
       const rowKind = parcel ? ((this.slots().find(x => x.id === k) || {}).kind || 'parcel') : 'table';
+      /* Signed out, guest_mobile is revoked and every slot reads null, so the
+         row simply has no number to offer rather than a dead link. */
+      const dlvTelRaw = door ? String((this.slots().find(x => x.id === k) || {}).mobile || '').trim() : '';
+      const dlvTel = dlvTelRaw ? 'tel:' + dlvTelRaw.replace(/[^0-9+]/g, '') : '';
       /* Settlement is an amount, not a flag. A bag paid for at the counter and
          then added to is not a paid ticket, and the old boolean said it was —
          staff handed over a second round for free. Comparing what was taken
@@ -6961,19 +7857,98 @@ class Component extends DCLogic {
         ring: outstanding ? 'rgba(240,160,60,.14)'
           : parcel && !clear ? 'rgba(212,103,74,.34)' : 'rgba(159,208,127,.22)',
         isParcel: parcel, isTable: !parcel,
+        /* Door delivery, for the person carrying the bag. The pin is preferred
+           over the typed address because coordinates cannot be misread; the
+           text is still shown, since a rider standing on the street reads
+           "blue gate opposite the school" better than a map does. A directions
+           link rather than a search one — the rider wants the route, not a
+           place card — and it opens the installed Maps app on both phones. */
+        dlvShow: door,
+        dlvAddr: (o.dlv && o.dlv.addr) || L.dlvNoAddr,
+        dlvPinNote: o.dlv && o.dlv.pin ? L.dlvPinned : L.dlvTypedOnly,
+        dlvPinColor: o.dlv && o.dlv.pin ? '#9fd07f' : '#c9a36a',
+        /* Distance is stated, never editable: it comes from the pin, and a
+           counter that disagrees with it should move the money instead. */
+        dlvDistText: quote ? quote.km.toFixed(1) + ' km' : L.dlvNoPin,
+        dlvDistColor: quote && quote.far ? '#e0a83a' : '#8d8479',
+        dlvFarNote: quote && quote.far ? L.dlvFar : '',
+        dlvFarShow: !!(quote && quote.far),
+        dlvFeeVal: o.dlv && o.dlv.fee != null ? String(o.dlv.fee) : '',
+        dlvFeeHint: dlvFeeDef() ? String(dlvFeeDef()) : quote ? String(quote.fee) : '0',
+        /* Typed figures only. Showing the derived travel time as the field's
+           value made it uneditable: clearing the box wrote null, the fallback
+           put the same number straight back, and the counter could never get
+           rid of it. The suggestion belongs in the placeholder, like the fee. */
+        dlvMinsVal: o.dlv && o.dlv.mins != null ? String(o.dlv.mins) : '',
+        dlvMinsHint: String(quote ? quote.mins : DELIVERY.blindMins),
+        setDlvFee: e => this.setDlvNum(k, 'fee', e.target.value),
+        setDlvMins: e => this.setDlvNum(k, 'mins', e.target.value),
+        /* Whether the counter is looking at its own number or the app's. Staff
+           asked for this: an untouched suggestion and a deliberate price read
+           identically otherwise, and only one of them is a decision. */
+        /* Three states, because they are three different jobs: nothing to
+           collect, a figure the counter chose, or a promise the guest has
+           already been shown and nobody has priced yet. */
+        dlvFeeNote: !door ? '' : !dlvChargeOn(o) ? L.dlvChargeOffNote
+          : o.dlv.fee != null ? L.dlvSetByYou
+          : dlvFeeDef() ? (L.dlvFeeDefUsed || STR.en.dlvFeeDefUsed) : L.dlvFeeAsk,
+        dlvChargeState: dlvChargeOn(o) ? L.dlvChargeOnLbl : L.dlvChargeOffLbl,
+        dlvChargeInk: dlvChargeOn(o) ? '#9fd07f' : '#6f665d',
+        dlvChargeBg: dlvChargeOn(o) ? 'rgba(127,174,99,.42)' : 'rgba(255,255,255,.07)',
+        dlvChargeKnob: dlvChargeOn(o) ? '23px' : '3px',
+        toggleDlvCharge: () => this.toggleDlvCharge(k),
+        // The quote stays a suggestion in the box rather than a figure on a bill.
+        dlvFeeOff: !dlvChargeOn(o),
+        // A dead box must look dead: at the pass the switch is small and the field is not.
+        dlvFeeInk: dlvChargeOn(o) ? '#f0e8dc' : '#6f665d',
+        dlvFeeBg: dlvChargeOn(o) ? 'rgba(255,255,255,.05)' : 'rgba(255,255,255,.015)',
+        dlvFeeEdge: dlvChargeOn(o) ? 'rgba(240,160,60,.16)' : 'rgba(240,160,60,.07)',
+        dlvPartShow: door && dlvFee > 0 && settled > 0 && due > 0,
+        dlvPartText: L.dlvPartAdmin,
+        dlvPartAmt: money(due),
+        /* Out for delivery replaces handover: a door bag is not finished when
+           it leaves the counter, it is finished when it arrives. The clock the
+           guest sees starts from this press. */
+        dlvOutAt: dlvOutOf(o),
+        dlvEtaText: !dlvOutOf(o) ? '' : this.dlvEtaLabel(dlvOutOf(o), dlvMins),
+        /* The number the guest left, dialled from the card. The counter rings
+           a door order far more often than a collect one — the lane is wrong,
+           the gate is locked, nobody answers — so it sits with the address
+           rather than three screens away on the floor display. */
+        dlvTel: dlvTel,
+        dlvTelShow: !!dlvTel,
+        dlvTelLabel: dlvTel ? '\u2706 ' + dlvTelRaw : '',
+        dlvMapUrl: !o.dlv ? '#'
+          : o.dlv.pin
+            ? 'https://www.google.com/maps/dir/?api=1&destination=' + o.dlv.pin.lat + ',' + o.dlv.pin.lng
+            : 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(o.dlv.addr || ''),
         /* A bag goes out whole, so per-portion bumping is the wrong shape for a
            parcel: one action marks the lot, and tapping it again undoes a
            mis-press the same way the table lines do. */
-        readyLabel: o.ready ? L.parcelNotReady : L.parcelReady,
-        readyColor: o.ready ? '#9fd07f' : '#1a1005',
-        readyBg: o.ready ? 'rgba(159,208,127,.12)' : 'linear-gradient(180deg, #ffc27a, #f0a03c)',
+        /* For a door bag the departure stamp is the state, not `ready`. A row
+           flagged ready without a stamp — bagged by the kitchen before that
+           press was reserved for dispatch — read as "On the road" here, so the
+           counter's dispatch press cleared it instead of sending it. Reading the
+           stamp puts that row back on the dispatch press. */
+        readyLabel: door
+          ? (dlvOutOf(o) ? L.dlvOnRoad : L.dlvSendOut)
+          : (o.ready ? L.parcelNotReady : L.parcelReady),
+        readyColor: (door ? !!dlvOutOf(o) : o.ready) ? '#9fd07f' : '#1a1005',
+        readyBg: (door ? !!dlvOutOf(o) : o.ready) ? 'rgba(159,208,127,.12)' : 'linear-gradient(180deg, #ffc27a, #f0a03c)',
         toggleReady: () => {
-          this.chime(o.ready ? 'back' : 'bell');
+          const on = door ? !!dlvOutOf(o) : o.ready;
+          this.chime(on ? 'back' : 'bell');
           db.patch(st2 => {
             const t = st2.orders[k];
             if (!t) return;
-            t.ready = !o.ready;
-            (t.items || []).forEach(i => { i.sent = o.ready ? 0 : i.qty; });
+            t.ready = !on;
+            /* The moment the bag leaves, so the guest's countdown measures the
+               drive rather than the kitchen. Undoing the press clears it —
+               a stale departure time is worse than none. */
+            if (door) t.dlv = on
+              ? { ...t.dlv, outAt: null }
+              : { ...t.dlv, outAt: Date.now(), mins: t.dlv.mins != null ? t.dlv.mins : dlvMinsOf(o) };
+            (t.items || []).forEach(i => { i.sent = on ? 0 : i.qty; });
           });
         },
         /* Three states, because a part-paid ticket is the one staff must not
@@ -7268,14 +8243,19 @@ class Component extends DCLogic {
        rather than hunting the ticket list for U-keys. */
     const tvParcels = tvKeys.filter(k => kindOf(k) === 'parcel').map(k => {
       const o = db.state.orders[k];
-      const tot = (o.items || []).reduce((n, i) => n + (i.price || 0) * i.qty, 0);
+      const tot = (o.items || []).reduce((n, i) => n + (i.price || 0) * i.qty, 0) + dlvFeeOf(o);
       const settled = o.paidAmt != null ? o.paidAmt : (o.paid ? tot : 0);
       const due = Math.max(0, tot - settled);
-      const etaAt = this.etaAtOf(o, k);
+      const etaAt = this.etaKitchenAt(o, k);
       const mins = etaAt ? Math.ceil((etaAt - nowMs) / 60000) : 0;
       const sl = this.slots().find(x => x.id === k) || {};
       const armed = st.tvArm === k;
       const units = (o.items || []).reduce((n, i) => n + i.qty, 0);
+      const door = !!(o.dlv && o.dlv.mode === 'door');
+      const fee = dlvFeeOf(o);
+      const out = dlvOutOf(o);
+      const dlvLeft = out ? Math.round((out + dlvMinsOf(o) * 60000 - nowMs) / 60000) : 0;
+      const dlvLeftTxt = !out ? '' : dlvLeft > 0 ? dlvLeft + ' min' : L.dlvAnyMoment;
       return {
         title: this.keyLabel(k),
         /* The guest's name heads the card, because it is what gets called across
@@ -7283,6 +8263,54 @@ class Component extends DCLogic {
         who: sl.name || (L.pcLbl + (sl.num ? ' ' + sl.num : '')),
         orderNo: L.pcLbl + (sl.num ? ' ' + sl.num : ''),
         itemLine: units + (units === 1 ? ' item' : ' items'),
+        /* What is actually in the bag. A name and a count is not something a
+           parcel can be checked against, and this is the screen the person
+           packing it is standing in front of. */
+        lines: (o.items || []).map(i => {
+          const d = DISHES.find(x => x.id === i.id);
+          return {
+            label: d ? this.nameOf(d) : i.id,
+            qty: '\u00d7' + i.qty,
+            amount: money((i.price || 0) * i.qty),
+          };
+        }),
+        /* The address on the wall as well as in the admin panel: the bag is
+           packed here, and whoever carries it out reads the lane off this
+           screen rather than walking back to a phone. */
+        dlvShow: door,
+        dlvAddr: door ? ((o.dlv.addr || '').trim() || L.dlvNoAddr) : '',
+        dlvPinNote: door ? (o.dlv.pin ? L.dlvPinned : L.dlvTypedOnly) : '',
+        dlvPinColor: door && o.dlv.pin ? '#9fd07f' : '#c9a36a',
+        dlvFeeText: !door ? ''
+          : dlvFeeSoonOf(o) ? L.dlvChargeLbl + ' \u00b7 ' + L.dlvSoon
+          : fee > 0 ? L.dlvChargeLbl + ' ' + money(fee)
+          : L.dlvChargeOffLbl,
+        dlvFeeColor: dlvFeeSoonOf(o) ? '#e0a83a' : '#8d8479',
+        // Only once it is on the road; a drive time before that is not a fact.
+        dlvEtaShow: !!out,
+        dlvEta: out ? this.dlvEtaLabel(out, dlvMinsOf(o)) : '',
+        dlvChargeState: dlvChargeOn(o) ? L.dlvChargeOnLbl : L.dlvChargeOffLbl,
+        dlvChargeInk: dlvChargeOn(o) ? '#9fd07f' : '#6f665c',
+        dlvChargeBg: dlvChargeOn(o) ? 'rgba(127,174,99,.42)' : 'rgba(255,255,255,.07)',
+        dlvChargeKnob: dlvChargeOn(o) ? '19px' : '3px',
+        toggleDlvCharge: () => this.toggleDlvCharge(k),
+        dlvFeeVal: o.dlv && o.dlv.fee != null ? String(o.dlv.fee) : '',
+        dlvFeeOff: !dlvChargeOn(o),
+        dlvFeeHint: dlvFeeDef() ? String(dlvFeeDef())
+          : door && dlvQuote(o.dlv.pin) ? String(dlvQuote(o.dlv.pin).fee) : '0',
+        dlvFeeInk: dlvChargeOn(o) ? '#f0e8dc' : '#6f665c',
+        dlvFeeBg: dlvChargeOn(o) ? 'rgba(255,255,255,.05)' : 'rgba(255,255,255,.015)',
+        dlvFeeEdge: dlvChargeOn(o) ? 'rgba(240,160,60,.16)' : 'rgba(240,160,60,.07)',
+        dlvMinsVal: o.dlv && o.dlv.mins != null ? String(o.dlv.mins) : '',
+        dlvMinsHint: !door ? '0' : String(dlvQuote(o.dlv.pin) ? dlvQuote(o.dlv.pin).mins : DELIVERY.blindMins),
+        setDlvFee: e => this.setDlvNum(k, 'fee', e.target.value),
+        setDlvMins: e => this.setDlvNum(k, 'mins', e.target.value),
+        /* Whoever is holding the bag is the one who needs the route, and they
+           are standing at this screen — not at the phone in the office. */
+        dlvMapUrl: !door ? '#'
+          : o.dlv.pin
+            ? 'https://www.google.com/maps/dir/?api=1&destination=' + o.dlv.pin.lat + ',' + o.dlv.pin.lng + '&travelmode=two-wheeler'
+            : 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent((o.dlv.addr || '').trim()),
         bill: sl.bill || '',
         setBill: e => this.setSlotBill(k, e.target.value),
         payLbl: due > 0 ? (settled > 0 ? money(settled) + ' paid · balance' : 'Unpaid · take') : 'Settled in full',
@@ -7290,7 +8318,10 @@ class Component extends DCLogic {
         payBg: due > 0 ? 'rgba(212,103,74,.1)' : 'rgba(159,208,127,.1)',
         payEdge: due > 0 ? 'rgba(212,103,74,.3)' : 'rgba(159,208,127,.28)',
         mobile: sl.mobile ? '✆ ' + sl.mobile : '',
-        eta: o.ready ? 'Ready' : mins > 0 ? mins + ' min' : 'Any moment',
+        /* Once a door bag leaves, the kitchen estimate is history: the clock
+           on the card becomes the drive, counted from the press that sent it. */
+        eta: door && out ? this.dlvEtaLabel(out, dlvMinsOf(o))
+          : o.ready ? 'Ready' : mins > 0 ? mins + ' min' : 'Any moment',
         etaColor: o.ready ? '#9fd07f' : mins > 0 ? '#ffc27a' : '#e0a83a',
         bg: o.ready ? 'rgba(159,208,127,.1)' : 'rgba(255,122,24,.07)',
         border: o.ready ? 'rgba(159,208,127,.42)' : 'rgba(240,160,60,.24)',
@@ -7300,7 +8331,13 @@ class Component extends DCLogic {
            the ticket leaves the kitchen queue. Ready: the bag left with someone, so
            the ticket is finished and clears from the pass, the live list and the
            admin board at once. Clearing is armed first, because it cannot be undone. */
-        readyLabel: o.ready ? (armed ? 'Clear it?' : 'Handed over') : 'Bag ready',
+        /* Once it is out, the button stops being a state and becomes the clock:
+           the same countdown the guest is watching, on the wall the bag left
+           from. It runs on the travel minutes the counter set. */
+        readyLabel: o.ready
+          ? (armed ? 'Clear it?'
+            : door ? L.dlvOnRoad + (dlvLeftTxt ? ' \u00b7 ' + dlvLeftTxt : '') : 'Handed over')
+          : (door ? L.dlvSendOut : 'Bag ready'),
         readyInk: o.ready ? (armed ? '#1a1005' : '#9fd07f') : '#1a1005',
         readyBg: o.ready
           ? (armed ? 'linear-gradient(180deg, #ffe0ae, #ffb04a)' : 'rgba(159,208,127,.14)')
@@ -7320,6 +8357,15 @@ class Component extends DCLogic {
             if (!t) return;
             t.ready = true;
             t.served = Date.now();
+            /* Sent from the wall is the same press as sent from the admin
+               panel, so the guest's countdown starts here too — otherwise a
+               bag dispatched from the floor display had no departure time and
+               the drive was never counted. */
+            if (door) t.dlv = {
+              ...t.dlv,
+              outAt: Date.now(),
+              mins: t.dlv.mins != null ? t.dlv.mins : dlvMinsOf(o),
+            };
             (t.items || []).forEach(i => { i.sent = i.qty; });
           });
         },
@@ -7427,8 +8473,14 @@ class Component extends DCLogic {
               t.served = Date.now();
               /* Everything bagged is what "ready" means for a parcel, so the ticket
                  leaves the kitchen queue and the guest's phone chimes from the same
-                 press — the counter should not have to say it twice. */
-              if (kindOf(k) === 'parcel') t.ready = true;
+                 press — the counter should not have to say it twice.
+                 A door bag is the exception: there `ready` is the departure flag,
+                 and it is set by the out-for-delivery press together with the
+                 stamp the countdown is measured from. Setting it here left a bag
+                 flagged as gone with no stamp — the guest got the badge and no
+                 countdown under it, and the counter's own button had already
+                 flipped to "On the road", so the real dispatch press undid it. */
+              if (kindOf(k) === 'parcel' && !(t.dlv && t.dlv.mode === 'door')) t.ready = true;
             }
           });
           this.setState(s => {
@@ -7725,6 +8777,8 @@ class Component extends DCLogic {
       langEdge: 'rgba(240,160,60,.2)',
       bellRef: this.refs.bellRef,
       bellCoachPulse: st.bellCoach ? 'assignPulse 1.45s ease-out 3' : 'none',
+      // Rings while the bubble that names it is up, for the add and the send alike.
+      ordCoachPulse: st.addCoach || st.ordCoach ? 'assignPulse 1.45s ease-out 3' : 'none',
 
       tableLabel: st.table ? this.keyLabel(st.table) : IDENTITY.tagline,
       tableBtn: st.table ? (/^U/.test(st.table) ? L.assign : L.table + ' ' + st.table) : L.assign,
@@ -7790,8 +8844,20 @@ class Component extends DCLogic {
       /* Not on the panel or the wall: both run the same code, and neither is the
          guest whose bag this is. */
       pcReadyBanner: !!st.pcReadyBanner && pcReady && st.screen !== 'admin' && st.screen !== 'tv',
-      pcReadyBanTitle: L.pcBanTitle || STR.en.pcBanTitle,
-      pcReadyBanNote: L.pcBanNote || STR.en.pcBanNote,
+      /* A door bag that has left the counter is not "ready to collect" — the
+         guest should stay where they are. Same banner, opposite instruction. */
+      /* The counter's own delivery minutes, counting down from the moment the
+         bag left, on the card itself. */
+      pcDoorEtaShow: pcDoorOut,
+      pcDoorEtaLbl: pcDoorLeft > 0 ? (L.dlvIn || STR.en.dlvIn) : (L.dlvAnyMoment || STR.en.dlvAnyMoment),
+      pcDoorEtaVal: pcDoorLeft > 0 ? pcDoorLeft + ' min' : '',
+      pcDoorLate: pcDoorLeft <= 0,
+      pcDoorOnTime: pcDoorLeft > 0,
+      L_dlvLateNote: L.dlvLateNote || STR.en.dlvLateNote,
+      pcReadyBanTitle: pcDoorOut ? (L.pcBanTitleDoor || STR.en.pcBanTitleDoor) : (L.pcBanTitle || STR.en.pcBanTitle),
+      pcReadyBanNote: pcDoorOut
+        ? (pcDoorEta ? (L.pcBanNoteDoor || STR.en.pcBanNoteDoor) + ' \u00b7 ' + pcDoorEta : (L.pcBanNoteDoor || STR.en.pcBanNoteDoor))
+        : (L.pcBanNote || STR.en.pcBanNote),
       /* The slot's name first — that is what the counter wrote on the bag — and
          the name this phone typed only as a fallback, for a bag packed before
          staff labelled it. A bill-numbered slot with no name gives its id. */
@@ -7936,6 +9002,9 @@ class Component extends DCLogic {
       tableHint: st.table && !/^U/.test(st.table) ? (L.tapRelease || STR.en.tapRelease) : (L.tapAssign || STR.en.tapAssign),
 
       cartLines, cartEmpty: !st.cart.length, cartTotal: money(cartTotal),
+      cartDlvShow: cartDlvOn,
+      L_dlvChargeLbl: L.dlvChargeLbl || STR.en.dlvChargeLbl,
+      cartDlvAmount: cartDlvFee ? money(cartDlvFee) : (L.dlvSoon || STR.en.dlvSoon),
       /* What the guest has already sent, read from the same per-line `sent`
          counts the pass board writes, so "where is my curry" is answerable
          from the table without asking anyone. */
@@ -7943,7 +9012,24 @@ class Component extends DCLogic {
       parcelWait: pcLive && !pcReady, parcelDone: pcLive && pcReady,
       parcelEta: pcMins > 0 ? L.readyIn + ' ' + pcMins + ' ' + L.minsUnit : pcLate ? L.readySoon : L.pcWaitTitle,
       parcelEtaSize: pcLate ? '13px' : '19px',
-      L_readyNow: L.readyNow, L_collectAt: L.collectAt,
+      /* "Collect at the parcel counter" is the wrong instruction for a bag
+         being brought to the guest, and "ready for collection" is the wrong
+         state: packed, then on the way. */
+      L_collectAt: pcIsDoor ? (L.dlvWhereLbl || STR.en.dlvWhereLbl) : L.collectAt,
+      /* Once it is on the road the strip carries the counter's own delivery
+         time, counting down from the moment the bag left; when that time is up
+         it says the package is arriving rather than repeating a stale minute. */
+      /* "Leaving soon" is only true while the bag is still on the counter. Once
+         it is dispatched the strip says so and carries the drive countdown
+         beside it — and a packed door bag with no departure stamp (dispatched
+         from a screen that predates the stamp) is out too, not waiting. */
+      L_readyNow: !pcIsDoor ? L.readyNow
+        /* The stage alone: the strip shares one line with the address label, and
+           stacking the drive countdown onto it overflowed the card in Tamil.
+           The countdown is already on the ready banner above. */
+        : pcDoorOut ? (L.dlvOutNow || STR.en.dlvOutNow)
+        : pcOrder && pcOrder.ready ? (L.dlvPackedOut || STR.en.dlvPackedOut)
+        : (L.dlvPackedNow || STR.en.dlvPackedNow),
       /* The collection pass. Every field is read back off the shared store, so
          what the guest holds up and what the floor display shows are the same
          record — the point of the card is that the two can be compared. */
@@ -7953,7 +9039,7 @@ class Component extends DCLogic {
          money is the only one that lets the bag go; a guest's own tap in their
          UPI app says a transfer was sent, which the counter still has to see. */
       pcPassPay: pcDue <= 0 ? L.pcPayOk : pcClaim > 0 ? L.pcPayClaim : L.pcPayDueNote,
-      pcPassAmt: pcDue <= 0 ? money(pcTot) : money(pcAsk > 0 ? pcAsk : pcDue),
+      pcPassAmt: pcDue <= 0 ? money(pcTot) : money(pcDue),
       pcPassPayColor: pcDue <= 0 ? '#9fd07f' : '#ffc27a',
       pcPassPayBg: pcDue <= 0 ? 'rgba(159,208,127,.1)' : 'rgba(255,122,24,.08)',
       pcPassPayEdge: pcDue <= 0 ? 'rgba(159,208,127,.3)' : 'rgba(240,160,60,.26)',
@@ -7962,10 +9048,11 @@ class Component extends DCLogic {
       pcPassHasStamp: pcDue <= 0 && !!(myTicket && myTicket.paidAt),
       pcPassStamp: myTicket && myTicket.paidAt
         ? new Date(myTicket.paidAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : '',
-      L_pcPassName: L.pcPassName || STR.en.pcPassName,
+      // Nobody asks for a door bag at a counter; the name is on the bag.
+      L_pcPassName: pcIsDoor ? (L.dlvPassName || STR.en.dlvPassName) : (L.pcPassName || STR.en.pcPassName),
       L_pcPassPay: L.pcPassPay || STR.en.pcPassPay,
       L_pcPassStamp: L.pcPassStamp || STR.en.pcPassStamp,
-      L_pcPassShow: L.pcPassShow || STR.en.pcPassShow,
+      L_pcPassShow: pcIsDoor ? (L.dlvPassShowDoor || STR.en.dlvPassShowDoor) : (L.pcPassShow || STR.en.pcPassShow),
       /* The fork replaces the send button rather than sitting beside it: two gold
          buttons at the foot of a sheet is a coin toss, and only one of these two
          paths puts food in a kitchen. */
@@ -8028,6 +9115,75 @@ class Component extends DCLogic {
         this.say(st.pcName.trim() ? L.pcSaved || STR.en.pcSaved : L.pcTakeaway);
       },
       pcName: st.pcName, pcMobile: st.pcMobile,
+      /* Collect or door. The selected face is the same amber the send button
+         uses, so the answer reads as chosen rather than merely highlighted. */
+      pcIsDoor: st.pcFulfil === 'door',
+      pcColInk: st.pcFulfil === 'collect' ? '#1a1005' : '#cfc6ba',
+      pcColBg: st.pcFulfil === 'collect' ? 'linear-gradient(180deg, #ffc27a, #f0a03c)' : 'rgba(255,255,255,.045)',
+      pcColBd: st.pcFulfil === 'collect' ? 'transparent' : 'rgba(240,160,60,.16)',
+      pcDoorInk: st.pcFulfil === 'door' ? '#1a1005' : '#cfc6ba',
+      pcDoorBg: st.pcFulfil === 'door' ? 'linear-gradient(180deg, #ffc27a, #f0a03c)' : 'rgba(255,255,255,.045)',
+      pcDoorBd: st.pcFulfil === 'door' ? 'transparent' : 'rgba(240,160,60,.16)',
+      pcPickCollect: () => this.setState({ pcFulfil: 'collect', pcFulfilSet: true, sendArmed: false }, () => this.syncDlv()),
+      pcPickDoor: () => this.setState({ pcFulfil: 'door', pcFulfilSet: true, sendArmed: false }, () => this.syncDlv()),
+      pcAddr: st.pcAddr,
+      /* The pin button carries its own state: amber once a spot is set, so the
+         guest can tell at a glance whether the rider has one. */
+      pcPinLabel: st.pcPin ? (L.pcPinSet || STR.en.pcPinSet) : (L.pcPinAdd || STR.en.pcPinAdd),
+      pcPinInk: st.pcPin ? '#ffc27a' : '#cfc6ba',
+      pcPinBd: st.pcPin ? 'rgba(240,160,60,.42)' : 'rgba(240,160,60,.16)',
+      pcMapOpen: st.pcMapOpen,
+      /* Created once and reused. An inline arrow here is a new function on
+         every render, and React reads that as a different ref: it calls the
+         old one with null and the new one with the node, so the map was torn
+         down and rebuilt on each pass. Mounting calls setState, which renders,
+         which tore it down again — an endless build/destroy loop that never
+         let a tile finish (the black map) and pinned the main thread until
+         iOS stopped responding to touch at all. */
+      pcMapNode: (this._pcMapRef || (this._pcMapRef = n => this.pcMapMount(n))),
+      openPcMap: () => { this.chime('tap'); this.setState({ pcMapOpen: true, pcResolvedText: 'looking' }); },
+      closePcMap: () => { this.pcMapTeardown(); this.setState({ pcMapOpen: false }); },
+      pcConfirmPin: () => {
+        if (!this._pcMap) return;
+        const c = this._pcMap.getCenter();
+        const txt = st.pcResolvedText;
+        const usable = txt && txt !== 'looking' && txt !== 'none' && txt !== 'map-failed';
+        this.chime('tap');
+        this.pcMapTeardown();
+        /* The typed lines stay if the guest wrote them — a landmark they chose
+           beats a road name the map guessed. An empty box takes the lookup. */
+        this.setState({
+          pcMapOpen: false,
+          pcPin: { lat: +c.lat.toFixed(6), lng: +c.lng.toFixed(6) },
+          pcAddr: st.pcAddr.trim() ? st.pcAddr : (usable ? txt.slice(0, 180) : st.pcAddr),
+          sendArmed: false,
+        }, () => this.syncDlv());
+      },
+      pcLocateMe: () => {
+        if (!navigator.geolocation || !this._pcMap) return;
+        this.setState({ pcResolvedText: 'looking' });
+        navigator.geolocation.getCurrentPosition(
+          p => { if (this._pcMap) this._pcMap.setView([p.coords.latitude, p.coords.longitude], 17); },
+          () => this.setState({ pcResolvedText: 'denied' }),
+          { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 },
+        );
+      },
+      pcResolved: PC_GEO_MSG[st.pcResolvedText] ? (L[PC_GEO_MSG[st.pcResolvedText]] || STR.en[PC_GEO_MSG[st.pcResolvedText]]) : st.pcResolvedText,
+      pcResolvedInk: PC_GEO_MSG[st.pcResolvedText] ? '#8d8479' : '#cfc6ba',
+      L_pcMapTitle: L.pcMapTitle || STR.en.pcMapTitle,
+      L_pcMapBack: L.pcMapBack || STR.en.pcMapBack,
+      L_pcLocate: L.pcLocate || STR.en.pcLocate,
+      L_pcUseSpot: L.pcUseSpot || STR.en.pcUseSpot,
+      setPcAddr: e => this.setState({ pcAddr: e.target.value.slice(0, 180), sendArmed: false }, () => this.syncDlv()),
+      /* An address short enough to be a placeholder is not an address a rider
+         can find, so the field asks again rather than accepting it. */
+      pcAddrBorder: st.pcFulfil === 'door' && st.pcAddr.trim().length && st.pcAddr.trim().length < 12
+        ? 'rgba(226,124,88,.5)' : 'rgba(240,160,60,.16)',
+      L_pcHowTitle: L.pcHowTitle || STR.en.pcHowTitle,
+      L_pcCollect: L.pcCollect || STR.en.pcCollect,
+      L_pcDoor: L.pcDoor || STR.en.pcDoor,
+      L_pcAddrPh: L.pcAddrPh || STR.en.pcAddrPh,
+      L_pcAddrNote: L.pcAddrNote || STR.en.pcAddrNote,
       // Editing the name again reopens the question the last answer closed.
       setPcName: e => {
         this._pcNameChoice = null;
@@ -8052,9 +9208,12 @@ class Component extends DCLogic {
       billTotal: money(this.tableBill()),
       /* The balance, not the total: a guest who paid for the first round and then
          ordered a second was shown the whole bill again at the QR. */
-      billBalance: money(pcAsk), billPaidText: money(pcSettled + pcClaim), billHasPaid: pcSettled + pcClaim > 0,
-      billDueLbl: pcSettled + pcClaim > 0 ? L.balLbl : L.billDue,
-      billBalColor: pcAsk > 0 ? '#ffc27a' : '#9fd07f',
+      /* Confirmed money only, because the balance beside it counts only that:
+         crediting the claim here read "paid so far ₹420" above "balance ₹450"
+         on a ₹450 bill. What the guest has sent has its own row below. */
+      billBalance: money(pcDue), billPaidText: money(pcSettled), billHasPaid: pcSettled > 0,
+      billDueLbl: pcSettled > 0 ? L.balLbl : L.billDue,
+      billBalColor: pcDue > 0 ? '#ffc27a' : '#9fd07f',
       /* The total on the pay screen was the only figure a guest could see, so it
          had to be taken on trust at the moment money changes hands. Same rows
          tableBill() sums, so the lines and the total cannot disagree. */
@@ -8080,15 +9239,15 @@ class Component extends DCLogic {
       L_payNow: L.payNow, L_pcPayFirst: L.pcPayFirst, L_billNoLbl: L.billNoLbl,
 
       /* ---- UPI intent ---- */
-      upiOn: pcAsk > 0 && !!upiHref,
-      upiBtnLabel: money(pcAsk) + '  \u00b7  ' + (L.upiPay || STR.en.upiPay),
+      upiOn: pcDue > 0 && !!upiHref,
+      upiBtnLabel: money(askAmt) + '  \u00b7  ' + (L.upiPay || STR.en.upiPay),
       payScanLbl: askAmt > 0 && upiHref ? (L.upiOrScan || STR.en.upiOrScan) : (L.scanPay || STR.en.scanPay),
       /* Stays up while a balance is owed, claim or no claim. The claim used to
          replace this panel, which left the guest who tapped it by accident with
          no way back to their app for a bill that was still open. */
       upiWaiting: pcDue > 0 && (!!st.upiSent || this.upiPending() || upiClaimed),
       // Comes back on its own for a second round: there is a fresh amount to claim.
-      upiCanClaim: pcAsk > 0,
+      upiCanClaim: pcDue > 0,
       upiClaimed: upiClaimed,
       L_upiPick: L.upiPick || STR.en.upiPick,
       L_upiBackTitle: L.upiBackTitle || STR.en.upiBackTitle,
@@ -8104,9 +9263,20 @@ class Component extends DCLogic {
       L_upiClaimNote: L.upiClaimNote || STR.en.upiClaimNote,
       claimSplit: pcClaim > 0 && pcAsk > 0,
       claimSentAmt: money(pcClaim),
+      /* The bill's own growth since the claim, not what the button asks for:
+         the button asks for the whole unconfirmed balance. */
       claimOpenAmt: money(pcAsk),
       L_claimSent: L.claimSent || STR.en.claimSent,
-      L_claimOpen: L.claimOpen || STR.en.claimOpen,
+      /* "New items" is true of a second round of food and wrong of a delivery
+         charge — the guest ordered nothing new. When the open amount is the
+         charge, it is named the charge. */
+      L_claimOpen: dlvAfterPay ? (L.dlvChargeLbl || STR.en.dlvChargeLbl) : (L.claimOpen || STR.en.claimOpen),
+      dlvNoteShow: dlvSoonShow || dlvAfterPay,
+      dlvNoteText: dlvSoonShow ? (L.dlvSoonNote || STR.en.dlvSoonNote)
+        : (L.dlvAfterPay || STR.en.dlvAfterPay) + ' ' + money(pcDue),
+      dlvNoteColor: dlvSoonShow ? '#ffc27a' : '#e0a83a',
+      dlvNoteBg: dlvSoonShow ? 'rgba(255,122,24,.08)' : 'rgba(224,168,58,.1)',
+      dlvNoteEdge: dlvSoonShow ? 'rgba(240,160,60,.26)' : 'rgba(224,168,58,.3)',
       /* Two taps, and the split is the point. A payment app takes the whole
          screen the instant it is asked for, so anything shown on the way out is
          never read — including the one thing the guest has to know, that nothing
@@ -8123,8 +9293,8 @@ class Component extends DCLogic {
            for a second round is not a dispute about the first one, so the earlier
            claim stands; with nothing new owed, the only reading is that the
            transfer never landed. */
-        const k = st.table;
-        if (upiClaimed && pcAsk === 0 && k) {
+        const k = billKey;
+        if (upiClaimed && pcDue === 0 && k) {
           try { db.patch(s2 => { const t = s2.orders[k]; if (t) { t.claimAt = null; t.claimTot = null; t.claimAmt = null; } }); } catch (e) {}
         }
       },
@@ -8142,7 +9312,7 @@ class Component extends DCLogic {
       upiDone: () => {
         this.chime('bell');
         clearTimeout(this._upiT);
-        const k = st.table;
+        const k = billKey;
         if (k) db.patch(s2 => {
           const t = s2.orders[k];
           if (!t) return;
@@ -8242,6 +9412,27 @@ class Component extends DCLogic {
          never what exists. A seated guest without a number sits with the tables —
          a waiter still walks food out to them. */
       orderRows: ordShown, noOrders: !ordShown.length, adminCats,
+      L_dlvTitle: L.dlvTitle || STR.en.dlvTitle,
+      L_dlvOpen: L.dlvOpen || STR.en.dlvOpen,
+      L_dlvDist: L.dlvDist || STR.en.dlvDist,
+      L_dlvFeeLbl: L.dlvFeeLbl || STR.en.dlvFeeLbl,
+      L_dlvMinsLbl: L.dlvMinsLbl || STR.en.dlvMinsLbl,
+      L_dlvChargeLbl: L.dlvChargeLbl || STR.en.dlvChargeLbl,
+      L_dlvBikeNote: L.dlvBikeNote || STR.en.dlvBikeNote,
+      L_dlvChargeDefLbl: L.dlvChargeDefLbl || STR.en.dlvChargeDefLbl,
+      L_dlvChargeDefNote: L.dlvChargeDefNote || STR.en.dlvChargeDefNote,
+      dlvDefState: dlvChargeDef() ? (L.dlvChargeAllOn || STR.en.dlvChargeAllOn) : (L.dlvChargeAllOff || STR.en.dlvChargeAllOff),
+      dlvDefInk: dlvChargeDef() ? '#9fd07f' : '#8d8479',
+      dlvDefBg: dlvChargeDef() ? 'rgba(127,174,99,.42)' : 'rgba(255,255,255,.07)',
+      dlvDefKnob: dlvChargeDef() ? '23px' : '3px',
+      toggleDlvChargeAll: () => this.toggleDlvChargeAll(),
+      L_dlvFeeDefLbl: L.dlvFeeDefLbl || STR.en.dlvFeeDefLbl,
+      dlvFeeDefVal: dlvFeeDef() ? String(dlvFeeDef()) : '',
+      dlvFeeDefNote: dlvFeeDef()
+        ? (L.dlvFeeDefSet || STR.en.dlvFeeDefSet)
+        : (L.dlvFeeDefZero || STR.en.dlvFeeDefZero),
+      setDlvFeeDef: e => this.setDlvFeeDef(e.target.value),
+      ordKindParcel: st.ordKind === 'parcel',
       ordKindTabs: [['all', L.ordAll, orderRows.length], ['table', L.ordTables, orderRows.length - ordParcelCount], ['parcel', L.ordParcels, ordParcelCount]]
         .map(([k2, label, n]) => ({
           label, count: String(n),
@@ -8459,6 +9650,7 @@ class Component extends DCLogic {
       L_billDue: L.billDue, L_ingredients: L.ingredients, L_ingShort: L.ingShort,
       L_scanPay: L.scanPay || STR.en.scanPay,
       L_rateShort: L.rateShort || STR.en.rateShort, L_orderShort: L.orderShort || STR.en.orderShort,
+      L_addCart: L.addCart || STR.en.addCart,
       L_waiterShort: L.waiterShort || STR.en.waiterShort,
       L_menu: L.menu, L_staffOnly: L.staffOnly, L_enter: L.enter, L_back: L.back, L_exit: L.exit, L_rateClose: L.rateClose,
       L_clear: L.clear, L_attended: L.attended, L_noOrders: L.noOrders, L_noCalls: L.noCalls,
