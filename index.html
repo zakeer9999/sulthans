@@ -845,7 +845,7 @@
                             <sc-if value="{{ row.dlvEtaText }}" hint-placeholder-val="{{ false }}">
                               <span style="font-size: 11px; letter-spacing: .08em; color: #9fd07f">{{ row.dlvEtaText }}</span>
                             </sc-if>
-                            <a href="{{ row.dlvMapUrl }}" target="_blank" rel="noreferrer" style="display: flex; align-items: center; justify-content: center; min-height: 44px; padding: 0 16px; border-radius: 11px; font-size: 10px; letter-spacing: .2em; text-transform: uppercase; text-decoration: none; color: #1a1005; background: linear-gradient(180deg, #ffc27a, #f0a03c); transition: transform 140ms" style-active="transform: scale(.985)">{{ L_dlvOpen }}</a>
+                            <a href="{{ row.dlvMapUrl }}" target="_blank" rel="noreferrer" style="display: flex; align-items: center; justify-content: center; min-height: 44px; padding: 0 16px; border-radius: 11px; font-size: 10px; letter-spacing: .2em; text-transform: uppercase; text-decoration: none; color: #1a1005; background: linear-gradient(180deg, #ffc27a, #f0a03c); transition: transform 140ms" style-active="transform: scale(.985)">{{ row.dlvOpenLabel }}</a>
                           </div>
                         </sc-if>
                       </sc-if>
@@ -1921,7 +1921,7 @@
                           <input type="number" inputmode="numeric" value="{{ b.dlvMinsVal }}" onChange="{{ b.setDlvMins }}" placeholder="{{ b.dlvMinsHint }}" style="width: 100%; min-width: 0; box-sizing: border-box; padding: 6px 8px; border-radius: 8px; font-family: inherit; font-size: 16px; font-weight: 300; color: #f0e8dc; background: rgba(255,255,255,.05); border: 1px solid rgba(240,160,60,.16); outline: none" />
                         </label>
                       </div>
-                      <a href="{{ b.dlvMapUrl }}" target="_blank" rel="noreferrer" style="display: flex; align-items: center; justify-content: center; min-height: 38px; margin-top: 2px; padding: 0 12px; border-radius: 9px; font-size: clamp(7.5px, .9vmin, 10.5px); letter-spacing: .18em; text-transform: uppercase; text-decoration: none; color: #1a1005; background: linear-gradient(180deg, #ffc27a, #f0a03c); transition: transform 140ms" style-active="transform: scale(.97)">{{ L_dlvOpen }}</a>
+                      <a href="{{ b.dlvMapUrl }}" target="_blank" rel="noreferrer" style="display: flex; align-items: center; justify-content: center; min-height: 38px; margin-top: 2px; padding: 0 12px; border-radius: 9px; font-size: clamp(7.5px, .9vmin, 10.5px); letter-spacing: .18em; text-transform: uppercase; text-decoration: none; color: #1a1005; background: linear-gradient(180deg, #ffc27a, #f0a03c); transition: transform 140ms" style-active="transform: scale(.97)">{{ b.dlvOpenLabel }}</a>
                     </div>
                   </sc-if>
                   <div style="display: flex; flex-wrap: nowrap; align-items: center; gap: clamp(6px, .8vmin, 10px); min-width: 0">
@@ -2506,6 +2506,7 @@ const SPICE = [
 Object.assign(STR.en, {
   dlvTitle: 'Door delivery',
   dlvOpen: 'Open route in Maps',
+  dlvOpenAddr: 'Search address in Maps',
   dlvDist: 'Distance',
   dlvNoPin: 'No pin — address only',
   dlvFar: 'Beyond the usual delivery range.',
@@ -2586,6 +2587,7 @@ Object.assign(STR.en, {
 Object.assign(STR.ta, {
   dlvTitle: 'வீட்டிற்கு டெலிவரி',
   dlvOpen: 'வரைபடத்தில் வழியைத் திற',
+  dlvOpenAddr: 'முகவரியை வரைபடத்தில் தேடு',
   dlvDist: 'தூரம்',
   dlvNoPin: 'இடம் குறிக்கப்படவில்லை — முகவரி மட்டும்',
   dlvFar: 'வழக்கமான டெலிவரி எல்லைக்கு வெளியே.',
@@ -3250,6 +3252,20 @@ class Component extends DCLogic {
     /* Longer than the interaction buzzes in buzz(): this one has to register
        through a pocket, and it is the only unprompted one a guest ever gets. */
     try { if (navigator.vibrate) navigator.vibrate([0, 160, 90, 160, 90, 240]); } catch (e) {}
+  }
+
+  /* A typed address is rarely a searchable one: guests write "No 5, 3rd
+     street" and leave the town out, so a bare search drops the rider in
+     another district — or nowhere. The restaurant's own locality is appended
+     unless the guest already named it, which is what makes the tap land the
+     same way the restaurant's own address card does. */
+  mapSearchUrl(addr) {
+    const a = (addr || '').trim();
+    const near = IDENTITY.address.split(',').slice(-2).map(s => s.trim()).join(', ');
+    const town = near.split(',')[0].trim().toLowerCase();
+    const q = !a ? near
+      : (a.toLowerCase().indexOf(town) >= 0 ? a : a + ', ' + near);
+    return 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(q);
   }
 
   /* ============================================================
@@ -7921,7 +7937,10 @@ class Component extends DCLogic {
         dlvMapUrl: !o.dlv ? '#'
           : o.dlv.pin
             ? 'https://www.google.com/maps/dir/?api=1&destination=' + o.dlv.pin.lat + ',' + o.dlv.pin.lng
-            : 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(o.dlv.addr || ''),
+            : this.mapSearchUrl(o.dlv.addr),
+        /* Pinned is a route; typed-only is a search. Saying which one the tap
+           will do stops the counter reading a guessed street as a fixed spot. */
+        dlvOpenLabel: o.dlv && o.dlv.pin ? (L.dlvOpen || STR.en.dlvOpen) : (L.dlvOpenAddr || STR.en.dlvOpenAddr),
         /* A bag goes out whole, so per-portion bumping is the wrong shape for a
            parcel: one action marks the lot, and tapping it again undoes a
            mis-press the same way the table lines do. */
@@ -8310,7 +8329,8 @@ class Component extends DCLogic {
         dlvMapUrl: !door ? '#'
           : o.dlv.pin
             ? 'https://www.google.com/maps/dir/?api=1&destination=' + o.dlv.pin.lat + ',' + o.dlv.pin.lng + '&travelmode=two-wheeler'
-            : 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent((o.dlv.addr || '').trim()),
+            : this.mapSearchUrl(o.dlv.addr),
+        dlvOpenLabel: door && o.dlv.pin ? (L.dlvOpen || STR.en.dlvOpen) : (L.dlvOpenAddr || STR.en.dlvOpenAddr),
         bill: sl.bill || '',
         setBill: e => this.setSlotBill(k, e.target.value),
         payLbl: due > 0 ? (settled > 0 ? money(settled) + ' paid · balance' : 'Unpaid · take') : 'Settled in full',
