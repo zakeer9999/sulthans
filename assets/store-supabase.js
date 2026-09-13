@@ -155,12 +155,21 @@
       try { localStorage.setItem('sul.cleared.v1', JSON.stringify(this.gone)); } catch (e) {}
     }
 
-    /* Readiness columns are additive, so the client treats them as optional and
-       finds out from the server which shape it is talking to. */
+    /* Readiness and delivery columns are additive, so the client treats them as
+       optional and finds out from the server which shape it is talking to. */
     orderCols() {
       const base = 'id,table_label,opened_at,device_id,hold_at,paid_amount,claim_at,claim_total';
       const tail = ',order_items(dish_id,qty,unit_price)';
-      return base + (this.ready$ === false ? '' : ',ready_at,served_at') + tail;
+      return base + (this.ready$ === false ? '' : ',ready_at,served_at')
+        + (this.dlv$ === false ? '' : ',dlv') + tail;
+    }
+
+    /* The house delivery rule lives beside the table count so every phone reads
+       one copy of it — and so the server can price a door bag itself rather than
+       trusting the figure the ordering phone arrived with. Optional, like the
+       order columns: a database without money-guard.sql still serves. */
+    roomCols() {
+      return 'table_count' + (this.dlvDef$ === false ? '' : ',dlv_fee_default,dlv_charge_default');
     }
 
     /* ---------- read: server -> db.state ---------- */
@@ -180,7 +189,7 @@
         sb.from('dish_ratings').select('dish_id,avg_stars,votes'),
         sb.from('dish_feedback').select(fbCols).order('created_at', { ascending: false }).limit(500),
         sb.from('service_feedback').select(svcCols).eq('restaurant_id', rid).order('created_at', { ascending: false }).limit(300),
-        sb.from('restaurants').select('table_count').eq('id', rid).maybeSingle(),
+        sb.from('restaurants').select(this.roomCols()).eq('id', rid).maybeSingle(),
         sb.from('floor_slots').select(slotCols).eq('restaurant_id', rid).order('created_at'),
       ]);
 
@@ -255,6 +264,13 @@
           // only in the local state of the device that pressed it.
           ready: !!o.ready_at,
           served: ms(o.served_at) || null,
+          /* The delivery answer, from the server rather than from whichever
+             phone happened to take it. Before this column the address lived
+             only on the guest's device, so the counter opened the ticket and
+             saw nothing to drive to. Falls back to what this device already
+             holds while the migration is still unrun, so nothing regresses on
+             a database that has not had delivery.sql applied yet. */
+          dlv: (this.dlv$ === false ? (sameVisit ? prev.dlv : null) : (o.dlv || null)) || null,
           unassigned: /^U/.test(o.table_label),
           items: (o.order_items || []).map(i => {
             const slug = this.dishSlug[i.dish_id] || i.dish_id;
@@ -295,8 +311,16 @@
          and the name a parcel guest typed on theirs reached nobody. holdMins has
          no column yet, so the rest of floor is carried forward rather than wiped
          by the merge. */
-      if (room.data && room.data.table_count != null) {
-        next.floor = Object.assign({}, (this.db.state || {}).floor, { tables: room.data.table_count });
+      if (room.data) {
+        const house = {};
+        if (room.data.table_count != null) house.tables = room.data.table_count;
+        if (this.dlvDef$ !== false) {
+          house.dlvFeeDef = room.data.dlv_fee_default == null ? null : Number(room.data.dlv_fee_default);
+          house.dlvChargeDef = !!room.data.dlv_charge_default;
+        }
+        if (Object.keys(house).length) {
+          next.floor = Object.assign({}, (this.db.state || {}).floor, house);
+        }
       }
       if (!slots.error) {
         next.uslots = (slots.data || []).map(r => ({
@@ -316,6 +340,13 @@
 
       // Feedback rows are ordered newest-first for the cap; the app expects oldest-first.
       next.feedback.reverse(); next.service.reverse();
+      // The house delivery rate is additive too, and it is read in the same
+      // breath as the table count: without the fallback a database that has not
+      // had money-guard.sql run yet loses the room as well as the rate.
+      if (room.error && this.dlvDef$ !== false && /dlv_fee_default|dlv_charge_default/.test(room.error.message || '')) {
+        this.dlvDef$ = false;
+        console.warn('[supabase] restaurants.dlv_fee_default missing — run supabase/money-guard.sql to share the house delivery rate');
+      }
       const errs = [cats, dishes, orders, calls, ratings, fb, svc, room, slots].map(r => r.error).filter(Boolean);
       if (errs.length) console.warn('[supabase] partial read:', errs.map(e => e.message).join(' | '));
       // A missing readiness column is a migration that has not been run yet, not
@@ -324,6 +355,11 @@
       if (orders.error && this.ready$ !== false && /ready_at|served_at/.test(orders.error.message || '')) {
         this.ready$ = false;
         console.warn('[supabase] orders.ready_at missing — run supabase/security.sql to enable bag-ready sync');
+        return this.hydrate();
+      }
+      if (orders.error && this.dlv$ !== false && /\bdlv\b/.test(orders.error.message || '')) {
+        this.dlv$ = false;
+        console.warn('[supabase] orders.dlv missing — run supabase/delivery.sql to share delivery addresses');
         return this.hydrate();
       }
       // Rows the server no longer reports open have nothing left to hide behind.
@@ -490,6 +526,14 @@
           else if (!ra) stamp.served_at = null;
           jobs.push(async () => this.upd('orders', this.orderId[k] || await this.orderFor(k), stamp));
         }
+        /* Compared as JSON because it is a whole object the app replaces
+           rather than mutates: an address edit, a pin move, a charge typed at
+           the counter and the out-for-delivery press all arrive as a new dlv,
+           and any of them has to reach the other phones. */
+        const da = after.orders[k].dlv || null, dbv = before.orders[k].dlv || null;
+        if (JSON.stringify(da) !== JSON.stringify(dbv) && this.dlv$ !== false) {
+          jobs.push(async () => this.upd('orders', this.orderId[k] || await this.orderFor(k), { dlv: da }));
+        }
         const ca = after.orders[k].claimAt || null, cb = before.orders[k].claimAt || null;
         const ct = after.orders[k].claimTot, cs = before.orders[k].claimTot;
         if (ca !== cb || ct !== cs) {
@@ -505,6 +549,18 @@
          is authenticated-only), so the count can only move from a signed-in phone. */
       const tb = (before.floor || {}).tables, ta = (after.floor || {}).tables;
       if (ta != null && ta !== tb) jobs.push(() => this.upd('restaurants', this.rid, { table_count: ta }));
+
+      /* The house delivery rule, mirrored the same way. It is what the server
+         stamps onto a new door bag, so it has to reach Postgres before the next
+         guest picks door delivery — and only a signed-in phone may move it. */
+      if (this.dlvDef$ !== false) {
+        const fb2 = (before.floor || {}).dlvFeeDef, fa = (after.floor || {}).dlvFeeDef;
+        if ((fa == null ? null : Number(fa)) !== (fb2 == null ? null : Number(fb2))) {
+          jobs.push(() => this.upd('restaurants', this.rid, { dlv_fee_default: fa == null ? null : Number(fa) }));
+        }
+        const cb = !!(before.floor || {}).dlvChargeDef, ca = !!(after.floor || {}).dlvChargeDef;
+        if (ca !== cb) jobs.push(() => this.upd('restaurants', this.rid, { dlv_charge_default: ca }));
+      }
 
       const bSlot = {}, aSlot = {};
       // Local slot key -> column, so a diff of the local keys can name its own patch.
@@ -733,6 +789,10 @@
               this.ready$ = false;
               console.warn('[supabase] no ready_at/served_at columns — run supabase/serve-stamp.sql');
             }
+            if (/\bdlv\b/.test(msg) && /does not exist|schema cache|PGRST204|could not find/i.test(msg)) {
+              this.dlv$ = false;
+              console.warn('[supabase] no dlv column — run supabase/delivery.sql');
+            }
             /* A refusal means the app and the database now disagree, and the next
                hydrate resolves that against the guest — so it has to be visible.
                A dropped connection is not that: it retries on its own, and
@@ -857,8 +917,40 @@
              holds the table. */
           device_id: deviceId(),
           hold_at: new Date((order && order.holdAt) || Date.now()).toISOString(),
+          /* Carried on the insert, not left to the update diff. A parcel that
+             is door delivery from its very first round arrives as a NEW key,
+             and the diff only compares dlv on keys that existed before — so
+             the first ticket of a visit reached the counter with no address
+             at all, and only a second round ever filled it in. */
+          ...(this.dlv$ !== false && order && order.dlv ? { dlv: order.dlv } : {}),
         }).select('id').single();
-      if (error) throw error;
+      /* One open row per table is a unique index, and a quarantined row that
+         would not close is still an open row. So the insert can lose to a row
+         this client has already decided is not a ticket — a clear that was
+         refused for want of a staff session, most often — and the guest saw the
+         raw constraint line and could not order at all.
+         Ordering has to win. The blocking row is adopted and its quarantine
+         lifted, so the round lands on the ticket the server actually has. The
+         previous round's items come with it, which is why this is loud: the
+         counter has to know the table was never really cleared. */
+      if (error) {
+        if (error.code !== '23505') throw error;
+        const retry = await this.closeIds(this.deadIds(label));
+        const { data: again } = await this.sb.from('orders').select('id')
+          .eq('restaurant_id', this.rid).eq('table_label', label).eq('status', 'open')
+          .order('opened_at', { ascending: false }).limit(1);
+        const row = (again || [])[0];
+        if (!row) throw error;
+        delete this.dead[label];
+        this.idsSave();
+        this.dropGone(label);
+        this.goneSave();
+        this.orderId[label] = row.id;
+        console.warn('[supabase] ' + label + ' still had an open ticket on the server' +
+          (retry ? ' that will not close (' + retry.message + ')' : '') +
+          ' — this round was added to it. Clear the table from a signed-in counter phone.');
+        return row.id;
+      }
       this.orderId[label] = data.id;
       return data.id;
     }
