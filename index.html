@@ -2328,6 +2328,10 @@ const PC_GEO_MSG = {
   looking: 'pcGeoLooking',
   none: 'pcGeoNone',
   denied: 'pcGeoDenied',
+  blocked: 'pcGeoBlocked',
+  'blocked-ios': 'pcGeoBlockedIos',
+  'blocked-android': 'pcGeoBlockedAndroid',
+  nofix: 'pcGeoNoFix',
   'map-failed': 'pcGeoFail',
 };
 
@@ -2573,6 +2577,10 @@ Object.assign(STR.en, {
   pcGeoLooking: 'Reading the map…',
   pcGeoNone: 'No street name here. The pin still works.',
   pcGeoDenied: 'Location is off. Move the map by hand.',
+  pcGeoBlocked: 'This site cannot see your location. Allow it in your browser settings, or move the map by hand.',
+  pcGeoBlockedIos: 'Location is blocked for this browser. Settings \u203a Privacy & Security \u203a Location Services \u2014 switch your browser to \u201cWhile Using\u201d, then tap again. Or move the map by hand.',
+  pcGeoBlockedAndroid: 'Location is blocked for this site. Tap the lock icon beside the web address \u203a Permissions \u203a allow Location, then tap again. Or move the map by hand.',
+  pcGeoNoFix: 'Your phone did not answer. Tap the button again, or move the map by hand.',
   pcGeoFail: 'The map did not load. Type the address instead.',
   pcBanTitle: 'Your parcel is ready',
   pcBanNote: 'Collect it at the counter',
@@ -2645,6 +2653,10 @@ Object.assign(STR.ta, {
   pcGeoLooking: 'வரைபடத்தைப் படிக்கிறது…',
   pcGeoNone: 'இங்கே தெரு பெயர் இல்லை. குறி வேலை செய்யும்.',
   pcGeoDenied: 'இருப்பிடம் அணைக்கப்பட்டுள்ளது. வரைபடத்தைக் கையால் நகர்த்துங்கள்.',
+  pcGeoBlocked: 'இந்த தளத்திற்கு இருப்பிட அனுமதி இல்லை. உலாவி அமைப்பில் அனுமதிக்கவும், அல்லது வரைபடத்தைக் கையால் நகர்த்துங்கள்.',
+  pcGeoBlockedIos: 'உலாவிக்கு இருப்பிட அனுமதி இல்லை. Settings \u203a Privacy & Security \u203a Location Services \u2014 உங்கள் உலாவியை \u201cWhile Using\u201d ஆக மாற்றி மீண்டும் தட்டவும். அல்லது வரைபடத்தைக் கையால் நகர்த்துங்கள்.',
+  pcGeoBlockedAndroid: 'இந்த தளத்திற்கு இருப்பிட அனுமதி இல்லை. முகவரிப் பட்டியில் உள்ள பூட்டு ஐகான் \u203a Permissions \u203a Location அனுமதிக்கவும், பின் மீண்டும் தட்டவும். அல்லது வரைபடத்தைக் கையால் நகர்த்துங்கள்.',
+  pcGeoNoFix: 'உங்கள் தொலைபேசி பதிலளிக்கவில்லை. மீண்டும் தட்டவும், அல்லது வரைபடத்தைக் கையால் நகர்த்துங்கள்.',
   pcGeoFail: 'வரைபடம் ஏற்றப்படவில்லை. முகவரியைத் தட்டச்சு செய்யுங்கள்.',
   pcBanTitle: 'உங்கள் பார்சல் தயார்',
   pcBanNote: 'கவுண்டரில் பெற்றுக்கொள்ளுங்கள்',
@@ -3421,6 +3433,37 @@ class Component extends DCLogic {
 
   /* Reverse geocoding is rate-limited to one call a second, and a pan fires
      dozens of moveends, so the lookup waits for the map to settle. */
+  /* iOS asks the GPS for a high-accuracy fix and, indoors on a first run,
+     often answers nothing before the timeout — the same call an Android phone
+     answers instantly. Every failure used to read as "location is off", which
+     sent the guest looking for a setting that was already on. A refused
+     permission is now told apart from a slow fix, and a slow fix gets a second,
+     coarser attempt: a cell-tower fix is accurate enough to move the map to
+     the right street, which is all this button has to do. */
+  pcGeoLocate(coarse) {
+    if (!navigator.geolocation || !this._pcMap) return;
+    this.setState({ pcResolvedText: 'looking' });
+    navigator.geolocation.getCurrentPosition(
+      p => { if (this._pcMap) this._pcMap.setView([p.coords.latitude, p.coords.longitude], 17); },
+      err => {
+        /* A refused permission is fixed in a different place on each phone, and
+           the guest is standing in the sheet with no idea which. Naming the two
+           taps for the device they are holding is the whole difference between
+           the button working on the second try and the address being typed blind. */
+        if (err && err.code === 1) {
+          const ua = navigator.userAgent || '';
+          const ios = /iPhone|iPad|iPod/.test(ua) || (/Mac/.test(ua) && navigator.maxTouchPoints > 1);
+          return this.setState({ pcResolvedText: ios ? 'blocked-ios' : /Android/.test(ua) ? 'blocked-android' : 'blocked' });
+        }
+        if (!coarse) return this.pcGeoLocate(true);
+        this.setState({ pcResolvedText: 'nofix' });
+      },
+      coarse
+        ? { enableHighAccuracy: false, timeout: 20000, maximumAge: 120000 }
+        : { enableHighAccuracy: true, timeout: 8000, maximumAge: 30000 },
+    );
+  }
+
   pcPinMoved() {
     if (!this._pcMap) return;
     this.setState({ pcResolvedText: 'looking' });
@@ -9167,7 +9210,9 @@ class Component extends DCLogic {
         if (!this._pcMap) return;
         const c = this._pcMap.getCenter();
         const txt = st.pcResolvedText;
-        const usable = txt && txt !== 'looking' && txt !== 'none' && txt !== 'map-failed';
+        /* Anything in PC_GEO_MSG is a status line, not a street: naming them
+           one by one let a new state leak into the address box as an address. */
+        const usable = !!txt && !PC_GEO_MSG[txt];
         this.chime('tap');
         this.pcMapTeardown();
         /* The typed lines stay if the guest wrote them — a landmark they chose
@@ -9179,15 +9224,7 @@ class Component extends DCLogic {
           sendArmed: false,
         }, () => this.syncDlv());
       },
-      pcLocateMe: () => {
-        if (!navigator.geolocation || !this._pcMap) return;
-        this.setState({ pcResolvedText: 'looking' });
-        navigator.geolocation.getCurrentPosition(
-          p => { if (this._pcMap) this._pcMap.setView([p.coords.latitude, p.coords.longitude], 17); },
-          () => this.setState({ pcResolvedText: 'denied' }),
-          { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 },
-        );
-      },
+      pcLocateMe: () => this.pcGeoLocate(false),
       pcResolved: PC_GEO_MSG[st.pcResolvedText] ? (L[PC_GEO_MSG[st.pcResolvedText]] || STR.en[PC_GEO_MSG[st.pcResolvedText]]) : st.pcResolvedText,
       pcResolvedInk: PC_GEO_MSG[st.pcResolvedText] ? '#8d8479' : '#cfc6ba',
       L_pcMapTitle: L.pcMapTitle || STR.en.pcMapTitle,
