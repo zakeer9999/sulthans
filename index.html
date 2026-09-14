@@ -8,7 +8,19 @@
 <body>
 <x-dc>
 <helmet>
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<!-- maximum-scale/user-scalable used to sit here to stop a stray double-tap
+     zooming the app. iOS has ignored both since iOS 10, so iPhones could pinch
+     all along — and pinching out is how Safari is told to collapse its address
+     bar. Android Chrome obeys them, so the same gesture did nothing there and
+     the bar stayed put. Dropping them gives Android the gesture iPhones already
+     had; zoom has been live on every iPhone for months without trouble. -->
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<!-- The app shell is a fixed overlay, so the document never scrolls and the
+     browser's address bar can never collapse on its own. What it CAN do is stop
+     looking like a browser: theme-color tints Chrome's bar and iOS Safari's bars
+     to the app's own black, so the strip above the top bar reads as part of the
+     room instead of a white band. -->
+<meta name="theme-color" content="#070605" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Alex+Brush&family=Jost:wght@200;300;400;500&family=Noto+Serif+Tamil:wght@300;400;600&display=swap" rel="stylesheet" />
