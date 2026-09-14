@@ -209,6 +209,20 @@
 
   <div ref="{{ dimRef }}" style="position: fixed; inset: 0; z-index: 250; background: #070605; opacity: .72; pointer-events: none; transition: opacity 2400ms cubic-bezier(.22,1,.32,1)"></div>
 
+  <!-- Chrome only grants fullscreen to a deliberate tap: a swipe that scrolled the
+       page carries no activation, so nothing the hero listens for in the background
+       can ever take the address bar away. This is that tap, made visible. Shown
+       only where it can work (Chrome exposes requestFullscreen, not already
+       installed, not already fullscreen) and gone for the rest of the session. -->
+  <sc-if value="{{ showFs }}" hint-placeholder-val="{{ false }}">
+    <button onClick="{{ goFs }}" style="position: fixed; z-index: 260; top: calc(env(safe-area-inset-top, 0px) + 14px); right: 14px; min-height: 40px; display: flex; align-items: center; gap: 7px; padding: 10px 14px; border: 1px solid rgba(240,178,100,.34); border-radius: 999px; background: rgba(12,10,9,.62); backdrop-filter: blur(9px); -webkit-backdrop-filter: blur(9px); color: #efe7db; font-family: inherit; font-size: 9px; letter-spacing: .2em; text-transform: uppercase; cursor: pointer">
+      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="rgba(240,178,100,.95)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"></path>
+      </svg>
+      {{ fsLabel }}
+    </button>
+  </sc-if>
+
   <section data-screen-label="Hero" style="position: relative; height: 1200vh; width: 100%">
     <!-- dvh, not vh: on iOS vh is the URL-bar-hidden height, so a sticky pane sized
          in vh overhangs the visible area and leaves a dead band when Safari settles
@@ -3010,16 +3024,17 @@ class Component extends DCLogic {
     if (!/[?&]pagescroll=0\b/.test(location.search)) {
       document.documentElement.setAttribute('data-pagescroll', '1');
     }
-    /* Android Chrome still refuses to retract its bar on the hero, so the hero
-       asks for fullscreen the same way the order screen does: on the first touch
-       that ends there. touchend, not touchstart — entering fullscreen resizes
-       the viewport, and doing that mid-swipe would jump the scrub. Harmless
-       everywhere else: goFullscreen no-ops when already fullscreen, when
-       installed, and on iPhone Safari, which has no element fullscreen (the
-       hero pinch-to-zoom-out route still covers iOS). */
-    const grab = () => this.goFullscreen();
-    document.addEventListener('touchend', grab, { capture: true, passive: true });
-    document.addEventListener('click', grab, { capture: true });
+    /* The chip is offered only where the request can actually succeed: Chrome
+       and friends expose requestFullscreen (iPhone Safari does not), and an
+       installed app has no browser frame left to shed. Tracked in state so the
+       chip leaves the moment fullscreen is granted and comes back if the guest
+       swipes out of it — the browser's own exit is the only way back. */
+    this.fsAvail = !!document.documentElement.requestFullscreen &&
+      !window.matchMedia('(display-mode: standalone)').matches;
+    if (this.fsAvail) {
+      this._fsWatch = () => this.setState({ fsOn: !!document.fullscreenElement });
+      document.addEventListener('fullscreenchange', this._fsWatch);
+    }
     this.perfProbe();
     this.unsub = db.subscribe(() => {
       this.setState(s => ({ tick: s.tick + 1 }));
@@ -3148,6 +3163,7 @@ class Component extends DCLogic {
   }
 
   componentWillUnmount() {
+    if (this._fsWatch) document.removeEventListener('fullscreenchange', this._fsWatch);
     clearInterval(this._alertT);
     clearTimeout(this._linkT);
     clearInterval(this.etaT);
@@ -8689,6 +8705,9 @@ class Component extends DCLogic {
       slideVidBRef: this.refs.slideVidBRef, slideVidCRef: this.refs.slideVidCRef,
 
       showApp: st.screen !== 'hero' && st.screen !== 'tv',
+      showFs: !!this.fsAvail && !st.fsOn && st.screen === 'hero' && !st.booting,
+      fsLabel: st.lang === 'ta' ? '\u0bae\u0bc1\u0bb4\u0bc1\u0ba4\u0bbf\u0bb0\u0bc8' : 'Full screen',
+      goFs: () => { this.chime('tap'); this.goFullscreen(); },
       /* Signed in AND connected, on the screens staff work from. Either half
          failing takes it away — an empty corner is the whole message, so there
          is no amber middle state to learn. */
