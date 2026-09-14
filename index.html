@@ -46,7 +46,15 @@
   body { margin: 0; background: #070605; color: #efe7db; font-family: 'Jost', 'Noto Serif Tamil', system-ui, sans-serif; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
   /* Hosts sometimes pin body to touch-action: pan-x, which kills vertical
      panning inside the fixed app scroller. manipulation re-allows both axes. */
-  html, body { touch-action: manipulation !important; overscroll-behavior: none; }
+  html, body { touch-action: manipulation !important; }
+  /* overscroll-behavior: none used to sit on the root unconditionally. It is
+     there to stop pull-to-refresh and rubber-banding behind the app shell — but
+     on the hero it also suppressed the root overscroll that Chrome and Safari
+     use to drive their address-bar retract, which is why two or three swipes
+     down the hero no longer collapsed the bar. It now applies only while the
+     app shell is mounted; the hero scrolls with normal root behaviour, and every
+     inner pane already carries its own overscroll-behavior. */
+  html:has([data-app-shell]), html:has([data-app-shell]) body { overscroll-behavior: none; }
   /* React rewrites inline styles on every render, so touch behaviour cannot be
      set imperatively — it has to live in a rule that outlives a re-render. */
   /* -webkit-overflow-scrolling: touch used to be set here on every scroller. It
