@@ -3010,6 +3010,14 @@ class Component extends DCLogic {
     if (!/[?&]pagescroll=0\b/.test(location.search)) {
       document.documentElement.setAttribute('data-pagescroll', '1');
     }
+    /* Android Chrome still refuses to retract its bar on the hero, so the hero
+       asks for fullscreen the same way the order screen does: on the first touch
+       that ends there. touchend, not touchstart — entering fullscreen resizes
+       the viewport, and doing that mid-swipe would jump the scrub. Harmless
+       everywhere else: goFullscreen no-ops when already fullscreen, when
+       installed, and on iPhone Safari, which has no element fullscreen (the
+       hero pinch-to-zoom-out route still covers iOS). */
+    window.addEventListener('touchend', () => this.goFullscreen(), { once: true, passive: true });
     this.perfProbe();
     this.unsub = db.subscribe(() => {
       this.setState(s => ({ tick: s.tick + 1 }));
