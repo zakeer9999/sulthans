@@ -51,6 +51,40 @@
      the raw pointer stream — hence touch-action: none, set from a rule rather than
      inline because React rewrites inline styles on every render. */
   html[data-touch-engine] [data-nscroll] { touch-action: none !important; }
+  /* ?pagescroll=1 — the address bar experiment.
+     The app is normally a fixed overlay, so the document never scrolls and
+     neither Chrome nor Safari has anything to collapse their address bar
+     against. This mode hands the menu back to the page: the shell leaves
+     position: fixed, the menu pane rejoins normal flow so the document grows
+     with the dish list, and the top bar goes sticky in its place. The hero,
+     gate and footer are pulled out of the document so their 1200vh cannot add
+     scroll behind it, and the order sheet + its scrim go fixed so they stay on
+     the viewport rather than sinking to the bottom of a very tall page.
+     Every other pane is absolute; inset: 0 and simply fills 100dvh as before.
+     Written as rules, not inline styles, because React rewrites inline styles
+     on every render — the same reason data-touch-engine lives here. */
+  /* overflow-x: hidden was the trap: CSS promotes the other axis from visible to
+     auto, so html and body each became their own 540px scroll box and the root
+     scroller had nothing left to move — a nested scroller again, which is the
+     exact thing this mode exists to escape. Both axes stay visible here and the
+     horizontal clip moves to the shell. The height chain has to be released
+     too: html, body and the runtime's own wrapper are all viewport-tall by
+     default, so the shell's content could not push the document past one
+     screen no matter what the shell did. */
+  html[data-pagescroll], html[data-pagescroll] body { overflow: visible !important; height: auto !important; min-height: 100%; }
+  html[data-pagescroll] body > div, html[data-pagescroll] .sc-host { height: auto !important; min-height: 100dvh; }
+  html[data-pagescroll] [data-app-shell] { position: relative !important; inset: auto !important; min-height: 100dvh; overflow-x: clip !important; overflow-y: visible !important; }
+  /* Releasing by exclusion caught the coach tooltip too: a fixed overlay child
+     became a full-screen block in flow, shoving the sticky bar a screen down.
+     Overlays stay on the viewport and only real screen panes join the page. */
+  html[data-pagescroll] [data-screen-pane] { position: relative !important; inset: auto !important; min-height: 100dvh; overflow: visible !important; }
+  html[data-pagescroll] [data-coach] { position: fixed !important; }
+  html[data-pagescroll] [data-menu-pane] { touch-action: auto !important; padding-top: 0 !important; min-height: 100dvh; }
+  html[data-pagescroll] [data-top-bar] { position: sticky !important; top: 0; }
+  html[data-pagescroll] [data-sheet], html[data-pagescroll] [data-sheet-scrim] { position: fixed !important; }
+  html[data-pagescroll] body:has([data-app-shell]) [data-screen-label="Hero"],
+  html[data-pagescroll] body:has([data-app-shell]) [data-screen-label="Tap to order"],
+  html[data-pagescroll] body:has([data-app-shell]) footer { display: none !important; }
   * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
   ::-webkit-scrollbar { width: 0; height: 0; }
   a { color: #f0a03c; text-decoration: none; }
@@ -288,13 +322,13 @@
   </footer>
 
   <sc-if value="{{ showApp }}" hint-placeholder-val="{{ false }}">
-    <div style="position: fixed; inset: 0; z-index: 120; background: #070605; animation: fadeIn 340ms ease-out; overflow: hidden">
+    <div data-app-shell="" style="position: fixed; inset: 0; z-index: 120; background: #070605; animation: fadeIn 340ms ease-out; overflow: hidden">
 
       <!-- Coach marks sit outside the top bar: that bar is a horizontal scroll
            box, and anything hanging below it was clipped by the scroll box. Fixed
            to the viewport instead, with its caret aimed at the button it names. -->
       <sc-if value="{{ coachOn }}" hint-placeholder-val="{{ false }}">
-        <div style="position: fixed; z-index: 60; top: {{ coachTop }}; left: {{ coachLeft }}; width: {{ coachWidth }}; padding: 10px 12px 11px; border-radius: 12px; background: linear-gradient(180deg, rgba(46,32,18,.97), rgba(28,20,12,.97)); border: 1px solid rgba(240,160,60,.44); box-shadow: 0 14px 32px rgba(0,0,0,.5); animation: coachIn 320ms cubic-bezier(.23,1,.32,1) both; pointer-events: none">
+        <div data-coach="" style="position: fixed; z-index: 60; top: {{ coachTop }}; left: {{ coachLeft }}; width: {{ coachWidth }}; padding: 10px 12px 11px; border-radius: 12px; background: linear-gradient(180deg, rgba(46,32,18,.97), rgba(28,20,12,.97)); border: 1px solid rgba(240,160,60,.44); box-shadow: 0 14px 32px rgba(0,0,0,.5); animation: coachIn 320ms cubic-bezier(.23,1,.32,1) both; pointer-events: none">
           <span style="position: absolute; top: -5px; left: {{ coachCaret }}; width: 9px; height: 9px; transform: rotate(45deg); background: rgba(46,32,18,.97); border-left: 1px solid rgba(240,160,60,.44); border-top: 1px solid rgba(240,160,60,.44)"></span>
           <span style="display: block; font-size: 10.5px; font-weight: 300; line-height: 1.45; color: #f2ece2; text-wrap: pretty">{{ coachTitle }}</span>
           <span style="display: block; margin-top: 4px; font-size: 8.5px; letter-spacing: .16em; text-transform: uppercase; color: rgba(240,160,60,.74)">{{ coachHint }}</span>
@@ -307,7 +341,7 @@
            carried the toggle past the right edge — and on iOS the bar would not
            scroll back, so the guest could not return to English. The toggle now
            holds its own slot at the end of the row and the rest scrolls under it. -->
-      <div style="position: absolute; top: 0; left: 0; right: 0; z-index: 40; display: flex; align-items: center; gap: 4px; padding: calc(env(safe-area-inset-top, 0px) + 12px) calc(env(safe-area-inset-right, 0px) + 12px) 12px calc(env(safe-area-inset-left, 0px) + 12px); background: linear-gradient(180deg, rgba(7,6,5,.88), rgba(7,6,5,0))">
+      <div data-top-bar="" style="position: absolute; top: 0; left: 0; right: 0; z-index: 40; display: flex; align-items: center; gap: 4px; padding: calc(env(safe-area-inset-top, 0px) + 12px) calc(env(safe-area-inset-right, 0px) + 12px) 12px calc(env(safe-area-inset-left, 0px) + 12px); background: linear-gradient(180deg, rgba(7,6,5,.88), rgba(7,6,5,0))">
         <div style="flex: 1 1 0; min-width: 0; display: flex; align-items: center; gap: 4px; flex-wrap: nowrap; overflow-x: auto; overscroll-behavior-x: contain; touch-action: pan-x; scrollbar-width: none">
         <button onClick="{{ goHome }}" title="Home" aria-label="Home" style="width: 42px; height: 42px; flex: 0 0 auto; border-radius: 13px; display: flex; align-items: center; justify-content: center; backdrop-filter: {{ glass }}; -webkit-backdrop-filter: {{ glass }}; transition: transform 150ms cubic-bezier(.23,1,.32,1); background: rgba(28,22,17,.5); border: 1px solid rgba(240,160,60,.2); box-shadow: inset 0 1px 0 rgba(255,214,160,.16)" style-active="transform: scale(.94)">
           <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="rgba(245,239,228,.9)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -424,7 +458,7 @@
       </sc-if>
 
       <sc-if value="{{ isCategories }}" hint-placeholder-val="{{ false }}">
-        <div style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 26px; padding: 96px 22px calc(env(safe-area-inset-bottom, 0px) + 32px); background: radial-gradient(120% 80% at 50% 8%, #17110b 0%, #070605 68%)">
+        <div data-screen-pane="" style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 26px; padding: 96px 22px calc(env(safe-area-inset-bottom, 0px) + 32px); background: radial-gradient(120% 80% at 50% 8%, #17110b 0%, #070605 68%)">
           <div style="text-align: center; display: flex; flex-direction: column; gap: 10px; animation: riseIn 480ms cubic-bezier(.23,1,.32,1) both">
             <div style="font-size: 9px; letter-spacing: .42em; color: rgba(240,160,60,.6); text-transform: uppercase">{{ L_choose }}</div>
             <div style="font-family: 'Cormorant Garamond', serif; font-weight: 300; font-size: clamp(26px, 7vw, 38px); color: #f4eee4">{{ L_chooseTitle }}</div>
@@ -452,7 +486,7 @@
       </sc-if>
 
       <sc-if value="{{ isCarousels }}" hint-placeholder-val="{{ false }}">
-        <div data-nscroll="y" ref="{{ bindMenuScroll }}" style="position: absolute; inset: 0; overflow-y: auto; overscroll-behavior: none; touch-action: pan-y; padding: 84px 0 calc(env(safe-area-inset-bottom, 0px) + 30px); background: radial-gradient(120% 70% at 50% 0%, #16110c 0%, #070605 62%)">
+        <div data-screen-pane="" data-menu-pane="" data-nscroll="y" ref="{{ bindMenuScroll }}" style="position: absolute; inset: 0; overflow-y: auto; overscroll-behavior: none; touch-action: pan-y; padding: 84px 0 calc(env(safe-area-inset-bottom, 0px) + 30px); background: radial-gradient(120% 70% at 50% 0%, #16110c 0%, #070605 62%)">
           <div style="padding: 0 20px 22px; display: flex; align-items: flex-end; justify-content: space-between; gap: 14px">
             <div style="display: flex; flex-direction: column; gap: 8px">
               <div style="font-size: 9px; letter-spacing: .38em; color: rgba(240,160,60,.6); text-transform: uppercase">{{ routeLabel }}</div>
@@ -499,7 +533,7 @@
       </sc-if>
 
       <sc-if value="{{ isFeed }}" hint-placeholder-val="{{ false }}">
-        <div ref="{{ feedRef }}" style="position: absolute; inset: 0; background: #050403; touch-action: none">
+        <div data-feed-pane="" ref="{{ feedRef }}" style="position: absolute; inset: 0; background: #050403; touch-action: none">
           <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; overflow: hidden">
             <div ref="{{ slideShellRef }}" style="position: relative; width: 100%; height: 100%; background: #080605; overflow: hidden">
               <div style="position: absolute; inset: 0; background: {{ slide.ground }}"></div>
@@ -622,7 +656,7 @@
       </sc-if>
 
       <sc-if value="{{ isAdmin }}" hint-placeholder-val="{{ false }}">
-        <div data-nscroll="y" ref="{{ bindPaneScroll }}" style="position: absolute; inset: 0; overflow-y: auto; overscroll-behavior: none; touch-action: pan-y; background: #0a0807; padding: calc(env(safe-area-inset-top, 0px) + 18px) 0 calc(env(safe-area-inset-bottom, 0px) + 40px)">
+        <div data-screen-pane="" data-nscroll="y" ref="{{ bindPaneScroll }}" style="position: absolute; inset: 0; overflow-y: auto; overscroll-behavior: none; touch-action: pan-y; background: #0a0807; padding: calc(env(safe-area-inset-top, 0px) + 18px) 0 calc(env(safe-area-inset-bottom, 0px) + 40px)">
           <sc-if value="{{ needsAuth }}" hint-placeholder-val="{{ false }}">
             <div style="min-height: 78vh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px; padding: 0 24px">
               <div style="font-family: 'Cormorant Garamond', serif; font-size: 28px; font-weight: 300; color: #f2ece2">{{ L_staffOnly }}</div>
@@ -1144,11 +1178,11 @@
       </sc-if>
 
       <sc-if value="{{ sheetOpen }}" hint-placeholder-val="{{ false }}">
-        <div onClick="{{ closeSheet }}" style="position: absolute; inset: 0; z-index: 60; background: rgba(4,3,3,.62); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); animation: fadeIn 220ms ease-out"></div>
+        <div data-sheet-scrim="" onClick="{{ closeSheet }}" style="position: absolute; inset: 0; z-index: 60; background: rgba(4,3,3,.62); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); animation: fadeIn 220ms ease-out"></div>
         <!-- The sheet grew a walk-in list, so it now overflows on a phone. It scrolls
              itself: pan-y claims the vertical gesture from the app shell, which sets
              touch-action: none on the panes behind it. -->
-        <div data-nscroll="y" ref="{{ bindSheetScroll }}" style="position: absolute; left: 0; right: 0; bottom: 0; z-index: 61; max-height: 84%; overflow-y: auto; touch-action: pan-y; overscroll-behavior: contain; padding: 20px 20px calc(env(safe-area-inset-bottom, 0px) + 26px); border-radius: 22px 22px 0 0; background: linear-gradient(180deg, rgba(30,24,18,.94), rgba(12,10,8,.97)); backdrop-filter: blur(26px) saturate(170%); -webkit-backdrop-filter: blur(26px) saturate(170%); border-top: 1px solid rgba(240,160,60,.24); box-shadow: 0 -30px 90px rgba(0,0,0,.6); animation: slideUp 320ms cubic-bezier(.23,1,.32,1)">
+        <div data-sheet="" data-nscroll="y" ref="{{ bindSheetScroll }}" style="position: absolute; left: 0; right: 0; bottom: 0; z-index: 61; max-height: 84%; overflow-y: auto; touch-action: pan-y; overscroll-behavior: contain; padding: 20px 20px calc(env(safe-area-inset-bottom, 0px) + 26px); border-radius: 22px 22px 0 0; background: linear-gradient(180deg, rgba(30,24,18,.94), rgba(12,10,8,.97)); backdrop-filter: blur(26px) saturate(170%); -webkit-backdrop-filter: blur(26px) saturate(170%); border-top: 1px solid rgba(240,160,60,.24); box-shadow: 0 -30px 90px rgba(0,0,0,.6); animation: slideUp 320ms cubic-bezier(.23,1,.32,1)">
           <div style="width: 38px; height: 3px; border-radius: 2px; background: rgba(240,160,60,.3); margin: 0 auto 18px"></div>
           <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 16px">
             <div style="font-family: 'Cormorant Garamond', serif; font-size: 24px; font-weight: 300; color: #f4eee4">{{ sheetTitle }}</div>
@@ -2945,6 +2979,12 @@ class Component extends DCLogic {
       (/Mac/.test(navigator.userAgent) && (navigator.maxTouchPoints || 0) > 1);
     if (window.top !== window.self && !iosTouch) {
       document.documentElement.setAttribute('data-touch-engine', '1');
+    }
+    /* Opt-in page scrolling. Off by default: it moves the menu out of the fixed
+       shell, which is the one change that lets a swipe collapse the address bar
+       but also the one that has to be proved on a real phone first. */
+    if (/[?&]pagescroll=1\b/.test(location.search)) {
+      document.documentElement.setAttribute('data-pagescroll', '1');
     }
     this.perfProbe();
     this.unsub = db.subscribe(() => {
