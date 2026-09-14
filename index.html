@@ -3017,7 +3017,9 @@ class Component extends DCLogic {
        everywhere else: goFullscreen no-ops when already fullscreen, when
        installed, and on iPhone Safari, which has no element fullscreen (the
        hero pinch-to-zoom-out route still covers iOS). */
-    window.addEventListener('touchend', () => this.goFullscreen(), { once: true, passive: true });
+    const grab = () => this.goFullscreen();
+    document.addEventListener('touchend', grab, { capture: true, passive: true });
+    document.addEventListener('click', grab, { capture: true });
     this.perfProbe();
     this.unsub = db.subscribe(() => {
       this.setState(s => ({ tick: s.tick + 1 }));
