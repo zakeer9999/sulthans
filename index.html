@@ -3048,13 +3048,16 @@ class Component extends DCLogic {
     const start = () => { if (this.state.screen === 'tv') this.enterTv(); else this.bootHero(); };
     this.attachMedia().then(start, start);
     this.attachStore();
-    /* pointerdown, not touchend: Chrome hands a page its transient activation
-        at the START of a touch, before the gesture is classified. By touchend a
-        swipe has become a scroll and the activation is spent — which is why every
-        swipe-triggered attempt was refused. Asking on pointerdown means the first
-        finger on the hero, swipe or tap, is what takes the address bar away.
-        goFullscreen no-ops when installed, already fullscreen, or on iPhone. */
-    this.onFirstTouch = () => { this.lift(); this.goFullscreen(); };
+    this.onFirstTouch = () => this.lift();
+    /* Chrome counts pointerdown as user activation for a MOUSE only; on a touch
+       screen the activation arrives with the tap and a swipe never carries one —
+       which is why both the touchend and the pointerdown attempts were refused.
+       So the hook is a plain tap, anywhere, captured before any handler can stop
+       it: the guest's first tap on the hero takes the address bar away and no
+       button has to exist. A swipe alone genuinely cannot do it on Chrome.
+       No-ops when installed, already fullscreen, or on iPhone Safari. */
+    this._fsTap = () => this.goFullscreen();
+    document.addEventListener('click', this._fsTap, { capture: true });
     window.addEventListener('pointerdown', this.onFirstTouch, { once: true });
     /* Coming back to the board after a pocket needs one immediate re-render, or
        every ticket shows the age it had when the screen went dark. */
