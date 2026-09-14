@@ -2991,10 +2991,15 @@ class Component extends DCLogic {
     if (window.top !== window.self && !iosTouch) {
       document.documentElement.setAttribute('data-touch-engine', '1');
     }
-    /* Opt-in page scrolling. Off by default: it moves the menu out of the fixed
-       shell, which is the one change that lets a swipe collapse the address bar
-       but also the one that has to be proved on a real phone first. */
-    if (/[?&]pagescroll=1\b/.test(location.search)) {
+    /* Page scrolling, on by default. Android Chrome collapses its address bar
+       only when the ROOT document scrolls — a swipe inside a fixed overlay's own
+       scroller gives it nothing to collapse against, which is why the bar stayed
+       put. This mode moves the menu into normal document flow so the page itself
+       is what moves. ?pagescroll=0 puts the old fixed shell back if a device
+       misbehaves. (Chrome on Android tablets never auto-hides its toolbar in
+       tab-strip mode; nothing a page does can change that — the installed app is
+       the only way to lose the bar there.) */
+    if (!/[?&]pagescroll=0\b/.test(location.search)) {
       document.documentElement.setAttribute('data-pagescroll', '1');
     }
     this.perfProbe();
@@ -3870,6 +3875,29 @@ class Component extends DCLogic {
   }
 
   // ---- wall display ----
+  /* Chrome on Android only retracts its address bar when the root document
+     scrolls, and on tablets in tab-strip mode it never retracts at all. The
+     Fullscreen API sidesteps both: asked for inside a real tap, Chrome drops
+     the whole browser frame — phone and tablet alike — and gives the page the
+     entire screen. Must be called synchronously in the gesture, so it sits in
+     the enter handler rather than in a timer or a setState callback.
+     iOS Safari has no element fullscreen; the promise rejects and is ignored,
+     which is why the hero pinch-to-zoom route stays in place for iPhones. */
+  goFullscreen() {
+    const el = document.documentElement;
+    if (document.fullscreenElement || !el.requestFullscreen) return;
+    // Installed (standalone) already has no browser frame to hide.
+    if (window.matchMedia('(display-mode: standalone)').matches) return;
+    try {
+      const p = el.requestFullscreen({ navigationUI: 'hide' });
+      if (p && p.catch) p.catch(() => {});
+    } catch (e) {}
+  }
+
+  dropFullscreen() {
+    try { if (document.fullscreenElement) document.exitFullscreen(); } catch (e) {}
+  }
+
   // One second tick drives the ticket ages; db.subscribe already covers content.
   enterTv() {
     this.setState({ screen: 'tv', booting: false });
@@ -7482,6 +7510,7 @@ class Component extends DCLogic {
       return;
     }
     // Leaving the panel does not sign staff out — the day-long hold decides that.
+    this.dropFullscreen();
     this.setState({ screen: 'hero', sheet: null, authed: this.authHeld(), ratingStars: 0 });
     requestAnimationFrame(() => {
       const g = this.refs.gateRef.current;
@@ -8800,6 +8829,9 @@ class Component extends DCLogic {
       openCategories: () => {
         if (this.entering) return;
         this.entering = true;
+        // Inside the tap, before anything async — Chrome grants fullscreen only
+        // to a call it can still trace back to the gesture that started it.
+        this.goFullscreen();
         /* The transition is scheduled FIRST, so nothing that follows can strand the
            gate. Sound and haptics are decoration; the screen change is the promise
            made to the guest, and it is never contingent on the audio graph. The
