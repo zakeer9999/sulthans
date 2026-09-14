@@ -2534,7 +2534,10 @@ Object.assign(STR.en, {
   dlvChargeDefNote: 'Sets what new door orders start as, and switches every live one to match. Any single bag can still be changed on its own card below.',
   dlvWhereLbl: 'Delivering to your address',
   dlvPackedNow: 'Packed · leaving soon',
-  dlvPackedOut: 'Out for delivery',
+  /* A door bag that is flagged ready but carries no departure stamp: an older
+     row from before the stamp existed. It is packed, and saying more than that
+     would promise a countdown that cannot be shown. */
+  dlvPackedOut: 'Packed · ready to leave',
   dlvOutNow: 'Out for delivery',
   dlvPassName: 'Bag name',
   dlvPassShowDoor: 'The rider carries this bag to your address. Keep this screen for the handover.',
@@ -2608,7 +2611,7 @@ Object.assign(STR.ta, {
   dlvChargeAllOff: 'டெலிவரி கட்டணம் இல்லை',
   dlvWhereLbl: 'முகவரிக்கு டெலிவரி',
   dlvPackedNow: 'பேக் செய்யப்பட்டது · விரைவில் புறப்படும்',
-  dlvPackedOut: 'டெலிவரிக்கு புறப்பட்டது',
+  dlvPackedOut: 'பேக் செய்யப்பட்டது · புறப்பட தயார்',
   dlvOutNow: 'டெலிவரிக்கு புறப்பட்டது',
   dlvPassName: 'பார்சல் பெயர்',
   upiClaimTitle: 'பணம் சரிபார்க்கப்பட காத்திருக்கிறது',
@@ -7922,24 +7925,30 @@ class Component extends DCLogic {
         /* A bag goes out whole, so per-portion bumping is the wrong shape for a
            parcel: one action marks the lot, and tapping it again undoes a
            mis-press the same way the table lines do. */
+        /* For a door bag the departure stamp is the state, not `ready`. A row
+           flagged ready without a stamp — bagged by the kitchen before that
+           press was reserved for dispatch — read as "On the road" here, so the
+           counter's dispatch press cleared it instead of sending it. Reading the
+           stamp puts that row back on the dispatch press. */
         readyLabel: door
-          ? (o.ready ? L.dlvOnRoad : L.dlvSendOut)
+          ? (dlvOutOf(o) ? L.dlvOnRoad : L.dlvSendOut)
           : (o.ready ? L.parcelNotReady : L.parcelReady),
-        readyColor: o.ready ? '#9fd07f' : '#1a1005',
-        readyBg: o.ready ? 'rgba(159,208,127,.12)' : 'linear-gradient(180deg, #ffc27a, #f0a03c)',
+        readyColor: (door ? !!dlvOutOf(o) : o.ready) ? '#9fd07f' : '#1a1005',
+        readyBg: (door ? !!dlvOutOf(o) : o.ready) ? 'rgba(159,208,127,.12)' : 'linear-gradient(180deg, #ffc27a, #f0a03c)',
         toggleReady: () => {
-          this.chime(o.ready ? 'back' : 'bell');
+          const on = door ? !!dlvOutOf(o) : o.ready;
+          this.chime(on ? 'back' : 'bell');
           db.patch(st2 => {
             const t = st2.orders[k];
             if (!t) return;
-            t.ready = !o.ready;
+            t.ready = !on;
             /* The moment the bag leaves, so the guest's countdown measures the
                drive rather than the kitchen. Undoing the press clears it —
                a stale departure time is worse than none. */
-            if (door) t.dlv = o.ready
+            if (door) t.dlv = on
               ? { ...t.dlv, outAt: null }
               : { ...t.dlv, outAt: Date.now(), mins: t.dlv.mins != null ? t.dlv.mins : dlvMinsOf(o) };
-            (t.items || []).forEach(i => { i.sent = o.ready ? 0 : i.qty; });
+            (t.items || []).forEach(i => { i.sent = on ? 0 : i.qty; });
           });
         },
         /* Three states, because a part-paid ticket is the one staff must not
@@ -8464,8 +8473,14 @@ class Component extends DCLogic {
               t.served = Date.now();
               /* Everything bagged is what "ready" means for a parcel, so the ticket
                  leaves the kitchen queue and the guest's phone chimes from the same
-                 press — the counter should not have to say it twice. */
-              if (kindOf(k) === 'parcel') t.ready = true;
+                 press — the counter should not have to say it twice.
+                 A door bag is the exception: there `ready` is the departure flag,
+                 and it is set by the out-for-delivery press together with the
+                 stamp the countdown is measured from. Setting it here left a bag
+                 flagged as gone with no stamp — the guest got the badge and no
+                 countdown under it, and the counter's own button had already
+                 flipped to "On the road", so the real dispatch press undid it. */
+              if (kindOf(k) === 'parcel' && !(t.dlv && t.dlv.mode === 'door')) t.ready = true;
             }
           });
           this.setState(s => {
