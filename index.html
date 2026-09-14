@@ -8,7 +8,28 @@
 <body>
 <x-dc>
 <helmet>
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<!-- maximum-scale/user-scalable used to sit here to stop a stray double-tap
+     zooming the app. iOS has ignored both since iOS 10, so iPhones could pinch
+     all along — and pinching out is how Safari is told to collapse its address
+     bar. Android Chrome obeys them, so the same gesture did nothing there and
+     the bar stayed put. Dropping them gives Android the gesture iPhones already
+     had; zoom has been live on every iPhone for months without trouble. -->
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<!-- The app shell is a fixed overlay, so the document never scrolls and the
+     browser's address bar can never collapse on its own. What it CAN do is stop
+     looking like a browser: theme-color tints Chrome's bar and iOS Safari's bars
+     to the app's own black, so the strip above the top bar reads as part of the
+     room instead of a white band. -->
+<meta name="theme-color" content="#070605" />
+<!-- Installed from Add to Home screen, the app opens with no browser chrome at
+     all — the only way to be rid of the address bar on a Chrome tablet, which
+     never auto-hides its toolbar in tab-strip mode. -->
+<link rel="manifest" href="./manifest.json" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Sulthan's" />
+<link rel="apple-touch-icon" href="./assets/icon-192.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Alex+Brush&family=Jost:wght@200;300;400;500&family=Noto+Serif+Tamil:wght@300;400;600&display=swap" rel="stylesheet" />
@@ -36,9 +57,45 @@
   /* Every scroller hands its gesture to the pointer engine: a host page can veto a
      native pan on an ancestor while still delivering taps, which is what froze
      these panes in the iOS webview. The engine writes scrollTop itself, so it needs
-     the raw pointer stream — hence touch-action: none, set from a rule rather than
-     inline because React rewrites inline styles on every render. */
-  html[data-touch-engine] [data-nscroll] { touch-action: none !important; }
+     the raw pointer stream, so every native pan is taken off these panes — but
+     pinch-zoom is left with the browser: it is the gesture that collapses the
+     address bar, and a two-finger pinch is never a scroll. Set from a rule
+     rather than inline because React rewrites inline styles on every render. */
+  html[data-touch-engine] [data-nscroll] { touch-action: pinch-zoom !important; }
+  /* ?pagescroll=1 — the address bar experiment.
+     The app is normally a fixed overlay, so the document never scrolls and
+     neither Chrome nor Safari has anything to collapse their address bar
+     against. This mode hands the menu back to the page: the shell leaves
+     position: fixed, the menu pane rejoins normal flow so the document grows
+     with the dish list, and the top bar goes sticky in its place. The hero,
+     gate and footer are pulled out of the document so their 1200vh cannot add
+     scroll behind it, and the order sheet + its scrim go fixed so they stay on
+     the viewport rather than sinking to the bottom of a very tall page.
+     Every other pane is absolute; inset: 0 and simply fills 100dvh as before.
+     Written as rules, not inline styles, because React rewrites inline styles
+     on every render — the same reason data-touch-engine lives here. */
+  /* overflow-x: hidden was the trap: CSS promotes the other axis from visible to
+     auto, so html and body each became their own 540px scroll box and the root
+     scroller had nothing left to move — a nested scroller again, which is the
+     exact thing this mode exists to escape. Both axes stay visible here and the
+     horizontal clip moves to the shell. The height chain has to be released
+     too: html, body and the runtime's own wrapper are all viewport-tall by
+     default, so the shell's content could not push the document past one
+     screen no matter what the shell did. */
+  html[data-pagescroll], html[data-pagescroll] body { overflow: visible !important; height: auto !important; min-height: 100%; }
+  html[data-pagescroll] body > div, html[data-pagescroll] .sc-host { height: auto !important; min-height: 100dvh; }
+  html[data-pagescroll] [data-app-shell] { position: relative !important; inset: auto !important; min-height: 100dvh; overflow-x: clip !important; overflow-y: visible !important; }
+  /* Releasing by exclusion caught the coach tooltip too: a fixed overlay child
+     became a full-screen block in flow, shoving the sticky bar a screen down.
+     Overlays stay on the viewport and only real screen panes join the page. */
+  html[data-pagescroll] [data-screen-pane] { position: relative !important; inset: auto !important; min-height: 100dvh; overflow: visible !important; }
+  html[data-pagescroll] [data-coach] { position: fixed !important; }
+  html[data-pagescroll] [data-menu-pane] { touch-action: auto !important; padding-top: 0 !important; min-height: 100dvh; }
+  html[data-pagescroll] [data-top-bar] { position: sticky !important; top: 0; }
+  html[data-pagescroll] [data-sheet], html[data-pagescroll] [data-sheet-scrim] { position: fixed !important; }
+  html[data-pagescroll] body:has([data-app-shell]) [data-screen-label="Hero"],
+  html[data-pagescroll] body:has([data-app-shell]) [data-screen-label="Tap to order"],
+  html[data-pagescroll] body:has([data-app-shell]) footer { display: none !important; }
   * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
   ::-webkit-scrollbar { width: 0; height: 0; }
   a { color: #f0a03c; text-decoration: none; }
@@ -276,13 +333,13 @@
   </footer>
 
   <sc-if value="{{ showApp }}" hint-placeholder-val="{{ false }}">
-    <div style="position: fixed; inset: 0; z-index: 120; background: #070605; animation: fadeIn 340ms ease-out; overflow: hidden">
+    <div data-app-shell="" style="position: fixed; inset: 0; z-index: 120; background: #070605; animation: fadeIn 340ms ease-out; overflow: hidden">
 
       <!-- Coach marks sit outside the top bar: that bar is a horizontal scroll
            box, and anything hanging below it was clipped by the scroll box. Fixed
            to the viewport instead, with its caret aimed at the button it names. -->
       <sc-if value="{{ coachOn }}" hint-placeholder-val="{{ false }}">
-        <div style="position: fixed; z-index: 60; top: {{ coachTop }}; left: {{ coachLeft }}; width: {{ coachWidth }}; padding: 10px 12px 11px; border-radius: 12px; background: linear-gradient(180deg, rgba(46,32,18,.97), rgba(28,20,12,.97)); border: 1px solid rgba(240,160,60,.44); box-shadow: 0 14px 32px rgba(0,0,0,.5); animation: coachIn 320ms cubic-bezier(.23,1,.32,1) both; pointer-events: none">
+        <div data-coach="" style="position: fixed; z-index: 60; top: {{ coachTop }}; left: {{ coachLeft }}; width: {{ coachWidth }}; padding: 10px 12px 11px; border-radius: 12px; background: linear-gradient(180deg, rgba(46,32,18,.97), rgba(28,20,12,.97)); border: 1px solid rgba(240,160,60,.44); box-shadow: 0 14px 32px rgba(0,0,0,.5); animation: coachIn 320ms cubic-bezier(.23,1,.32,1) both; pointer-events: none">
           <span style="position: absolute; top: -5px; left: {{ coachCaret }}; width: 9px; height: 9px; transform: rotate(45deg); background: rgba(46,32,18,.97); border-left: 1px solid rgba(240,160,60,.44); border-top: 1px solid rgba(240,160,60,.44)"></span>
           <span style="display: block; font-size: 10.5px; font-weight: 300; line-height: 1.45; color: #f2ece2; text-wrap: pretty">{{ coachTitle }}</span>
           <span style="display: block; margin-top: 4px; font-size: 8.5px; letter-spacing: .16em; text-transform: uppercase; color: rgba(240,160,60,.74)">{{ coachHint }}</span>
@@ -295,8 +352,8 @@
            carried the toggle past the right edge — and on iOS the bar would not
            scroll back, so the guest could not return to English. The toggle now
            holds its own slot at the end of the row and the rest scrolls under it. -->
-      <div style="position: absolute; top: 0; left: 0; right: 0; z-index: 40; display: flex; align-items: center; gap: 4px; padding: calc(env(safe-area-inset-top, 0px) + 12px) calc(env(safe-area-inset-right, 0px) + 12px) 12px calc(env(safe-area-inset-left, 0px) + 12px); background: linear-gradient(180deg, rgba(7,6,5,.88), rgba(7,6,5,0))">
-        <div style="flex: 1 1 0; min-width: 0; display: flex; align-items: center; gap: 4px; flex-wrap: nowrap; overflow-x: auto; overscroll-behavior-x: contain; touch-action: pan-x; scrollbar-width: none">
+      <div data-top-bar="" style="position: absolute; top: 0; left: 0; right: 0; z-index: 40; display: flex; align-items: center; gap: 4px; padding: calc(env(safe-area-inset-top, 0px) + 12px) calc(env(safe-area-inset-right, 0px) + 12px) 12px calc(env(safe-area-inset-left, 0px) + 12px); background: linear-gradient(180deg, rgba(7,6,5,.88), rgba(7,6,5,0))">
+        <div style="flex: 1 1 0; min-width: 0; display: flex; align-items: center; gap: 4px; flex-wrap: nowrap; overflow-x: auto; overscroll-behavior-x: contain; touch-action: pan-x pinch-zoom; scrollbar-width: none">
         <button onClick="{{ goHome }}" title="Home" aria-label="Home" style="width: 42px; height: 42px; flex: 0 0 auto; border-radius: 13px; display: flex; align-items: center; justify-content: center; backdrop-filter: {{ glass }}; -webkit-backdrop-filter: {{ glass }}; transition: transform 150ms cubic-bezier(.23,1,.32,1); background: rgba(28,22,17,.5); border: 1px solid rgba(240,160,60,.2); box-shadow: inset 0 1px 0 rgba(255,214,160,.16)" style-active="transform: scale(.94)">
           <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="rgba(245,239,228,.9)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M3.4 10.2 12 3.4l8.6 6.8V20a.9.9 0 0 1-.9.9h-4.4v-6.3H8.7v6.3H4.3a.9.9 0 0 1-.9-.9Z"></path>
@@ -412,7 +469,7 @@
       </sc-if>
 
       <sc-if value="{{ isCategories }}" hint-placeholder-val="{{ false }}">
-        <div style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 26px; padding: 96px 22px calc(env(safe-area-inset-bottom, 0px) + 32px); background: radial-gradient(120% 80% at 50% 8%, #17110b 0%, #070605 68%)">
+        <div data-screen-pane="" style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 26px; padding: 96px 22px calc(env(safe-area-inset-bottom, 0px) + 32px); background: radial-gradient(120% 80% at 50% 8%, #17110b 0%, #070605 68%)">
           <div style="text-align: center; display: flex; flex-direction: column; gap: 10px; animation: riseIn 480ms cubic-bezier(.23,1,.32,1) both">
             <div style="font-size: 9px; letter-spacing: .42em; color: rgba(240,160,60,.6); text-transform: uppercase">{{ L_choose }}</div>
             <div style="font-family: 'Cormorant Garamond', serif; font-weight: 300; font-size: clamp(26px, 7vw, 38px); color: #f4eee4">{{ L_chooseTitle }}</div>
@@ -440,7 +497,7 @@
       </sc-if>
 
       <sc-if value="{{ isCarousels }}" hint-placeholder-val="{{ false }}">
-        <div data-nscroll="y" ref="{{ bindMenuScroll }}" style="position: absolute; inset: 0; overflow-y: auto; overscroll-behavior: none; touch-action: pan-y; padding: 84px 0 calc(env(safe-area-inset-bottom, 0px) + 30px); background: radial-gradient(120% 70% at 50% 0%, #16110c 0%, #070605 62%)">
+        <div data-screen-pane="" data-menu-pane="" data-nscroll="y" ref="{{ bindMenuScroll }}" style="position: absolute; inset: 0; overflow-y: auto; overscroll-behavior: none; touch-action: pan-y pinch-zoom; padding: 84px 0 calc(env(safe-area-inset-bottom, 0px) + 30px); background: radial-gradient(120% 70% at 50% 0%, #16110c 0%, #070605 62%)">
           <div style="padding: 0 20px 22px; display: flex; align-items: flex-end; justify-content: space-between; gap: 14px">
             <div style="display: flex; flex-direction: column; gap: 8px">
               <div style="font-size: 9px; letter-spacing: .38em; color: rgba(240,160,60,.6); text-transform: uppercase">{{ routeLabel }}</div>
@@ -455,7 +512,7 @@
                 <div style="flex: 1; height: 1px; background: linear-gradient(90deg, rgba(240,160,60,.22), transparent)"></div>
                 <div style="font-size: 9px; letter-spacing: .2em; color: #6f665c; text-transform: uppercase">{{ cat.count }}</div>
               </div>
-              <div data-nscroll="x" ref="{{ bindRow }}" style="display: flex; gap: 12px; overflow-x: auto; scrollbar-width: none; overscroll-behavior-x: contain; touch-action: pan-x pan-y; cursor: grab; padding: 4px 20px 8px">
+              <div data-nscroll="x" ref="{{ bindRow }}" style="display: flex; gap: 12px; overflow-x: auto; scrollbar-width: none; overscroll-behavior-x: contain; touch-action: pan-x pan-y pinch-zoom; cursor: grab; padding: 4px 20px 8px">
                 <sc-for list="{{ cat.items }}" as="item" hint-placeholder-count="3">
                   <button onClick="{{ item.open }}" style="flex: 0 0 auto; width: 208px; scroll-snap-align: start; text-align: left; padding: 16px; border-radius: 16px; background: linear-gradient(150deg, rgba(255,255,255,.055), rgba(20,17,14,.66)); backdrop-filter: blur(18px) saturate(160%); -webkit-backdrop-filter: blur(18px) saturate(160%); border: 1px solid rgba(240,160,60,.16); box-shadow: inset 0 1px 0 rgba(255,214,160,.12), 0 16px 44px rgba(0,0,0,.42); transition: transform 180ms cubic-bezier(.23,1,.32,1)" style-active="transform: scale(.97)">
                     <span style="display: block; height: 96px; border-radius: 11px; margin-bottom: 13px; position: relative; overflow: hidden; background: linear-gradient(155deg, #2a1d12, #120d09 62%, #1d1409)">
@@ -487,7 +544,7 @@
       </sc-if>
 
       <sc-if value="{{ isFeed }}" hint-placeholder-val="{{ false }}">
-        <div ref="{{ feedRef }}" style="position: absolute; inset: 0; background: #050403; touch-action: none">
+        <div data-feed-pane="" ref="{{ feedRef }}" style="position: absolute; inset: 0; background: #050403; touch-action: none">
           <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; overflow: hidden">
             <div ref="{{ slideShellRef }}" style="position: relative; width: 100%; height: 100%; background: #080605; overflow: hidden">
               <div style="position: absolute; inset: 0; background: {{ slide.ground }}"></div>
@@ -610,7 +667,7 @@
       </sc-if>
 
       <sc-if value="{{ isAdmin }}" hint-placeholder-val="{{ false }}">
-        <div data-nscroll="y" ref="{{ bindPaneScroll }}" style="position: absolute; inset: 0; overflow-y: auto; overscroll-behavior: none; touch-action: pan-y; background: #0a0807; padding: calc(env(safe-area-inset-top, 0px) + 18px) 0 calc(env(safe-area-inset-bottom, 0px) + 40px)">
+        <div data-screen-pane="" data-nscroll="y" ref="{{ bindPaneScroll }}" style="position: absolute; inset: 0; overflow-y: auto; overscroll-behavior: none; touch-action: pan-y pinch-zoom; background: #0a0807; padding: calc(env(safe-area-inset-top, 0px) + 18px) 0 calc(env(safe-area-inset-bottom, 0px) + 40px)">
           <sc-if value="{{ needsAuth }}" hint-placeholder-val="{{ false }}">
             <div style="min-height: 78vh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px; padding: 0 24px">
               <div style="font-family: 'Cormorant Garamond', serif; font-size: 28px; font-weight: 300; color: #f2ece2">{{ L_staffOnly }}</div>
@@ -1132,11 +1189,11 @@
       </sc-if>
 
       <sc-if value="{{ sheetOpen }}" hint-placeholder-val="{{ false }}">
-        <div onClick="{{ closeSheet }}" style="position: absolute; inset: 0; z-index: 60; background: rgba(4,3,3,.62); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); animation: fadeIn 220ms ease-out"></div>
+        <div data-sheet-scrim="" onClick="{{ closeSheet }}" style="position: absolute; inset: 0; z-index: 60; background: rgba(4,3,3,.62); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); animation: fadeIn 220ms ease-out"></div>
         <!-- The sheet grew a walk-in list, so it now overflows on a phone. It scrolls
-             itself: pan-y claims the vertical gesture from the app shell, which sets
-             touch-action: none on the panes behind it. -->
-        <div data-nscroll="y" ref="{{ bindSheetScroll }}" style="position: absolute; left: 0; right: 0; bottom: 0; z-index: 61; max-height: 84%; overflow-y: auto; touch-action: pan-y; overscroll-behavior: contain; padding: 20px 20px calc(env(safe-area-inset-bottom, 0px) + 26px); border-radius: 22px 22px 0 0; background: linear-gradient(180deg, rgba(30,24,18,.94), rgba(12,10,8,.97)); backdrop-filter: blur(26px) saturate(170%); -webkit-backdrop-filter: blur(26px) saturate(170%); border-top: 1px solid rgba(240,160,60,.24); box-shadow: 0 -30px 90px rgba(0,0,0,.6); animation: slideUp 320ms cubic-bezier(.23,1,.32,1)">
+             itself: pan-y claims the vertical gesture from the app shell. Pinch stays
+             with the browser here too, so the guest can zoom the sheet. -->
+        <div data-sheet="" data-nscroll="y" ref="{{ bindSheetScroll }}" style="position: absolute; left: 0; right: 0; bottom: 0; z-index: 61; max-height: 84%; overflow-y: auto; touch-action: pan-y pinch-zoom; overscroll-behavior: contain; padding: 20px 20px calc(env(safe-area-inset-bottom, 0px) + 26px); border-radius: 22px 22px 0 0; background: linear-gradient(180deg, rgba(30,24,18,.94), rgba(12,10,8,.97)); backdrop-filter: blur(26px) saturate(170%); -webkit-backdrop-filter: blur(26px) saturate(170%); border-top: 1px solid rgba(240,160,60,.24); box-shadow: 0 -30px 90px rgba(0,0,0,.6); animation: slideUp 320ms cubic-bezier(.23,1,.32,1)">
           <div style="width: 38px; height: 3px; border-radius: 2px; background: rgba(240,160,60,.3); margin: 0 auto 18px"></div>
           <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 16px">
             <div style="font-family: 'Cormorant Garamond', serif; font-size: 24px; font-weight: 300; color: #f4eee4">{{ sheetTitle }}</div>
@@ -1734,7 +1791,7 @@
          simply off the bottom with no way to reach them — worst during the rush
          that produced five cards. Clear all also moves ABOVE the stack: it is the
          one control that must be reachable without scrolling. -->
-    <div data-nscroll="y" ref="{{ bindPaneScroll }}" style="position: fixed; top: calc(env(safe-area-inset-top, 0px) + 12px); left: 12px; right: 12px; max-height: calc(100vh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 24px); max-height: calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 24px); overflow-y: auto; overscroll-behavior: contain; touch-action: pan-y; z-index: 300; display: grid; gap: 8px; justify-items: stretch; align-content: start">
+    <div data-nscroll="y" ref="{{ bindPaneScroll }}" style="position: fixed; top: calc(env(safe-area-inset-top, 0px) + 12px); left: 12px; right: 12px; max-height: calc(100vh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 24px); max-height: calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 24px); overflow-y: auto; overscroll-behavior: contain; touch-action: pan-y pinch-zoom; z-index: 300; display: grid; gap: 8px; justify-items: stretch; align-content: start">
       <sc-if value="{{ alertsMany }}" hint-placeholder-val="{{ false }}">
         <button onClick="{{ alertsClear }}" style="min-height: 42px; padding: 11px; border-radius: 12px; font-size: 9px; letter-spacing: .22em; text-transform: uppercase; color: #efe7db; background: rgba(12,10,8,.88); border: 1px solid rgba(240,160,60,.24)">{{ alertsClearLbl }}</button>
       </sc-if>
@@ -1838,7 +1895,7 @@
 
           <div style="flex: 1; min-width: 0; display: flex; align-items: center; gap: clamp(6px, .9vmin, 12px); padding: 0 clamp(8px, 1vmin, 14px); border-radius: 13px; background: rgba(255,122,24,.055); border: 1px solid rgba(240,160,60,.18)">
             <span style="flex: 0 0 auto; font-size: clamp(7.5px, .95vmin, 11px); letter-spacing: .28em; color: #ffc27a; text-transform: uppercase">Calls</span>
-            <div data-nscroll="x" ref="{{ bindTvRow }}" style="flex: 1; min-width: 0; display: flex; align-items: center; gap: clamp(5px, .8vmin, 10px); overflow-x: auto; scrollbar-width: none; touch-action: pan-x; cursor: grab; padding: clamp(5px, .7vmin, 10px) 0">
+            <div data-nscroll="x" ref="{{ bindTvRow }}" style="flex: 1; min-width: 0; display: flex; align-items: center; gap: clamp(5px, .8vmin, 10px); overflow-x: auto; scrollbar-width: none; touch-action: pan-x pinch-zoom; cursor: grab; padding: clamp(5px, .7vmin, 10px) 0">
               <sc-for list="{{ tvCalls }}" as="c" hint-placeholder-count="2">
                 <button onClick="{{ c.clear }}" title="Tap when attended" style="flex: 0 0 auto; min-height: 44px; display: flex; align-items: center; gap: clamp(6px, .8vmin, 10px); padding: 0 clamp(9px, 1.1vmin, 15px); border-radius: 11px; background: rgba(255,122,24,.14); border: 1px solid rgba(240,160,60,.34); transition: transform 140ms cubic-bezier(.23,1,.32,1), background 140ms ease" style-active="transform: scale(.96); background: rgba(255,122,24,.24)">
                   <span style="width: 5px; height: 5px; border-radius: 50%; background: #f0a03c; animation: emberDrift 1.8s ease-in-out infinite"></span>
@@ -1858,7 +1915,7 @@
         </div>
 
         <sc-if value="{{ tvBagsOpen }}" hint-placeholder-val="{{ false }}">
-          <div data-nscroll="y" ref="{{ bindPaneScroll }}" style="flex: 0 1 auto; min-height: 0; max-height: 46%; overflow-y: auto; touch-action: pan-y; scrollbar-width: thin; scrollbar-color: rgba(240,160,60,.28) transparent; padding: clamp(8px, 1.1vmin, 15px); border-radius: 14px; background: rgba(255,255,255,.022); border: 1px solid rgba(240,160,60,.12); display: flex; flex-direction: column; gap: clamp(7px, 1vmin, 13px)">
+          <div data-nscroll="y" ref="{{ bindPaneScroll }}" style="flex: 0 1 auto; min-height: 0; max-height: 46%; overflow-y: auto; touch-action: pan-y pinch-zoom; scrollbar-width: thin; scrollbar-color: rgba(240,160,60,.28) transparent; padding: clamp(8px, 1.1vmin, 15px); border-radius: 14px; background: rgba(255,255,255,.022); border: 1px solid rgba(240,160,60,.12); display: flex; flex-direction: column; gap: clamp(7px, 1vmin, 13px)">
             <div style="flex: 0 0 auto; display: flex; align-items: center; gap: clamp(10px, 1.4vmin, 18px); font-size: clamp(7.5px, .95vmin, 11px); letter-spacing: .26em; text-transform: uppercase; color: #6f665c">
               <span style="display: flex; align-items: center; gap: 6px"><span style="width: 7px; height: 7px; border-radius: 2px; background: rgba(212,103,74,.75)"></span>Owing</span>
               <span style="display: flex; align-items: center; gap: 6px"><span style="width: 7px; height: 7px; border-radius: 2px; background: rgba(127,174,99,.7)"></span>Ready</span>
@@ -1938,7 +1995,7 @@
         </sc-if>
 
         <sc-if value="{{ tvFloorOpen }}" hint-placeholder-val="{{ false }}">
-          <div data-nscroll="y" ref="{{ bindPaneScroll }}" style="flex: 0 1 auto; min-height: 0; max-height: 46%; overflow-y: auto; touch-action: pan-y; scrollbar-width: thin; scrollbar-color: rgba(240,160,60,.28) transparent; padding: clamp(8px, 1.1vmin, 15px); border-radius: 14px; background: rgba(255,255,255,.022); border: 1px solid rgba(240,160,60,.12); display: flex; flex-direction: column; gap: clamp(7px, 1vmin, 13px)">
+          <div data-nscroll="y" ref="{{ bindPaneScroll }}" style="flex: 0 1 auto; min-height: 0; max-height: 46%; overflow-y: auto; touch-action: pan-y pinch-zoom; scrollbar-width: thin; scrollbar-color: rgba(240,160,60,.28) transparent; padding: clamp(8px, 1.1vmin, 15px); border-radius: 14px; background: rgba(255,255,255,.022); border: 1px solid rgba(240,160,60,.12); display: flex; flex-direction: column; gap: clamp(7px, 1vmin, 13px)">
             <div style="flex: 0 0 auto; display: flex; align-items: center; gap: clamp(10px, 1.4vmin, 18px); font-size: clamp(7.5px, .95vmin, 11px); letter-spacing: .26em; text-transform: uppercase; color: #6f665c">
               <span style="display: flex; align-items: center; gap: 6px"><span style="width: 7px; height: 7px; border-radius: 2px; background: rgba(212,103,74,.75)"></span>Assigned</span>
               <span style="display: flex; align-items: center; gap: 6px"><span style="width: 7px; height: 7px; border-radius: 2px; background: rgba(127,174,99,.7)"></span>Available</span>
@@ -2013,7 +2070,7 @@
               <span style="flex: 1; height: 1px; background: rgba(240,160,60,.12)"></span>
               <span style="font-size: clamp(11px, 1.4vmin, 17px); color: #8d8479; font-variant-numeric: tabular-nums; white-space: nowrap">{{ tvPendingCount }}</span>
             </div>
-            <div data-nscroll="y" ref="{{ bindPaneScroll }}" style="flex: 1; min-width: 0; min-height: 0; overflow-y: auto; overflow-x: hidden; touch-action: pan-y; scrollbar-width: thin; scrollbar-gutter: stable; scrollbar-color: rgba(240,160,60,.28) transparent; display: grid; grid-template-columns: minmax(0, 1fr); grid-auto-rows: max-content; gap: clamp(6px, .9vmin, 12px); align-content: start">
+            <div data-nscroll="y" ref="{{ bindPaneScroll }}" style="flex: 1; min-width: 0; min-height: 0; overflow-y: auto; overflow-x: hidden; touch-action: pan-y pinch-zoom; scrollbar-width: thin; scrollbar-gutter: stable; scrollbar-color: rgba(240,160,60,.28) transparent; display: grid; grid-template-columns: minmax(0, 1fr); grid-auto-rows: max-content; gap: clamp(6px, .9vmin, 12px); align-content: start">
               <sc-for list="{{ tvPending }}" as="p" hint-placeholder-count="3">
                 <div style="min-width: 0; max-width: 100%; box-sizing: border-box; overflow: hidden; padding: clamp(8px, 1.1vmin, 15px) clamp(9px, 1.1vmin, 15px); border-radius: 12px; background: {{ p.bg }}; border: 1px solid {{ p.border }}; display: flex; flex-direction: column; gap: clamp(6px, .8vmin, 10px)">
                   <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 8px">
@@ -2081,7 +2138,7 @@
             <!-- overflow-x hidden + a reserved gutter: once the list grew long enough
                  to need a scrollbar the track ate into the card and pushed the timer
                  and total past the right edge. -->
-            <div data-nscroll="y" ref="{{ bindPaneScroll }}" style="flex: 1; min-width: 0; min-height: 0; overflow-y: auto; overflow-x: hidden; touch-action: pan-y; scrollbar-width: thin; scrollbar-gutter: stable; scrollbar-color: rgba(240,160,60,.28) transparent; display: grid; grid-template-columns: minmax(0, 1fr); grid-auto-rows: max-content; gap: clamp(6px, .9vmin, 12px); align-content: start">
+            <div data-nscroll="y" ref="{{ bindPaneScroll }}" style="flex: 1; min-width: 0; min-height: 0; overflow-y: auto; overflow-x: hidden; touch-action: pan-y pinch-zoom; scrollbar-width: thin; scrollbar-gutter: stable; scrollbar-color: rgba(240,160,60,.28) transparent; display: grid; grid-template-columns: minmax(0, 1fr); grid-auto-rows: max-content; gap: clamp(6px, .9vmin, 12px); align-content: start">
               <sc-for list="{{ tvOrders }}" as="o" hint-placeholder-count="4">
                 <div style="min-width: 0; max-width: 100%; box-sizing: border-box; overflow: hidden; padding: clamp(8px, 1.1vmin, 15px) clamp(9px, 1.1vmin, 15px); border-radius: 12px; background: {{ o.bg }}; border: 1px solid {{ o.border }}; display: flex; flex-direction: column; gap: clamp(6px, .8vmin, 10px)">
                   <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 8px">
@@ -2328,6 +2385,10 @@ const PC_GEO_MSG = {
   looking: 'pcGeoLooking',
   none: 'pcGeoNone',
   denied: 'pcGeoDenied',
+  blocked: 'pcGeoBlocked',
+  'blocked-ios': 'pcGeoBlockedIos',
+  'blocked-android': 'pcGeoBlockedAndroid',
+  nofix: 'pcGeoNoFix',
   'map-failed': 'pcGeoFail',
 };
 
@@ -2573,6 +2634,10 @@ Object.assign(STR.en, {
   pcGeoLooking: 'Reading the map…',
   pcGeoNone: 'No street name here. The pin still works.',
   pcGeoDenied: 'Location is off. Move the map by hand.',
+  pcGeoBlocked: 'This site cannot see your location. Allow it in your browser settings, or move the map by hand.',
+  pcGeoBlockedIos: 'Location is blocked for this browser. Settings \u203a Privacy & Security \u203a Location Services \u2014 switch your browser to \u201cWhile Using\u201d, then tap again. Or move the map by hand.',
+  pcGeoBlockedAndroid: 'Location is blocked for this site. Tap the lock icon beside the web address \u203a Permissions \u203a allow Location, then tap again. Or move the map by hand.',
+  pcGeoNoFix: 'Your phone did not answer. Tap the button again, or move the map by hand.',
   pcGeoFail: 'The map did not load. Type the address instead.',
   pcBanTitle: 'Your parcel is ready',
   pcBanNote: 'Collect it at the counter',
@@ -2645,6 +2710,10 @@ Object.assign(STR.ta, {
   pcGeoLooking: 'வரைபடத்தைப் படிக்கிறது…',
   pcGeoNone: 'இங்கே தெரு பெயர் இல்லை. குறி வேலை செய்யும்.',
   pcGeoDenied: 'இருப்பிடம் அணைக்கப்பட்டுள்ளது. வரைபடத்தைக் கையால் நகர்த்துங்கள்.',
+  pcGeoBlocked: 'இந்த தளத்திற்கு இருப்பிட அனுமதி இல்லை. உலாவி அமைப்பில் அனுமதிக்கவும், அல்லது வரைபடத்தைக் கையால் நகர்த்துங்கள்.',
+  pcGeoBlockedIos: 'உலாவிக்கு இருப்பிட அனுமதி இல்லை. Settings \u203a Privacy & Security \u203a Location Services \u2014 உங்கள் உலாவியை \u201cWhile Using\u201d ஆக மாற்றி மீண்டும் தட்டவும். அல்லது வரைபடத்தைக் கையால் நகர்த்துங்கள்.',
+  pcGeoBlockedAndroid: 'இந்த தளத்திற்கு இருப்பிட அனுமதி இல்லை. முகவரிப் பட்டியில் உள்ள பூட்டு ஐகான் \u203a Permissions \u203a Location அனுமதிக்கவும், பின் மீண்டும் தட்டவும். அல்லது வரைபடத்தைக் கையால் நகர்த்துங்கள்.',
+  pcGeoNoFix: 'உங்கள் தொலைபேசி பதிலளிக்கவில்லை. மீண்டும் தட்டவும், அல்லது வரைபடத்தைக் கையால் நகர்த்துங்கள்.',
   pcGeoFail: 'வரைபடம் ஏற்றப்படவில்லை. முகவரியைத் தட்டச்சு செய்யுங்கள்.',
   pcBanTitle: 'உங்கள் பார்சல் தயார்',
   pcBanNote: 'கவுண்டரில் பெற்றுக்கொள்ளுங்கள்',
@@ -2921,6 +2990,12 @@ class Component extends DCLogic {
       (/Mac/.test(navigator.userAgent) && (navigator.maxTouchPoints || 0) > 1);
     if (window.top !== window.self && !iosTouch) {
       document.documentElement.setAttribute('data-touch-engine', '1');
+    }
+    /* Opt-in page scrolling. Off by default: it moves the menu out of the fixed
+       shell, which is the one change that lets a swipe collapse the address bar
+       but also the one that has to be proved on a real phone first. */
+    if (/[?&]pagescroll=1\b/.test(location.search)) {
+      document.documentElement.setAttribute('data-pagescroll', '1');
     }
     this.perfProbe();
     this.unsub = db.subscribe(() => {
@@ -3421,6 +3496,37 @@ class Component extends DCLogic {
 
   /* Reverse geocoding is rate-limited to one call a second, and a pan fires
      dozens of moveends, so the lookup waits for the map to settle. */
+  /* iOS asks the GPS for a high-accuracy fix and, indoors on a first run,
+     often answers nothing before the timeout — the same call an Android phone
+     answers instantly. Every failure used to read as "location is off", which
+     sent the guest looking for a setting that was already on. A refused
+     permission is now told apart from a slow fix, and a slow fix gets a second,
+     coarser attempt: a cell-tower fix is accurate enough to move the map to
+     the right street, which is all this button has to do. */
+  pcGeoLocate(coarse) {
+    if (!navigator.geolocation || !this._pcMap) return;
+    this.setState({ pcResolvedText: 'looking' });
+    navigator.geolocation.getCurrentPosition(
+      p => { if (this._pcMap) this._pcMap.setView([p.coords.latitude, p.coords.longitude], 17); },
+      err => {
+        /* A refused permission is fixed in a different place on each phone, and
+           the guest is standing in the sheet with no idea which. Naming the two
+           taps for the device they are holding is the whole difference between
+           the button working on the second try and the address being typed blind. */
+        if (err && err.code === 1) {
+          const ua = navigator.userAgent || '';
+          const ios = /iPhone|iPad|iPod/.test(ua) || (/Mac/.test(ua) && navigator.maxTouchPoints > 1);
+          return this.setState({ pcResolvedText: ios ? 'blocked-ios' : /Android/.test(ua) ? 'blocked-android' : 'blocked' });
+        }
+        if (!coarse) return this.pcGeoLocate(true);
+        this.setState({ pcResolvedText: 'nofix' });
+      },
+      coarse
+        ? { enableHighAccuracy: false, timeout: 20000, maximumAge: 120000 }
+        : { enableHighAccuracy: true, timeout: 8000, maximumAge: 30000 },
+    );
+  }
+
   pcPinMoved() {
     if (!this._pcMap) return;
     this.setState({ pcResolvedText: 'looking' });
@@ -9167,7 +9273,9 @@ class Component extends DCLogic {
         if (!this._pcMap) return;
         const c = this._pcMap.getCenter();
         const txt = st.pcResolvedText;
-        const usable = txt && txt !== 'looking' && txt !== 'none' && txt !== 'map-failed';
+        /* Anything in PC_GEO_MSG is a status line, not a street: naming them
+           one by one let a new state leak into the address box as an address. */
+        const usable = !!txt && !PC_GEO_MSG[txt];
         this.chime('tap');
         this.pcMapTeardown();
         /* The typed lines stay if the guest wrote them — a landmark they chose
@@ -9179,15 +9287,7 @@ class Component extends DCLogic {
           sendArmed: false,
         }, () => this.syncDlv());
       },
-      pcLocateMe: () => {
-        if (!navigator.geolocation || !this._pcMap) return;
-        this.setState({ pcResolvedText: 'looking' });
-        navigator.geolocation.getCurrentPosition(
-          p => { if (this._pcMap) this._pcMap.setView([p.coords.latitude, p.coords.longitude], 17); },
-          () => this.setState({ pcResolvedText: 'denied' }),
-          { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 },
-        );
-      },
+      pcLocateMe: () => this.pcGeoLocate(false),
       pcResolved: PC_GEO_MSG[st.pcResolvedText] ? (L[PC_GEO_MSG[st.pcResolvedText]] || STR.en[PC_GEO_MSG[st.pcResolvedText]]) : st.pcResolvedText,
       pcResolvedInk: PC_GEO_MSG[st.pcResolvedText] ? '#8d8479' : '#cfc6ba',
       L_pcMapTitle: L.pcMapTitle || STR.en.pcMapTitle,
