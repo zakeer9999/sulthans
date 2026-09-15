@@ -96,9 +96,14 @@
   /* Releasing by exclusion caught the coach tooltip too: a fixed overlay child
      became a full-screen block in flow, shoving the sticky bar a screen down.
      Overlays stay on the viewport and only real screen panes join the page. */
-  html[data-pagescroll] [data-screen-pane] { position: relative !important; inset: auto !important; min-height: 100dvh; overflow: visible !important; }
+  /* No min-height on the panes themselves. Each released pane claimed a full
+     screen even when it held nothing, so any pane sitting before the menu in
+     flow added a blank screen of its own — the gap above the sticky bar. The
+     shell already guarantees one screen minimum; a pane now takes exactly the
+     height of its content. */
+  html[data-pagescroll] [data-screen-pane] { position: relative !important; inset: auto !important; overflow: visible !important; }
   html[data-pagescroll] [data-coach] { position: fixed !important; }
-  html[data-pagescroll] [data-menu-pane] { touch-action: auto !important; padding-top: 0 !important; min-height: 100dvh; }
+  html[data-pagescroll] [data-menu-pane] { touch-action: auto !important; padding-top: 0 !important; }
   html[data-pagescroll] [data-top-bar] { position: sticky !important; top: 0; }
   html[data-pagescroll] [data-sheet], html[data-pagescroll] [data-sheet-scrim] { position: fixed !important; }
   html[data-pagescroll] body:has([data-app-shell]) [data-screen-label="Hero"],
