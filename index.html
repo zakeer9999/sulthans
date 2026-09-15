@@ -102,21 +102,8 @@
   html[data-pagescroll] [data-top-bar] { position: sticky !important; top: 0; }
   html[data-pagescroll] [data-sheet], html[data-pagescroll] [data-sheet-scrim] { position: fixed !important; }
   html[data-pagescroll] body:has([data-app-shell]) [data-screen-label="Hero"],
-  html[data-pagescroll] body:has([data-app-shell]) [data-screen-label="Tap to order"] { display: none !important; }
-  /* The footer used to be hidden with the hero. All three going away left the
-     document exactly one screen tall — and a page with nothing to scroll is a
-     page whose address bar Safari puts straight back, which is why the bar
-     returned the moment a guest tapped to order and stayed for the whole reel.
-     The footer keeps its box as a short blank spacer instead: the page stays
-     taller than the viewport, the scroll offset stays off zero, and Safari
-     leaves the bar collapsed for the rest of the session. It sits above the
-     shell in document order, so pinShell() parks the page at the shell's top
-     and the spacer is scrolled out of sight rather than seen. */
-  html[data-pagescroll] body:has([data-app-shell]) footer {
-    height: 128px !important; min-height: 0 !important; padding: 0 !important;
-    margin: 0 !important; border: 0 !important; overflow: hidden !important;
-    visibility: hidden !important;
-  }
+  html[data-pagescroll] body:has([data-app-shell]) [data-screen-label="Tap to order"],
+  html[data-pagescroll] body:has([data-app-shell]) footer { display: none !important; }
   * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
   ::-webkit-scrollbar { width: 0; height: 0; }
   a { color: #f0a03c; text-decoration: none; }
@@ -3346,7 +3333,6 @@ class Component extends DCLogic {
       } else if (liveEdge) { this._alertSeen = null; this.alertHush(); }
     }
     this.bindFeedGestures();
-    this.pinShell();
     this.applyReelFilter();
     this.applyHeroGrade();
     this.syncDev();
@@ -3956,18 +3942,6 @@ class Component extends DCLogic {
 
   dropFullscreen() {
     try { if (document.fullscreenElement) document.exitFullscreen(); } catch (e) {}
-  }
-
-  /* Parks the document so the app shell's top meets the top of the viewport.
-     The blank footer spacer above it is what keeps the page scrollable — this is
-     what keeps that spacer from ever being visible. Idempotent, so it is safe to
-     call from componentDidUpdate on every render. */
-  pinShell() {
-    if (!document.documentElement.hasAttribute('data-pagescroll')) return;
-    const el = document.querySelector('[data-app-shell]');
-    if (!el) return;
-    const top = el.offsetTop;
-    if (top && Math.abs(window.scrollY - top) > 2) window.scrollTo(0, top);
   }
 
   // One second tick drives the ticket ages; db.subscribe already covers content.
