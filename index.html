@@ -79,18 +79,13 @@
      existing single-slide renderer and simply follows the scroll offset. The
      hero is pulled out so its 1200vh cannot offset the stops. Android is left on
      the pointer engine: fullscreen already removes its bar, and its reel works. */
-  /* The hero was never the problem it looked like. It already scrolls natively —
-     1200vh of section under a sticky screen — but html, body and the runtime's
-     own wrapper are all viewport-tall, so the thing that actually moved was an
-     inner box, and neither Chrome nor Safari retracts its address bar for an
-     inner scroller. Releasing that chain makes the DOCUMENT the scroller and the
-     bar goes on the first swipe down the hero, on iOS Chrome and Safari alike.
-     Scoped to "no app shell mounted", so the shell keeps its fixed overlay and
-     the menu never rejoins the flow — that route brought the wobble and the gap.
-     :has is WebKit 16.4+ and Chrome 105+; on anything older this rule is skipped
-     and the hero behaves exactly as it did before. */
-  html:not(:has([data-app-shell])), html:not(:has([data-app-shell])) body { overflow: visible !important; height: auto !important; }
-  html:not(:has([data-app-shell])) body > div, html:not(:has([data-app-shell])) .sc-host { height: auto !important; }
+  /* Handing the hero to the document scroller did collapse the bar, and it also
+     made every screen-tall section on the way in shudder: each time iOS resized
+     the viewport for the retract, the sticky scrub and the two gate screens
+     relaid out under the finger. Not worth it — the hero keeps its inner
+     scroller and pinch-out stays the way to clear the bar there. Only the reel,
+     which pages through discrete stops and has nothing sticky to disturb, scrolls
+     the document. */
   html[data-reel-page], html[data-reel-page] body { overflow: visible !important; height: auto !important; }
   html[data-reel-page] body > div, html[data-reel-page] .sc-host { height: auto !important; }
   html[data-reel-page] [data-screen-label="Hero"],
@@ -107,7 +102,11 @@
      cluster is cut off. --vvh tracks visualViewport, the area really visible, so
      the reel pane ends where the toolbar begins. Falls back to 100% where there
      is no visualViewport. */
-  html[data-reel-page] [data-feed-pane] { bottom: auto !important; height: var(--vvh, 100%) !important; }
+  /* Resizing the pane moved the video crop with it. Only the two bottom clusters
+     were ever the problem, so only they move: --vvgap is exactly how much of the
+     fixed box the toolbar is covering, so adding it to their offset lifts the
+     price, the rating and add-to-order into view and leaves the shot alone. */
+  html[data-reel-page] [data-reel-foot] { bottom: calc(env(safe-area-inset-bottom, 0px) + 20px + var(--vvgap, 0px)) !important; }
   [data-reel-stops] { position: relative; z-index: 0; pointer-events: none; scroll-snap-type: y mandatory; }
   [data-reel-stops] > div { height: 100dvh; scroll-snap-align: start; }
   /* ?pagescroll=1 — the address bar experiment.
@@ -699,7 +698,7 @@
               </sc-if>
 
               <sc-if value="{{ reelChrome }}" hint-placeholder-val="{{ true }}">
-              <div style="position: absolute; z-index: 2; right: 14px; bottom: calc(env(safe-area-inset-bottom, 0px) + 20px); display: flex; flex-direction: row; gap: 10px; align-items: flex-end">
+              <div data-reel-foot="" style="position: absolute; z-index: 2; right: 14px; bottom: calc(env(safe-area-inset-bottom, 0px) + 20px); display: flex; flex-direction: row; gap: 10px; align-items: flex-end">
                 <div role="img" aria-label="{{ slide.ratingLabel }}" style="padding: 7px 11px 6px 10px; border-radius: 14px; display: flex; flex-direction: row; align-items: center; gap: 7px; background: rgba(20,16,12,.3); backdrop-filter: {{ glass }}; -webkit-backdrop-filter: {{ glass }}; border: 1px solid rgba(240,160,60,.14)">
                   <span style="font-size: 16px; line-height: 1; color: #f0a03c">★</span>
                   <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 1px">
@@ -724,7 +723,7 @@
               </sc-if>
 
               <sc-if value="{{ reelChrome }}" hint-placeholder-val="{{ true }}">
-              <div ref="{{ slideTextRef }}" style="position: absolute; z-index: 1; pointer-events: none; left: 14px; right: 186px; bottom: calc(env(safe-area-inset-bottom, 0px) + 20px); display: flex; flex-direction: column; gap: 9px">
+              <div data-reel-foot="" ref="{{ slideTextRef }}" style="position: absolute; z-index: 1; pointer-events: none; left: 14px; right: 186px; bottom: calc(env(safe-area-inset-bottom, 0px) + 20px); display: flex; flex-direction: column; gap: 9px">
                 <img src="./assets/logo-light.png" onError="{{ imgFallback }}" alt="Sulthan's" style="width: 78px; height: auto; opacity: .82" />
                 <div style="display: flex; align-items: center; gap: 8px">
                   <span style="width: 11px; height: 11px; flex: 0 0 auto; border: 1.2px solid {{ slide.dietColor }}; display: flex; align-items: center; justify-content: center"><span style="width: 5px; height: 5px; border-radius: 50%; background: {{ slide.dietColor }}"></span></span>
@@ -4501,7 +4500,11 @@ class Component extends DCLogic {
   trackVV() {
     const vv = window.visualViewport;
     if (!vv) return;
-    document.documentElement.style.setProperty('--vvh', Math.round(vv.height) + 'px');
+    const root = document.documentElement;
+    root.style.setProperty('--vvh', Math.round(vv.height) + 'px');
+    // How much of a fixed, layout-viewport-sized box the browser chrome covers.
+    const gap = Math.max(0, Math.round((window.innerHeight || vv.height) - vv.height));
+    root.style.setProperty('--vvgap', gap + 'px');
   }
 
   androidAudio() {
