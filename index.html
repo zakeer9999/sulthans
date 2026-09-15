@@ -101,6 +101,13 @@
      whole mechanism. pan-y hands that drag to Safari; the engine's own touch
      handlers stand down in this mode. */
   html[data-reel-page] [data-feed-pane] { touch-action: pan-y !important; }
+  /* A position: fixed inset: 0 box is sized to the LAYOUT viewport, which on iOS
+     is the tall bar-hidden one — so while the address bar is actually on screen
+     the shell's bottom sits behind it and the reel's price / rating / add-to-order
+     cluster is cut off. --vvh tracks visualViewport, the area really visible, so
+     the reel pane ends where the toolbar begins. Falls back to 100% where there
+     is no visualViewport. */
+  html[data-reel-page] [data-feed-pane] { bottom: auto !important; height: var(--vvh, 100%) !important; }
   [data-reel-stops] { position: relative; z-index: 0; pointer-events: none; scroll-snap-type: y mandatory; }
   [data-reel-stops] > div { height: 100dvh; scroll-snap-align: start; }
   /* ?pagescroll=1 — the address bar experiment.
@@ -3036,7 +3043,12 @@ class Component extends DCLogic {
     // The wait is a countdown, so something has to move it even when the guest
     // is only looking at it.
     this.etaT = setInterval(() => this.setState(st => ({ tick: st.tick + 1 })), 20000);
-    this.onReaim = () => this.reaimCoach();
+    this.onReaim = () => { this.trackVV(); this.reaimCoach(); };
+    this.trackVV();
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', this.onReaim);
+      window.visualViewport.addEventListener('scroll', this.onReaim);
+    }
     window.addEventListener('resize', this.onReaim);
     window.addEventListener('orientationchange', this.onReaim);
     if (window.visualViewport) {
@@ -4481,6 +4493,15 @@ class Component extends DCLogic {
       window.removeEventListener('scroll', this.onReelScroll);
       window.scrollTo(0, this._reelReturn || 0);
     }
+  }
+
+  /* Publishes the visually-visible height as --vvh. The address bar collapsing
+     is a visualViewport resize and nothing else — no resize event on window — so
+     this is the only signal that the usable area changed. */
+  trackVV() {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    document.documentElement.style.setProperty('--vvh', Math.round(vv.height) + 'px');
   }
 
   androidAudio() {
