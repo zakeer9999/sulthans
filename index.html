@@ -3044,15 +3044,17 @@ class Component extends DCLogic {
     this.etaT = setInterval(() => this.setState(st => ({ tick: st.tick + 1 })), 20000);
     this.onReaim = () => { this.trackVV(); this.reaimCoach(); };
     this.trackVV();
-    if (window.visualViewport) {
-      window.visualViewport.addEventListener('resize', this.onReaim);
-      window.visualViewport.addEventListener('scroll', this.onReaim);
-    }
     window.addEventListener('resize', this.onReaim);
     window.addEventListener('orientationchange', this.onReaim);
     if (window.visualViewport) {
+      /* resize only reaches reaimCoach. visualViewport also fires scroll on
+         every frame of an iOS bar retract, and reaimCoach setStates — so the
+         gate screens were re-rendering dozens of times mid-swipe, which is the
+         wobble. scroll now updates the CSS variables and nothing else: no
+         setState, no re-render, no relayout under the finger. The listeners
+         were also registered twice, doubling every one of those renders. */
       window.visualViewport.addEventListener('resize', this.onReaim);
-      window.visualViewport.addEventListener('scroll', this.onReaim);
+      window.visualViewport.addEventListener('scroll', this._onVV = () => this.trackVV());
     }
     /* Only when framed. The veto this engine routes around is a framed-webview
        behaviour: a host page can refuse a native pan on an ancestor while still
@@ -3254,6 +3256,7 @@ class Component extends DCLogic {
 
   componentWillUnmount() {
     if (this._fsWatch) document.removeEventListener('fullscreenchange', this._fsWatch);
+    if (this._onVV && window.visualViewport) window.visualViewport.removeEventListener('scroll', this._onVV);
     window.removeEventListener('scroll', this.onReelScroll);
     clearTimeout(this._reelLockT);
     clearInterval(this._alertT);
@@ -4502,8 +4505,12 @@ class Component extends DCLogic {
     if (!vv) return;
     const root = document.documentElement;
     root.style.setProperty('--vvh', Math.round(vv.height) + 'px');
-    // How much of a fixed, layout-viewport-sized box the browser chrome covers.
-    const gap = Math.max(0, Math.round((window.innerHeight || vv.height) - vv.height));
+    /* Only the chrome BELOW the visible area pushes the cluster up. The first
+       version subtracted all of it — top bar included — so the buttons rose by
+       roughly twice the real overlap and sat too high. offsetTop is how much
+       sits above, so what is left is what is underneath. */
+    const gap = Math.max(0, Math.round(
+      (window.innerHeight || vv.height) - vv.height - (vv.offsetTop || 0)));
     root.style.setProperty('--vvgap', gap + 'px');
   }
 
