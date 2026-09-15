@@ -70,6 +70,27 @@
      address bar, and a two-finger pinch is never a scroll. Set from a rule
      rather than inline because React rewrites inline styles on every render. */
   html[data-touch-engine] [data-nscroll] { touch-action: pinch-zoom !important; }
+  /* Reel paging by root scroll — iOS only. Safari retracts its address bar for
+     the ROOT scroller and nothing else, so a reel driven by a custom pointer
+     engine on a fixed pane could never collapse it however the guest swiped.
+     This mode puts a column of transparent, screen-tall snap stops in the
+     document behind the reel and lets the swipe scroll the page itself: Safari
+     gets a real root scroll (bar goes, and stays gone), while the reel keeps its
+     existing single-slide renderer and simply follows the scroll offset. The
+     hero is pulled out so its 1200vh cannot offset the stops. Android is left on
+     the pointer engine: fullscreen already removes its bar, and its reel works. */
+  html[data-reel-page], html[data-reel-page] body { overflow: visible !important; height: auto !important; }
+  html[data-reel-page] body > div, html[data-reel-page] .sc-host { height: auto !important; }
+  html[data-reel-page] [data-screen-label="Hero"],
+  html[data-reel-page] [data-screen-label="Tap to order"],
+  html[data-reel-page] footer { display: none !important; }
+  /* The stops sit under the shell and take no pointer events of their own: a
+     drag anywhere on the fixed reel pans the root scroller on iOS, which is the
+     whole mechanism. pan-y hands that drag to Safari; the engine's own touch
+     handlers stand down in this mode. */
+  html[data-reel-page] [data-feed-pane] { touch-action: pan-y !important; }
+  [data-reel-stops] { position: relative; z-index: 0; pointer-events: none; scroll-snap-type: y mandatory; }
+  [data-reel-stops] > div { height: 100dvh; scroll-snap-align: start; }
   /* ?pagescroll=1 — the address bar experiment.
      The app is normally a fixed overlay, so the document never scrolls and
      neither Chrome nor Safari has anything to collapse their address bar
@@ -356,6 +377,17 @@
       </div>
     </div>
   </footer>
+
+  <!-- Scroll travel for the reel, nothing else: one empty screen-tall stop per
+       dish in the current feed. Only rendered in reel-page mode (iOS, on the reel
+       screen), so it never adds height to the menu or the hero. -->
+  <sc-if value="{{ reelPage }}" hint-placeholder-val="{{ false }}">
+    <div data-reel-stops="">
+      <sc-for list="{{ reelStops }}" as="stop" hint-placeholder-count="3">
+        <div></div>
+      </sc-for>
+    </div>
+  </sc-if>
 
   <sc-if value="{{ showApp }}" hint-placeholder-val="{{ false }}">
     <div data-app-shell="" style="position: fixed; inset: 0; z-index: 120; background: #070605; animation: fadeIn 340ms ease-out; overflow: hidden">
@@ -3115,6 +3147,7 @@ class Component extends DCLogic {
     window.addEventListener('offline', this.onNet);
     if (db.remote) db.remote.onLive = this.onNet;
     this.bindFeedGestures();
+    this.syncReelPage();
     this.applyHeroGrade();
     this.syncDev();
     if (this.state.screen === 'categories') this.seatGuide();
@@ -3153,15 +3186,26 @@ class Component extends DCLogic {
       return null;
     };
     el.addEventListener('touchstart', e => {
+      if (this.reelPaged()) return; // Safari is paging the reel, not this engine
       if (active) return; // a second finger does not restart the drag
       tid = e.touches[0].identifier;
       begin(e.touches[0].clientY, e.target);
     }, { passive: true });
     el.addEventListener('touchmove', e => {
+      if (this.reelPaged()) return;
       const t = active && pick(e);
       if (t) dy = t.clientY - y0;
     }, { passive: true });
-    el.addEventListener('touchend', e => { if (pick(e)) { tid = null; settle(); } });
+    el.addEventListener('touchend', e => {
+      if (this.reelPaged()) return;
+      if (pick(e)) { tid = null; settle(); }
+    });
+    /* The engine is off in reel-page mode, so tap-to-pause needs its own hook:
+       a click Safari synthesised means the touch never became a scroll. */
+    el.addEventListener('click', e => {
+      if (!this.reelPaged() || onCtl(e.target)) return;
+      this.toggleSlide();
+    });
     el.addEventListener('touchcancel', e => {
       // Travel already recorded still counts: an interrupted flick is a flick.
       if (pick(e)) { tid = null; settle(); }
@@ -3187,6 +3231,8 @@ class Component extends DCLogic {
 
   componentWillUnmount() {
     if (this._fsWatch) document.removeEventListener('fullscreenchange', this._fsWatch);
+    window.removeEventListener('scroll', this.onReelScroll);
+    clearTimeout(this._reelLockT);
     clearInterval(this._alertT);
     clearTimeout(this._linkT);
     clearInterval(this.etaT);
@@ -3344,6 +3390,7 @@ class Component extends DCLogic {
       } else if (liveEdge) { this._alertSeen = null; this.alertHush(); }
     }
     this.bindFeedGestures();
+    this.syncReelPage();
     this.applyReelFilter();
     this.applyHeroGrade();
     this.syncDev();
@@ -4359,6 +4406,69 @@ class Component extends DCLogic {
        When the context is not audible yet, wait for it and play on the far side. */
     if (ac.state !== 'running') { this.whenAudible(() => this.playChime(kind)); return; }
     this.playChime(kind);
+  }
+
+  /* iOS Safari only. Android keeps the pointer engine (fullscreen handles its
+     bar), and an installed app has no bar to chase. */
+  reelPaged() {
+    if (this._ios == null) {
+      const ua = navigator.userAgent || '';
+      this._ios = /iphone|ipad|ipod/i.test(ua) ||
+        (/macintosh/i.test(ua) && navigator.maxTouchPoints > 1);
+    }
+    return this._ios && this.state.screen === 'feed' && !!this.state.feedIds.length;
+  }
+
+  /* Root scroll -> feed index. Runs on the page's own scroll events, so the reel
+     advances when Safari's snap settles rather than when a gesture ends. */
+  onReelScroll = () => {
+    if (this._reelRaf) return;
+    this._reelRaf = requestAnimationFrame(() => {
+      this._reelRaf = 0;
+      if (!this.reelPaged() || this._reelLock) return;
+      const h = window.innerHeight || 1;
+      const i = Math.max(0, Math.min(this.state.feedIds.length - 1, Math.round(window.scrollY / h)));
+      if (i === this.state.feedIndex) return;
+      this.slideDir = i > this.state.feedIndex ? 1 : -1;
+      this.hideReelCue(true);
+      this.setState({ feedIndex: i }, () => this.mountSlide());
+    });
+  };
+
+  /* Parks the page on the stop that matches the current index — for entering the
+     reel at a tapped dish, and for the auto-skip past a sold-out one. The lock
+     keeps that programmatic jump from reading back as a guest scroll. */
+  syncReelScroll(smooth) {
+    if (!this.reelPaged()) return;
+    const y = this.state.feedIndex * (window.innerHeight || 0);
+    if (Math.abs(window.scrollY - y) < 4) return;
+    this._reelLock = true;
+    try { window.scrollTo({ top: y, behavior: smooth ? 'smooth' : 'auto' }); } catch (e) { window.scrollTo(0, y); }
+    clearTimeout(this._reelLockT);
+    this._reelLockT = setTimeout(() => { this._reelLock = false; }, smooth ? 520 : 90);
+  }
+
+  /* Flips the root attribute and keeps scroll and index in step. Called from
+     componentDidMount and componentDidUpdate, so it covers entering the reel,
+     leaving it, and every index change from either direction. */
+  syncReelPage() {
+    const on = this.reelPaged();
+    const root = document.documentElement;
+    if (on === !!this._reelOn) { if (on) this.syncReelScroll(false); return; }
+    this._reelOn = on;
+    if (on) {
+      // Where the hero was left, so leaving the reel puts the page back there
+      // rather than snapping the scrub to the top.
+      this._reelReturn = window.scrollY;
+      root.setAttribute('data-reel-page', '1');
+      window.addEventListener('scroll', this.onReelScroll, { passive: true });
+      // After the stops exist in the document, not before.
+      requestAnimationFrame(() => this.syncReelScroll(false));
+    } else {
+      root.removeAttribute('data-reel-page');
+      window.removeEventListener('scroll', this.onReelScroll);
+      window.scrollTo(0, this._reelReturn || 0);
+    }
   }
 
   androidAudio() {
@@ -8752,6 +8862,7 @@ class Component extends DCLogic {
       showLive: this.staffMode() && st.screen !== 'tv' && st.screen !== 'hero' && st.screen !== 'feed' && this.netLive(),
       isCategories: st.screen === 'categories', isCarousels: st.screen === 'carousels',
       isFeed: st.screen === 'feed', isAdmin: st.screen === 'admin',
+      reelPage: this.reelPaged(), reelStops: this.reelPaged() ? st.feedIds.map(id => ({ id })) : [],
       showGuestBar: st.screen !== 'hero' && st.screen !== 'tv' && st.screen !== 'admin',
 
       bindRow: this._bindRow || (this._bindRow = el => this.bindRow(el)),
