@@ -3024,7 +3024,13 @@ class Component extends DCLogic {
        misbehaves. (Chrome on Android tablets never auto-hides its toolbar in
        tab-strip mode; nothing a page does can change that — the installed app is
        the only way to lose the bar there.) */
-    if (!/[?&]pagescroll=0\b/.test(location.search)) {
+    /* Back to opt-in. Page-scroll mode was the attempt at letting a swipe
+       collapse the address bar, and across a week of real-device testing it never
+       did on either platform — what it did do was put the menu in normal flow,
+       where a sticky top bar wobbles against Safari's resizing viewport and any
+       released pane adds blank height above it. The fixed shell has neither
+       problem, and fullscreen-on-tap is what actually removes the bar. */
+    if (/[?&]pagescroll=1\b/.test(location.search)) {
       document.documentElement.setAttribute('data-pagescroll', '1');
     }
     /* The chip is offered only where the request can actually succeed: Chrome
@@ -4025,7 +4031,7 @@ class Component extends DCLogic {
     try {
       const Ctx = window.AudioContext || window.webkitAudioContext;
       if (Ctx) {
-        if (!this.audio) this.audio = new Ctx();
+        if (!this.audio) this.audio = new Ctx(this.acOpts());
         this.audio.resume();
         /* One inaudible tick inside the gesture: some browsers only truly leave
            'suspended' once a node has been scheduled, and it costs nothing. */
@@ -4329,7 +4335,7 @@ class Component extends DCLogic {
     if (!this.audio) {
       try {
         const Ctx = window.AudioContext || window.webkitAudioContext;
-        if (Ctx) this.audio = new Ctx();
+        if (Ctx) this.audio = new Ctx(this.acOpts());
       } catch (e) { return; }
     }
     const ac = this.audio;
@@ -4370,6 +4376,18 @@ class Component extends DCLogic {
     // enter is a swell — sub, strike, shimmer — the rest are single taps.
     const B = { enter: [0, 14, 40, 30, 110, 16], tap: 10, toggle: 8, back: 8, add: 12, serve: 14, deny: 24, bell: 18 };
     try { navigator.vibrate(B[kind] != null ? B[kind] : 10); } catch (e) {}
+  }
+
+  /* Android Chrome defaults to an interactive, minimum-latency output buffer.
+     Every voice in this app is synthesised — oscillators, a convolver, filters —
+     and on a mid-range phone that graph does not always render inside one short
+     buffer. A missed buffer is an underrun: the crackle-on-everything you hear,
+     and it is luck-of-the-draw per page load, which is why a refresh sometimes
+     clears it. 'playback' asks for the largest buffer the device offers, trading
+     latency nobody can perceive in a chime for headroom the renderer needs.
+     iOS is left alone: its default already renders this graph cleanly. */
+  acOpts() {
+    return this.androidAudio() ? { latencyHint: 'playback' } : undefined;
   }
 
   /* Resolve the moment the context can actually be heard. resume() returns a
