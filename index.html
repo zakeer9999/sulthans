@@ -346,8 +346,8 @@
         </div>
       </div>
       <div style="display: flex; justify-content: space-between; align-items: center; gap: 16px; padding-top: 20px; border-top: 1px solid rgba(240,160,60,.08); font-size: 9px; letter-spacing: .24em; color: #4e473f; text-transform: uppercase">
-        <span>Table-side menu</span>
-        <button onClick="{{ openAdmin }}" style="font-size: 9px; letter-spacing: .24em; color: #4e473f; text-transform: uppercase">Staff</button>
+        <a href="https://marvotech.vercel.app/" target="_blank" rel="noopener" style="color: #8a7f72; text-decoration: underline; text-decoration-color: rgba(240,160,60,.45); text-underline-offset: 4px" style-hover="color: #f0a03c; text-decoration-color: #f0a03c">Designed by Marvotech</a>
+        <button onClick="{{ openAdmin }}" style="font-size: 9px; letter-spacing: .24em; color: #8a7f72; text-transform: uppercase; text-decoration: underline; text-decoration-color: rgba(240,160,60,.45); text-underline-offset: 4px" style-hover="color: #f0a03c; text-decoration-color: #f0a03c">Staff</button>
       </div>
     </div>
   </footer>
@@ -3058,6 +3058,11 @@ class Component extends DCLogic {
        No-ops when installed, already fullscreen, or on iPhone Safari. */
     this._fsTap = () => this.goFullscreen();
     document.addEventListener('click', this._fsTap, { capture: true });
+    /* touchend too: the hero's own pointer handlers call preventDefault, which
+       stops Chrome from ever synthesising a click there — so a click-only hook
+       could not fire on the one screen that needed it. A tap's activation is
+       still live at touchend (a swipe's is not, which is fine). */
+    document.addEventListener('touchend', this._fsTap, { capture: true, passive: true });
     window.addEventListener('pointerdown', this.onFirstTouch, { once: true });
     /* Coming back to the board after a pocket needs one immediate re-render, or
        every ticket shows the age it had when the screen went dark. */
@@ -7551,7 +7556,10 @@ class Component extends DCLogic {
       return;
     }
     // Leaving the panel does not sign staff out — the day-long hold decides that.
-    this.dropFullscreen();
+    /* Deliberately NOT dropping fullscreen here. Leaving the app used to exit
+       it, so the address bar and the fallback chip both came back on the hero
+       and the guest had to earn fullscreen again on every trip home. Fullscreen
+       now lasts the session; the browser's own gesture still exits it. */
     this.setState({ screen: 'hero', sheet: null, authed: this.authHeld(), ratingStars: 0 });
     requestAnimationFrame(() => {
       const g = this.refs.gateRef.current;
