@@ -159,7 +159,10 @@
        optional and finds out from the server which shape it is talking to. */
     orderCols() {
       const base = 'id,table_label,opened_at,device_id,hold_at,paid_amount,claim_at,claim_total';
-      const tail = ',order_items(dish_id,qty,unit_price)';
+      const cols = ['dish_id', 'qty', 'unit_price']
+        .concat(this.sent$ === false ? [] : ['sent'])
+        .concat(this.flags$ === false ? [] : ['rush_at', 'hold_at']);
+      const tail = ',order_items(' + cols.join(',') + ')';
       return base + (this.ready$ === false ? '' : ',ready_at,served_at')
         + (this.dlv$ === false ? '' : ',dlv') + tail;
     }
@@ -169,7 +172,9 @@
        trusting the figure the ordering phone arrived with. Optional, like the
        order columns: a database without money-guard.sql still serves. */
     roomCols() {
-      return 'table_count' + (this.dlvDef$ === false ? '' : ',dlv_fee_default,dlv_charge_default');
+      return 'table_count'
+        + (this.dlvDef$ === false ? '' : ',dlv_fee_default,dlv_charge_default')
+        + (this.stockMode$ === false ? '' : ',stock_mode');
     }
 
     /* ---------- read: server -> db.state ---------- */
@@ -276,7 +281,38 @@
             const slug = this.dishSlug[i.dish_id] || i.dish_id;
             const line = { id: slug, qty: i.qty, price: Number(i.unit_price) };
             const was = sameVisit ? (prev.items || []).find(x => x.id === slug) : null;
-            const sent = servedAt ? i.qty : Math.min(i.qty, (was && was.sent) || 0);
+            /* Expedite and hold are the order's business once there is a second
+               screen: the veg side parking a line has to reach the pass and the
+               counter. Stored as timestamps and read back as millis, because the
+               kitchen screen sorts by when a line was expedited.
+
+               The same race the sent line below guards against, and it bites
+               harder here. A press writes to state and queues the mirror; any
+               realtime change from any device triggers a hydrate, and one
+               landing in that window would put the server's stale value back —
+               a held line quietly un-parks and the kitchen cooks food the cook
+               deliberately stopped. So while a press is in flight the local
+               value wins.
+
+               Not the higher of the two, the way sent does it: sent only ever
+               climbs, while hold has to be clearable — firing IS clearing it —
+               and a max would make every clear lose to the stale local value
+               forever. Zero rather than undefined for the same reason: a clear
+               arriving from another screen has to land. */
+            if (this.flags$ !== false) {
+              const pend = this.flagPending(o.table_label, slug) && was;
+              line.rush = pend ? (was.rush || 0) : (i.rush_at ? Date.parse(i.rush_at) : 0);
+              line.held = pend ? (was.held || 0) : (i.hold_at ? Date.parse(i.hold_at) : 0);
+            }
+            /* Part-carried portions are a column now, so they survive a reload
+               and reach the other phones — the split press on the kitchen screen
+               is worth nothing if only the phone that made it can see it. The
+               local count still counts: it may be a press this device made a
+               moment ago that has not been mirrored yet, so the higher of the
+               two wins rather than the server's alone. */
+            const srv = this.sent$ === false ? 0 : Number(i.sent || 0);
+            const sent = servedAt ? i.qty
+              : Math.min(i.qty, Math.max(srv, (was && was.sent) || 0));
             if (sent) {
               line.sent = sent;
               // Per-portion times are local; a ticket read back as served has only
@@ -318,6 +354,11 @@
           house.dlvFeeDef = room.data.dlv_fee_default == null ? null : Number(room.data.dlv_fee_default);
           house.dlvChargeDef = !!room.data.dlv_charge_default;
         }
+        /* How this kitchen runs stock. It decides what happens when a dish is
+           switched off, so a cook on one phone and the office on another have to
+           agree — it was a per-device setting, which meant the kitchen could be
+           asked why a dish was off on one screen and not on the next. */
+        if (this.stockMode$ !== false && room.data.stock_mode) house.stockMode = room.data.stock_mode;
         if (Object.keys(house).length) {
           next.floor = Object.assign({}, (this.db.state || {}).floor, house);
         }
@@ -347,6 +388,10 @@
         this.dlvDef$ = false;
         console.warn('[supabase] restaurants.dlv_fee_default missing — run supabase/money-guard.sql to share the house delivery rate');
       }
+      if (room.error && this.stockMode$ !== false && /stock_mode/.test(room.error.message || '')) {
+        this.stockMode$ = false;
+        console.warn('[supabase] restaurants.stock_mode missing — run supabase/stock-lite.sql to share how stock runs');
+      }
       const errs = [cats, dishes, orders, calls, ratings, fb, svc, room, slots].map(r => r.error).filter(Boolean);
       if (errs.length) console.warn('[supabase] partial read:', errs.map(e => e.message).join(' | '));
       // A missing readiness column is a migration that has not been run yet, not
@@ -360,6 +405,16 @@
       if (orders.error && this.dlv$ !== false && /\bdlv\b/.test(orders.error.message || '')) {
         this.dlv$ = false;
         console.warn('[supabase] orders.dlv missing — run supabase/delivery.sql to share delivery addresses');
+        return this.hydrate();
+      }
+      if (orders.error && this.flags$ !== false && /rush_at|hold_at/.test(orders.error.message || '')) {
+        this.flags$ = false;
+        console.warn('[supabase] order_items.rush_at/hold_at missing — run supabase/kitchen-share.sql to share expedite and hold');
+        return this.hydrate();
+      }
+      if (orders.error && this.sent$ !== false && /\bsent\b/.test(orders.error.message || '')) {
+        this.sent$ = false;
+        console.warn('[supabase] order_items.sent missing — run supabase/kitchen-punch.sql to share part-served lines');
         return this.hydrate();
       }
       // Rows the server no longer reports open have nothing left to hide behind.
@@ -499,6 +554,35 @@
           }
         });
         if (added.length) jobs.push(() => this.addItems(k, added));
+        /* Portions carried out, per dish. Written as an absolute count rather
+           than a delta, so a retry cannot double-serve a line. */
+        if (this.flags$ !== false) {
+          const flagsOf = items => {
+            const m = {};
+            (items || []).forEach(i => {
+              if (i.rush || i.held) m[i.id] = (i.rush || 0) + ':' + (i.held || 0);
+            });
+            return m;
+          };
+          const fb = flagsOf(before.orders[k].items), fa = flagsOf(now);
+          Object.keys(Object.assign({}, fb, fa)).forEach(id => {
+            if ((fa[id] || '') === (fb[id] || '')) return;
+            const line = (now || []).find(x => x.id === id) || {};
+            jobs.push(async () => this.itemFlags(k, id, line.rush || 0, line.held || 0));
+          });
+        }
+        if (this.sent$ !== false) {
+          const sentOf = items => {
+            const m = {};
+            (items || []).forEach(i => { if (i.sent) m[i.id] = (m[i.id] || 0) + i.sent; });
+            return m;
+          };
+          const sb3 = sentOf(before.orders[k].items), sa3 = sentOf(now);
+          Object.keys(Object.assign({}, sb3, sa3)).forEach(id => {
+            if ((sa3[id] || 0) === (sb3[id] || 0)) return;
+            jobs.push(async () => this.itemSent(k, id, sa3[id] || 0));
+          });
+        }
         // Settlement is mirrored so the amount lives in Postgres, where the
         // trigger stamps paid_at and paid_by and refuses a write that no staff
         // session made. A guest's attempt fails here and the row stays honest.
@@ -560,6 +644,13 @@
         }
         const cb = !!(before.floor || {}).dlvChargeDef, ca = !!(after.floor || {}).dlvChargeDef;
         if (ca !== cb) jobs.push(() => this.upd('restaurants', this.rid, { dlv_charge_default: ca }));
+      }
+
+      /* The stock mode, same rule: staff-only, one copy, read back by every
+         screen that asks a dish why it went off. */
+      if (this.stockMode$ !== false) {
+        const mb = (before.floor || {}).stockMode, ma = (after.floor || {}).stockMode;
+        if (ma && ma !== mb) jobs.push(() => this.upd('restaurants', this.rid, { stock_mode: ma }));
       }
 
       const bSlot = {}, aSlot = {};
@@ -993,6 +1084,69 @@
         .map(l => ({ order_id: orderId, dish_id: this.dishId[l.id], qty: l.qty, unit_price: l.price || 0 }));
       if (rows.length) await this.ins('order_items', rows);
     }
+
+    /* Portions of one dish carried out of the kitchen. A dish ordered twice has
+       two rows, so the distribution across them is Postgres's job — one
+       statement, one transaction, earliest row filled first. */
+    async itemSent(label, slug, n) {
+      const dish = this.dishId[slug];
+      if (!dish) return;
+      const orderId = this.orderId[label] || await this.orderFor(label);
+      if (!orderId) return;
+      const { error } = await this.sb.rpc('item_sent', { p_order: orderId, p_dish: dish, p_sent: n });
+      if (!error) return;
+      const msg = (error.message || '') + ' ' + (error.hint || '');
+      /* A database without this migration must keep serving rather than report a
+         failure on every press: the app falls back to the behaviour it had
+         before the column existed, where a part-carried line is local. */
+      if (/item_sent|order_items\.sent|\bsent\b/.test(msg) && /does not exist|schema cache|PGRST20[024]|could not find/i.test(msg)) {
+        this.sent$ = false;
+        console.warn('[supabase] no order_items.sent \u2014 run supabase/kitchen-punch.sql to share part-served lines');
+        return;
+      }
+      console.warn('[supabase] serve did not save for ' + label + ':', error.message);
+    }
+    /* A press this device has made and not yet mirrored. Aged out rather than
+       trusted forever: if the write never lands, the server's value is the
+       better of two bad answers, and a pin held open by a dropped connection
+       would make this screen permanently disagree with every other one. */
+    flagKey(label, slug) { return label + '|' + slug; }
+    flagPending(label, slug) {
+      const at = (this.flagPend || {})[this.flagKey(label, slug)];
+      if (!at) return false;
+      if (Date.now() - at < 15000) return true;
+      delete this.flagPend[this.flagKey(label, slug)];
+      return false;
+    }
+
+    /* Expedite and hold, mirrored. An absolute value rather than a toggle, so
+       two tablets pressing in the same second agree instead of cancelling each
+       other out, and a retry after a dropped connection is harmless. */
+    async itemFlags(label, slug, rush, held) {
+      const dish = this.dishId[slug];
+      if (!dish) return;
+      this.flagPend = this.flagPend || {};
+      const key = this.flagKey(label, slug);
+      this.flagPend[key] = Date.now();
+      const done = () => { delete this.flagPend[key]; };
+      const orderId = this.orderId[label] || await this.orderFor(label);
+      if (!orderId) return done();
+      const { error } = await this.sb.rpc('item_flags', {
+        p_order: orderId, p_dish: dish,
+        p_rush: rush ? new Date(rush).toISOString() : null,
+        p_hold: held ? new Date(held).toISOString() : null,
+      });
+      done();
+      if (!error) return;
+      const msg = (error.message || '') + ' ' + (error.hint || '');
+      if (/item_flags|rush_at|hold_at/.test(msg) && /does not exist|schema cache|PGRST20[024]|could not find/i.test(msg)) {
+        this.flags$ = false;
+        console.warn('[supabase] no item_flags \u2014 run supabase/kitchen-share.sql to share expedite and hold');
+        return;
+      }
+      console.warn('[supabase] expedite/hold did not save for ' + label + ':', error.message);
+    }
+
     /* Lifts the hide on a label. The quarantine is deliberately left alone —
        it is released by releaseDead once the server stops reporting those rows
        open, so a refused close cannot put their items back on the ticket. */
