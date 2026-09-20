@@ -159,11 +159,14 @@
        optional and finds out from the server which shape it is talking to. */
     orderCols() {
       const base = 'id,table_label,opened_at,device_id,hold_at,paid_amount,claim_at,claim_total';
-      const cols = ['dish_id', 'qty', 'unit_price']
+      const cols = ['dish_id', 'qty', 'unit_price', 'added_at']
         .concat(this.sent$ === false ? [] : ['sent'])
+        .concat(this.note$ === false ? [] : ['note'])
+        .concat(this.okq$ === false ? [] : ['ok_qty'])
         .concat(this.flags$ === false ? [] : ['rush_at', 'hold_at']);
       const tail = ',order_items(' + cols.join(',') + ')';
-      return base + (this.ready$ === false ? '' : ',ready_at,served_at')
+      return base + (this.okq$ === false ? '' : ',ok_at')
+        + (this.ready$ === false ? '' : ',ready_at,served_at')
         + (this.dlv$ === false ? '' : ',dlv') + tail;
     }
 
@@ -267,6 +270,12 @@
           // The counter's press, on every phone. Without this the guest kept
           // counting down a bag that was already packed, because "ready" lived
           // only in the local state of the device that pressed it.
+          /* When staff released this ticket, which is the clock the kitchen
+             sorts on. Local wins while a press is in flight, for the same
+             reason the flags below do. */
+          okAt: (this.okq$ === false
+            ? (sameVisit ? prev.okAt : null)
+            : (ms(o.ok_at) || (sameVisit ? prev.okAt : null))) || null,
           ready: !!o.ready_at,
           served: ms(o.served_at) || null,
           /* The delivery answer, from the server rather than from whichever
@@ -280,7 +289,35 @@
           items: (o.order_items || []).map(i => {
             const slug = this.dishSlug[i.dish_id] || i.dish_id;
             const line = { id: slug, qty: i.qty, price: Number(i.unit_price) };
+            /* When this food was ordered, as opposed to when the table sat down.
+               A table on its fourth round is a new ticket to the kitchen, and
+               sorting the board on opened_at buried it under tables that had
+               been sitting for an hour. */
+            line.addedAt = ms(i.added_at) || null;
+            /* What the guest asked for on this dish, shared like the price: a
+               note that only lived on the ordering phone vanished the moment
+               any other device's change triggered a hydrate. */
+            if (this.note$ !== false && i.note) line.note = i.note;
+            else if (this.note$ === false && sameVisit) {
+              const w = (prev.items || []).find(x => x.id === slug);
+              if (w && w.note) line.note = w.note;
+            }
             const was = sameVisit ? (prev.items || []).find(x => x.id === slug) : null;
+            /* Portions staff have released to the kitchen. Left undefined on a
+               database without the migration, which the app reads as "authorise
+               on sight" — the old behaviour, rather than a floor full of tickets
+               that vanish off the pass.
+
+               The higher of the two wins, like sent and for the same race: a
+               press writes to state and queues the mirror, and any hydrate
+               landing in that window would put the stale server value back and
+               un-authorise food a chef has already started. Safe as a max
+               because the count only ever climbs; it is cleared by the line
+               going out, not by being lowered. */
+            if (this.okq$ !== false) {
+              const srvOk = i.ok_qty == null ? 0 : Number(i.ok_qty) || 0;
+              line.ok = Math.min(i.qty, Math.max(srvOk, (was && was.ok) || 0));
+            } else if (was && was.ok != null) line.ok = was.ok;
             /* Expedite and hold are the order's business once there is a second
                screen: the veg side parking a line has to reach the pass and the
                counter. Stored as timestamps and read back as millis, because the
@@ -321,9 +358,15 @@
               line.sentLog = log.length >= sent ? log.slice(0, sent)
                 : log.concat(Array.from({ length: sent - log.length }, () => servedAt || Date.now()));
             }
+            if (!line.addedAt && was && was.addedAt) line.addedAt = was.addedAt;
             return line;
           }),
         };
+        const o$ = next.orders[o.table_label];
+        // The newest food on the ticket — what the boards sort on.
+        o$.roundAt = o$.items.reduce((m, l) => Math.max(m, l.addedAt || 0), 0) || o$.at;
+        // A round this device just sent may not be on the server yet.
+        if (sameVisit && prev.roundAt) o$.roundAt = Math.max(o$.roundAt, prev.roundAt);
       });
       (calls.data || []).forEach(c => {
         const at = ms(c.called_at);
@@ -415,6 +458,16 @@
       if (orders.error && this.sent$ !== false && /\bsent\b/.test(orders.error.message || '')) {
         this.sent$ = false;
         console.warn('[supabase] order_items.sent missing — run supabase/kitchen-punch.sql to share part-served lines');
+        return this.hydrate();
+      }
+      if (orders.error && this.okq$ !== false && /ok_qty|\bok_at\b/.test(orders.error.message || '')) {
+        this.okq$ = false;
+        console.warn('[supabase] ok_qty/ok_at missing \u2014 run supabase/kitchen-check.sql or guest orders reach the kitchen unchecked');
+        return this.hydrate();
+      }
+      if (orders.error && this.note$ !== false && /\bnote\b/.test(orders.error.message || '')) {
+        this.note$ = false;
+        console.warn('[supabase] order_items.note missing \u2014 run supabase/kitchen-notes.sql to share guest notes');
         return this.hydrate();
       }
       // Rows the server no longer reports open have nothing left to hide behind.
@@ -570,6 +623,42 @@
             const line = (now || []).find(x => x.id === id) || {};
             jobs.push(async () => this.itemFlags(k, id, line.rush || 0, line.held || 0));
           });
+        }
+        if (this.note$ !== false) {
+          const notesOf = items => {
+            const m = {};
+            (items || []).forEach(i => { if (!(i.id in m)) m[i.id] = (i.note || ''); });
+            return m;
+          };
+          const nb = notesOf(before.orders[k].items), na = notesOf(now);
+          Object.keys(Object.assign({}, nb, na)).forEach(id => {
+            if ((na[id] || '') === (nb[id] || '')) return;
+            jobs.push(async () => this.itemNote(k, id, na[id] || null));
+          });
+        }
+        /* The Authorise press, mirrored per dish like the serve count and
+           written as an absolute number rather than a delta, so a retry cannot
+           release more than staff pressed for. */
+        if (this.okq$ !== false) {
+          const okOf2 = items => {
+            const m = {};
+            (items || []).forEach(i => {
+              const q = Number(i.qty || 0);
+              m[i.id] = (m[i.id] || 0) + Math.min(i.ok == null ? q : Number(i.ok) || 0, q);
+            });
+            return m;
+          };
+          const ob = okOf2(before.orders[k].items), oa = okOf2(now);
+          Object.keys(Object.assign({}, ob, oa)).forEach(id => {
+            if ((oa[id] || 0) === (ob[id] || 0)) return;
+            jobs.push(async () => this.itemOk(k, id, oa[id] || 0));
+          });
+          const ka = after.orders[k].okAt || null, kb = before.orders[k].okAt || null;
+          if (ka !== kb) {
+            jobs.push(async () => this.upd('orders', this.orderId[k] || await this.orderFor(k), {
+              ok_at: ka ? new Date(ka).toISOString() : null,
+            }));
+          }
         }
         if (this.sent$ !== false) {
           const sentOf = items => {
@@ -1014,6 +1103,11 @@
              the first ticket of a visit reached the counter with no address
              at all, and only a second round ever filled it in. */
           ...(this.dlv$ !== false && order && order.dlv ? { dlv: order.dlv } : {}),
+          /* Carried on the insert for the same reason dlv is: a ticket the
+             counter opens is checked from its first round, and the update diff
+             only compares keys that already existed. */
+          ...(this.okq$ !== false && order && order.okAt
+            ? { ok_at: new Date(order.okAt).toISOString() } : {}),
         }).select('id').single();
       /* One open row per table is a unique index, and a quarantined row that
          would not close is still an open row. So the insert can lose to a row
@@ -1081,8 +1175,80 @@
       }
       const rows = lines
         .filter(l => this.dishId[l.id])
-        .map(l => ({ order_id: orderId, dish_id: this.dishId[l.id], qty: l.qty, unit_price: l.price || 0 }));
-      if (rows.length) await this.ins('order_items', rows);
+        .map(l => {
+          const row = { order_id: orderId, dish_id: this.dishId[l.id], qty: l.qty, unit_price: l.price || 0 };
+          if (this.note$ !== false && l.note) row.note = String(l.note).slice(0, 120);
+          /* A round the counter took face to face is already checked, and says
+             so on the insert — waiting for a second press on food staff just
+             typed in would be theatre. The server forces this to zero for
+             anon whatever it says, so a guest's phone cannot claim it. */
+          if (this.okq$ !== false && l.ok) row.ok_qty = Math.min(Number(l.ok) || 0, l.qty);
+          return row;
+        });
+      if (!rows.length) return;
+      try {
+        await this.ins('order_items', rows);
+      } catch (e) {
+        const msg = (e && e.message || '') + ' ' + (e && e.hint || '');
+        // A database without the notes migration still takes the food.
+        if (this.okq$ !== false && /ok_qty/.test(msg)) {
+          this.okq$ = false;
+          console.warn('[supabase] no order_items.ok_qty \u2014 run supabase/kitchen-check.sql to hold guest orders for a staff check');
+          await this.ins('order_items', rows.map(r => { const c = { ...r }; delete c.ok_qty; return c; }));
+          return;
+        }
+        if (this.note$ !== false && /\bnote\b/.test(msg)) {
+          this.note$ = false;
+          console.warn('[supabase] no order_items.note \u2014 run supabase/kitchen-notes.sql to share guest notes');
+          await this.ins('order_items', rows.map(r => { const c = { ...r }; delete c.note; return c; }));
+          return;
+        }
+        throw e;
+      }
+    }
+
+    /* Staff released food to the kitchen. Keyed by dish like the serve count:
+       every row for that dish on that ticket carries the same released count,
+       and it is written absolutely so a retry cannot release more. */
+    async itemOk(label, slug, n) {
+      if (this.okq$ === false) return;
+      const dish = this.dishId[slug];
+      if (!dish) return;
+      const orderId = this.orderId[label] || await this.orderFor(label);
+      if (!orderId) return;
+      const { error } = await this.sb.from('order_items')
+        .update({ ok_qty: Math.max(0, Number(n) || 0) })
+        .eq('order_id', orderId).eq('dish_id', dish);
+      if (!error) return;
+      const msg = (error.message || '') + ' ' + (error.hint || '');
+      if (/ok_qty/.test(msg) && /does not exist|schema cache|PGRST20[024]|could not find/i.test(msg)) {
+        this.okq$ = false;
+        console.warn('[supabase] no order_items.ok_qty \u2014 run supabase/kitchen-check.sql to hold guest orders for a staff check');
+        return;
+      }
+      console.warn('[supabase] the check did not save for ' + label + ':', error.message);
+    }
+
+    /* A note changed on food already on the server — a waiter typing what the
+       guest said at the table. Keyed by dish, like the serve count: the rows
+       for that dish on that ticket all carry the same request. */
+    async itemNote(label, slug, note) {
+      if (this.note$ === false) return;
+      const dish = this.dishId[slug];
+      if (!dish) return;
+      const orderId = this.orderId[label] || await this.orderFor(label);
+      if (!orderId) return;
+      const { error } = await this.sb.from('order_items')
+        .update({ note: note ? String(note).slice(0, 120) : null })
+        .eq('order_id', orderId).eq('dish_id', dish);
+      if (!error) return;
+      const msg = (error.message || '') + ' ' + (error.hint || '');
+      if (/\bnote\b/.test(msg) && /does not exist|schema cache|PGRST20[024]|could not find/i.test(msg)) {
+        this.note$ = false;
+        console.warn('[supabase] no order_items.note \u2014 run supabase/kitchen-notes.sql to share guest notes');
+        return;
+      }
+      console.warn('[supabase] note did not save for ' + label + ':', error.message);
     }
 
     /* Portions of one dish carried out of the kitchen. A dish ordered twice has
