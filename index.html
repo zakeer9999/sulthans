@@ -155,6 +155,15 @@
   a:hover { color: #ffc27a; }
   button { font-family: inherit; color: inherit; border: 0; background: none; cursor: pointer; }
   input { font-family: inherit; }
+  /* The stock slider. Track and thumb are pseudo-elements, which is the one part
+     of this design that cannot be an inline style. Each row passes its own fill
+     down as --fill: a custom property tints the track without the input's own
+     34px box painting the same gradient as a hard-edged slab behind it. */
+  input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 34px; padding: 0; background: transparent; outline: none; touch-action: pan-y; }
+  input[type=range]::-webkit-slider-runnable-track { height: 12px; border-radius: 7px; background: var(--fill, rgba(255,255,255,.06)); border: 1px solid rgba(240,160,60,.16); }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 28px; height: 28px; margin-top: -9px; border-radius: 50%; background: linear-gradient(180deg, #fff1da, #f0a03c); border: 2px solid #17120a; box-shadow: 0 2px 7px rgba(0,0,0,.55); }
+  input[type=range]::-moz-range-track { height: 12px; border-radius: 7px; background: var(--fill, rgba(255,255,255,.06)); border: 1px solid rgba(240,160,60,.16); }
+  input[type=range]::-moz-range-thumb { width: 26px; height: 26px; border-radius: 50%; background: linear-gradient(180deg, #fff1da, #f0a03c); border: 2px solid #17120a; }
   @keyframes emberDrift { 0% { transform: translate3d(0,0,0) scale(1); opacity: .5 } 50% { transform: translate3d(0,-14px,0) scale(1.06); opacity: .85 } 100% { transform: translate3d(0,0,0) scale(1); opacity: .5 } }
   @keyframes riseIn { from { opacity: 0; transform: translateY(16px) } to { opacity: 1; transform: translateY(0) } }
   @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
@@ -934,7 +943,20 @@
                               <span style="flex: 0 0 auto; font-size: 11px; line-height: 1">{{ line.noteGlyph }}</span>
                               <span style="flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">{{ line.noteLabel }}</span>
                             </button>
-                            <sc-if value="{{ line.noteOpen }}" hint-placeholder-val="{{ false }}">
+                            <!-- Cook first and Hold — the kitchen's own two presses,
+                               offered to whoever is standing at the table. The
+                               pass board sorts by them, so this is the waiter
+                               telling the kitchen what to prioritise. -->
+                          <sc-if value="{{ line.fireShow }}" hint-placeholder-val="{{ false }}">
+                            <div style="display: flex; gap: 6px">
+                              <button onClick="{{ line.cookFirst }}" style="flex: 1 1 0; min-width: 0; min-height: 36px; padding: 7px 10px; border-radius: 9px; font-size: 9.5px; letter-spacing: .16em; text-transform: uppercase; color: {{ line.firstInk }}; background: {{ line.firstBg }}; border: 1px solid {{ line.firstEdge }}">{{ line.firstLbl }}</button>
+                              <button onClick="{{ line.holdTap }}" style="flex: 1 1 0; min-width: 0; min-height: 36px; padding: 7px 10px; border-radius: 9px; font-size: 9.5px; letter-spacing: .16em; text-transform: uppercase; color: {{ line.holdInk }}; background: {{ line.holdBg }}; border: 1px solid {{ line.holdEdge }}">{{ line.holdLbl }}</button>
+                            </div>
+                          </sc-if>
+                          <sc-if value="{{ line.readyShow }}" hint-placeholder-val="{{ false }}">
+                            <div style="padding: 6px 10px; border-radius: 9px; font-size: 9.5px; letter-spacing: .18em; text-transform: uppercase; color: #9fd07f; background: rgba(127,174,99,.1); border: 1px solid rgba(127,174,99,.26)">{{ line.readyText }}</div>
+                          </sc-if>
+                          <sc-if value="{{ line.noteOpen }}" hint-placeholder-val="{{ false }}">
                               <div style="display: grid; grid-template-columns: minmax(0, 1fr); gap: 9px; padding: 12px; border-radius: 12px; background: rgba(255,255,255,.03); border: 1px solid rgba(240,160,60,.18)">
                                 <span style="font-size: 9px; letter-spacing: .24em; text-transform: uppercase; color: #8d8479">{{ L_kNoteTitle }}</span>
                                 <div style="display: flex; flex-wrap: wrap; gap: 6px">
@@ -1031,20 +1053,37 @@
                       <div style="display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; margin-bottom: 13px">
                         <sc-for list="{{ row.lines }}" as="line" hint-placeholder-count="2">
                           <div style="display: grid; grid-template-columns: minmax(0, 1fr); gap: 5px">
-                          <!-- The whole line is the target, not a small checkbox: this is
-                               tapped with a working hand at a hot pass. -->
-                          <button onClick="{{ line.bump }}" title="Tap as each portion goes out" style="display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; min-height: 44px; padding: 4px 10px 4px 4px; border-radius: 11px; text-align: left; font-size: 12.5px; font-weight: 300; color: {{ line.lineColor }}; background: {{ line.tallyBg }}; transition: transform 140ms, background 180ms" style-active="transform: scale(.985)">
-                            <span style="flex: 0 0 auto; display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 9px; font-size: 13px; font-variant-numeric: tabular-nums; color: {{ line.tallyColor }}; background: rgba(0,0,0,.22)">{{ line.tally }}</span>
-                            <span style="flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">{{ line.label }}</span>
-                            <span style="flex: 0 0 auto; font-variant-numeric: tabular-nums">{{ line.amount }}</span>
-                          </button>
-                          <!-- A waiter takes the request at the table and types it here on
-                               the guest's behalf. Same field, same ticket line — the
-                               kitchen never has to know which of them wrote it. -->
-                          <button onClick="{{ line.noteToggle }}" style="display: flex; align-items: center; gap: 8px; width: 100%; min-height: 34px; padding: 6px 10px; border-radius: 9px; text-align: left; font-size: 10px; font-weight: 300; letter-spacing: .06em; color: {{ line.noteInk }}; background: {{ line.noteBg }}; border: 1px solid {{ line.noteEdge }}">
-                            <span style="flex: 0 0 auto; font-size: 11px; line-height: 1">{{ line.noteGlyph }}</span>
-                            <span style="flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">{{ line.noteLabel }}</span>
-                          </button>
+                          <!-- Dish and note in one box: they are one instruction, and the
+                               whole box turns green once every portion has been carried.
+                               The dish row is the tap target, not a small checkbox —
+                               this is pressed with a working hand at a hot pass. -->
+                          <div style="display: grid; grid-template-columns: minmax(0, 1fr); border-radius: 12px; background: {{ line.boxBg }}; border: 1px solid {{ line.boxEdge }}; overflow: hidden; transition: background 200ms, border-color 200ms">
+                            <button onClick="{{ line.bump }}" title="Tap as each portion goes out" style="display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; min-height: 44px; padding: 4px 10px 4px 4px; text-align: left; font-size: 12.5px; font-weight: 300; color: {{ line.lineColor }}; background: {{ line.tallyBg }}; transition: transform 140ms, background 180ms" style-active="transform: scale(.985)">
+                              <span style="flex: 0 0 auto; display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 9px; font-size: 13px; font-variant-numeric: tabular-nums; color: {{ line.tallyColor }}; background: rgba(0,0,0,.22)">{{ line.tally }}</span>
+                              <span style="flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">{{ line.label }}</span>
+                              <span style="flex: 0 0 auto; font-variant-numeric: tabular-nums">{{ line.amount }}</span>
+                            </button>
+                            <!-- A waiter takes the request at the table and types it here on
+                                 the guest's behalf. Same field, same ticket line — the
+                                 kitchen never has to know which of them wrote it. -->
+                            <button onClick="{{ line.noteToggle }}" style="display: flex; align-items: center; gap: 8px; min-width: 0; min-height: 34px; padding: 7px 11px; text-align: left; font-size: 10px; font-weight: 300; letter-spacing: .06em; color: {{ line.noteInk }}; background: transparent; border: 0; border-top: 1px solid {{ line.noteDiv }}">
+                              <span style="flex: 0 0 auto; font-size: 11px; line-height: 1">{{ line.noteGlyph }}</span>
+                              <span style="flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">{{ line.noteLabel }}</span>
+                            </button>
+                          </div>
+                          <!-- Cook first and Hold — the kitchen's own two presses,
+                               offered to whoever is standing at the table. The
+                               pass board sorts by them, so this is the waiter
+                               telling the kitchen what to prioritise. -->
+                          <sc-if value="{{ line.fireShow }}" hint-placeholder-val="{{ false }}">
+                            <div style="display: flex; gap: 6px">
+                              <button onClick="{{ line.cookFirst }}" style="flex: 1 1 0; min-width: 0; min-height: 36px; padding: 7px 10px; border-radius: 9px; font-size: 9.5px; letter-spacing: .16em; text-transform: uppercase; color: {{ line.firstInk }}; background: {{ line.firstBg }}; border: 1px solid {{ line.firstEdge }}">{{ line.firstLbl }}</button>
+                              <button onClick="{{ line.holdTap }}" style="flex: 1 1 0; min-width: 0; min-height: 36px; padding: 7px 10px; border-radius: 9px; font-size: 9.5px; letter-spacing: .16em; text-transform: uppercase; color: {{ line.holdInk }}; background: {{ line.holdBg }}; border: 1px solid {{ line.holdEdge }}">{{ line.holdLbl }}</button>
+                            </div>
+                          </sc-if>
+                          <sc-if value="{{ line.readyShow }}" hint-placeholder-val="{{ false }}">
+                            <div style="padding: 6px 10px; border-radius: 9px; font-size: 9.5px; letter-spacing: .18em; text-transform: uppercase; color: #9fd07f; background: rgba(127,174,99,.1); border: 1px solid rgba(127,174,99,.26)">{{ line.readyText }}</div>
+                          </sc-if>
                           <sc-if value="{{ line.noteOpen }}" hint-placeholder-val="{{ false }}">
                             <div style="display: grid; grid-template-columns: minmax(0, 1fr); gap: 9px; padding: 12px; border-radius: 12px; background: rgba(255,255,255,.03); border: 1px solid rgba(240,160,60,.18)">
                               <span style="font-size: 9px; letter-spacing: .24em; text-transform: uppercase; color: #8d8479">{{ L_kNoteTitle }}</span>
@@ -1078,6 +1117,12 @@
                           <span style="flex: 1 1 auto; min-width: 0; font-size: 9px; letter-spacing: .18em; text-transform: uppercase; color: #ffc27a; text-wrap: pretty">{{ row.guestClaimText }}</span>
                           <span style="flex: 0 0 auto; font-size: 12.5px; font-variant-numeric: tabular-nums; color: #ffc27a">{{ row.guestClaimAmt }}</span>
                         </div>
+                      </sc-if>
+                      <!-- What the kitchen has called ready. The cook's Serve press
+                           writes the count; this reads it, so the waiter knows the
+                           food is up without walking to the hatch. -->
+                      <sc-if value="{{ row.cookShow }}" hint-placeholder-val="{{ false }}">
+                        <div style="margin-bottom: 12px; padding: 10px 12px; border-radius: 11px; font-size: 10px; letter-spacing: .2em; text-transform: uppercase; color: {{ row.cookInk }}; background: {{ row.cookBg }}; border: 1px solid {{ row.cookEdge }}">{{ row.cookLine }}</div>
                       </sc-if>
                       <div style="display: flex; gap: 8px; flex-wrap: wrap">
                         <button onClick="{{ row.rate }}" style="padding: 8px 12px; border-radius: 10px; font-size: 9px; letter-spacing: .2em; text-transform: uppercase; color: #1a1005; background: linear-gradient(180deg, #ffc27a, #f0a03c)">{{ L_rateClose }}</button>
@@ -1116,6 +1161,27 @@
                       <input type="text" inputMode="numeric" value="{{ floorTables }}" onChange="{{ setFloorTables }}" onBlur="{{ blurFloorTables }}" style="width: 66px; padding: 8px; border-radius: 10px; text-align: center; font-size: 16px; font-variant-numeric: tabular-nums; color: #f0e8dc; background: rgba(255,255,255,.05); border: 1px solid rgba(240,160,60,.16); outline: none" />
                       <button onClick="{{ floorTablesUp }}" aria-label="Add a table" style="width: 40px; height: 40px; border-radius: 11px; font-size: 17px; line-height: 1; color: #1a1005; background: linear-gradient(180deg, #ffc27a, #f0a03c); transition: transform 150ms" style-active="transform: scale(.92)">+</button>
                     </div>
+                  </div>
+
+                  <!-- Splitting a table is a change to the room, so it lives with
+                       the table count rather than on a ticket. -->
+                  <div style="padding: 16px; border-radius: 15px; background: rgba(255,255,255,.035); border: 1px solid rgba(240,160,60,.14)">
+                    <div style="display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 11px">
+                      <span style="flex: 1 1 auto; font-size: 9px; letter-spacing: .26em; text-transform: uppercase; color: #8d8479">Split tables</span>
+                      <span style="font-size: 9.5px; letter-spacing: .12em; text-transform: uppercase; color: #6f665c">Tap to cycle</span>
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(62px, 1fr)); gap: 7px; margin-bottom: 11px">
+                      <sc-for list="{{ splitList }}" as="t" hint-placeholder-count="20">
+                        <button onClick="{{ t.cycle }}" style="min-height: 56px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; padding: 7px 4px; border-radius: 11px; background: {{ t.bg }}; border: 1px solid {{ t.border }}; transition: transform 150ms" style-active="transform: scale(.94)">
+                          <span style="display: flex; align-items: center; gap: 5px; font-size: 15px; font-variant-numeric: tabular-nums; color: {{ t.color }}">
+                            <span style="width: 5px; height: 5px; border-radius: 50%; background: {{ t.dot }}"></span>
+                            {{ t.label }}
+                          </span>
+                          <span style="font-size: 9.5px; letter-spacing: .16em; color: {{ t.lettersColor }}">{{ t.letters }}</span>
+                        </button>
+                      </sc-for>
+                    </div>
+                    <div style="font-size: 11.5px; font-weight: 300; line-height: 1.65; color: #8d8479; text-wrap: pretty">{{ splitNote }}</div>
                   </div>
 
                   <div style="padding: 16px; border-radius: 15px; background: rgba(255,255,255,.035); border: 1px solid rgba(240,160,60,.14)">
@@ -1200,7 +1266,13 @@
                              the row and carry the × off the edge of the screen. -->
                         <div style="display: flex; flex-wrap: nowrap; align-items: center; gap: 10px; max-width: 100%; box-sizing: border-box; overflow: hidden; padding: 12px; border-radius: 12px; background: rgba(255,255,255,.03); border: 1px solid rgba(240,160,60,.1)">
                           <div style="flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 3px">
-                            <span style="font-size: 13px; font-weight: 300; color: #f0e8dc; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">{{ u.label }}</span>
+                            <span style="display: flex; align-items: baseline; gap: 7px; min-width: 0">
+                              <span style="min-width: 0; font-size: 13px; font-weight: 300; color: #f0e8dc; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">{{ u.label }}</span>
+                              <!-- A cover reads as a party at a table, not a parcel. -->
+                              <sc-if value="{{ u.seatShow }}" hint-placeholder-val="{{ false }}">
+                                <span style="flex: 0 0 auto; padding: 2px 7px; border-radius: 6px; font-size: 8.5px; letter-spacing: .14em; text-transform: uppercase; white-space: nowrap; color: #f0b87a; background: rgba(240,160,60,.12); border: 1px solid rgba(240,160,60,.24)">{{ u.seatAt }}</span>
+                              </sc-if>
+                            </span>
                             <span style="font-size: 9.5px; letter-spacing: .12em; color: {{ u.noteColor }}">{{ u.note }}</span>
                           </div>
                           <!-- The bill number only ever adds to the label; the guest's name
@@ -1217,6 +1289,10 @@
                          typing cannot walk the button off the right edge. -->
                     <div style="display: flex; flex-wrap: nowrap; gap: 8px; max-width: 100%; box-sizing: border-box">
                       <input type="text" value="{{ newSlotName }}" onChange="{{ setNewSlotName }}" placeholder="Bill no. (optional)" size="8" style="flex: 1 1 0; min-width: 0; box-sizing: border-box; padding: 11px 12px; border-radius: 11px; font-size: 16px; color: #f0e8dc; background: rgba(255,255,255,.05); border: 1px solid rgba(240,160,60,.16); outline: none" />
+                      <!-- Leave the table blank and it is a walk-in, as before. Put a
+                           number in and the same slot becomes a second party sitting
+                           at that table, with its own ticket and its own bill. -->
+                      <input type="text" inputmode="numeric" value="{{ newSlotAt }}" onChange="{{ setNewSlotAt }}" placeholder="Table" aria-label="Sitting at table" size="4" style="flex: 0 0 76px; width: 76px; min-width: 0; box-sizing: border-box; padding: 11px 12px; border-radius: 11px; font-size: 16px; font-variant-numeric: tabular-nums; color: #f0e8dc; background: rgba(255,255,255,.05); border: 1px solid rgba(240,160,60,.16); outline: none" />
                       <button onClick="{{ addNewSlot }}" style="flex: 0 0 auto; white-space: nowrap; padding: 11px 16px; border-radius: 11px; font-size: 9px; letter-spacing: .2em; text-transform: uppercase; color: #1a1005; background: linear-gradient(180deg, #ffc27a, #f0a03c); transition: transform 150ms" style-active="transform: scale(.96)">Add</button>
                     </div>
                   </div>
@@ -1229,11 +1305,23 @@
                   <sc-for list="{{ adminCats }}" as="cat" hint-placeholder-count="2">
                     <div>
                       <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px">
-                        <span style="font-family: 'Cormorant Garamond', serif; font-size: 19px; color: #f0e8dc">{{ cat.title }}</span>
+                        <span style="font-family: 'Cormorant Garamond', serif; font-size: 19px; color: {{ cat.titleColor }}">{{ cat.title }}</span>
                         <span style="flex: 1; height: 1px; background: rgba(240,160,60,.14)"></span>
-                        <button onClick="{{ cat.toggleHide }}" style="padding: 6px 10px; border-radius: 9px; font-size: 9px; letter-spacing: .18em; text-transform: uppercase; color: {{ cat.hideColor }}; background: rgba(255,255,255,.04); border: 1px solid rgba(240,160,60,.14)">{{ cat.hideLabel }}</button>
+                        <button onClick="{{ cat.toggleHide }}" style="min-height: 38px; padding: 9px 13px; border-radius: 9px; font-size: 9px; letter-spacing: .18em; text-transform: uppercase; color: {{ cat.hideColor }}; background: {{ cat.hideBg }}; border: 1px solid {{ cat.hideBorder }}">{{ cat.hideLabel }}</button>
                       </div>
-                      <div style="display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(min(320px, 100%), 1fr)); align-items: start">
+                      <!-- Hiding a whole category is the one switch on this screen
+                           with no visible consequence beside it: the section leaves
+                           the guest menu entirely, and a mistaken tap on a small
+                           button looked exactly like no tap at all. So it now says
+                           so in words, and the dishes behind it go grey. -->
+                      <sc-if value="{{ cat.isHidden }}" hint-placeholder-val="{{ false }}">
+                        <button onClick="{{ cat.toggleHide }}" style="width: 100%; min-height: 46px; display: flex; align-items: center; gap: 10px; margin-bottom: 10px; padding: 11px 13px; border-radius: 11px; text-align: left; background: rgba(212,103,74,.1); border: 1px solid rgba(212,103,74,.34)">
+                          <span style="flex: 0 0 auto; display: flex; color: #e8a894">{{ cat.eye }}</span>
+                          <span style="flex: 1; min-width: 0; font-size: 11.5px; font-weight: 300; line-height: 1.5; color: #e8a894; text-wrap: pretty">{{ cat.hiddenNote }}</span>
+                          <span style="flex: 0 0 auto; font-size: 9px; letter-spacing: .18em; text-transform: uppercase; color: #ffd9a8">{{ cat.undoLabel }}</span>
+                        </button>
+                      </sc-if>
+                      <div style="display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(min(320px, 100%), 1fr)); align-items: start; opacity: {{ cat.dim }}; filter: {{ cat.grey }}; transition: opacity 240ms ease, filter 240ms ease">
                         <sc-for list="{{ cat.items }}" as="it" hint-placeholder-count="3">
                           <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 12px; border-radius: 12px; background: rgba(255,255,255,.03); border: 1px solid rgba(240,160,60,.1)">
                             <span style="flex: 1 1 130px; min-width: 0; font-size: 13px; font-weight: 300; color: {{ it.nameColor }}">{{ it.name }}</span>
@@ -1434,12 +1522,28 @@
                           <span style="font-size: 9px; letter-spacing: .24em; text-transform: uppercase; color: #9d9488">Ready dishes</span>
                           <span style="flex: 1; min-width: 0; font-size: 11px; font-weight: 300; color: #a89d8c">{{ bulkDishNote }}</span>
                         </div>
+                        <!-- The list is the whole menu for these rooms, which is
+                             fine to scroll at eleven and useless at eight. -->
+                        <div style="display: flex; gap: 6px; align-items: center">
+                          <input value="{{ bulkQ }}" onInput="{{ bulkSearch }}" placeholder="Search a dish by name" aria-label="Search a dish by name" style="flex: 1; min-width: 0; box-sizing: border-box; min-height: 44px; padding: 11px 13px; border-radius: 11px; font-size: 16px; color: #f0e8dc; background: rgba(255,255,255,.05); border: 1px solid rgba(240,160,60,.16); outline: none" />
+                          <sc-if value="{{ bulkHasQ }}" hint-placeholder-val="{{ false }}">
+                            <button onClick="{{ bulkClear }}" style="flex: 0 0 auto; min-height: 44px; padding: 11px 14px; border-radius: 11px; font-size: 9px; letter-spacing: .18em; text-transform: uppercase; color: rgba(239,231,219,.7); background: rgba(255,255,255,.05); border: 1px solid rgba(240,160,60,.14)">Clear</button>
+                          </sc-if>
+                        </div>
+                        <sc-if value="{{ bulkNoHits }}" hint-placeholder-val="{{ false }}">
+                          <div style="padding: 20px; text-align: center; font-size: 12px; font-weight: 300; line-height: 1.6; color: #9d9488">{{ bulkNoHitText }}</div>
+                        </sc-if>
                         <div style="display: grid; gap: 6px; grid-template-columns: repeat(auto-fill, minmax(min(250px, 100%), 1fr)); align-items: start">
                           <sc-for list="{{ bulkDishes }}" as="rd" hint-placeholder-count="6">
                             <button onClick="{{ rd.put }}" title="Put a batch of this on" style="min-height: 54px; display: flex; align-items: center; gap: 10px; text-align: left; padding: 10px 12px; border-radius: 11px; background: {{ rd.bg }}; border: 1px solid {{ rd.edge }}">
                               <span style="flex: 1; min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 3px">
                                 <span style="font-size: 12.5px; font-weight: 300; line-height: 1.35; color: #f2ece2; text-wrap: pretty">{{ rd.name }}</span>
                                 <span style="font-size: 10px; letter-spacing: .1em; color: {{ rd.noteColor }}">{{ rd.note }}</span>
+                                <sc-if value="{{ rd.barShow }}" hint-placeholder-val="{{ false }}">
+                                  <span style="display: block; height: 5px; margin-top: 2px; border-radius: 3px; background: rgba(255,255,255,.07); overflow: hidden">
+                                    <span style="display: block; height: 100%; width: {{ rd.w }}; border-radius: 3px; background: {{ rd.fill }}; transition: width 320ms cubic-bezier(.23,1,.32,1)"></span>
+                                  </span>
+                                </sc-if>
                               </span>
                               <span style="flex: 0 0 auto; font-size: 12px; font-variant-numeric: tabular-nums; color: #9fd07f">{{ rd.qtyLabel }}</span>
                             </button>
@@ -1501,6 +1605,20 @@
                           </button>
                         </sc-if>
 
+                        <!-- A12 · Hold a course, send a course. Only on a ticket that
+                             spans more than one: on a single-course card this would be
+                             the line buttons again under a longer name. -->
+                        <sc-if value="{{ t.hasCourses }}" hint-placeholder-val="{{ false }}">
+                          <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px">
+                            <sc-for list="{{ t.courses }}" as="c" hint-placeholder-count="2">
+                              <button onClick="{{ c.go }}" style="flex: 1 1 auto; min-height: 44px; display: flex; align-items: center; justify-content: space-between; gap: 9px; padding: 8px 12px; border-radius: 11px; color: {{ c.color }}; background: {{ c.bg }}; border: 1px solid {{ c.edge }}; transition: transform 140ms" style-active="transform: scale(.985)">
+                                <span style="font-size: 9.5px; letter-spacing: .18em; text-transform: uppercase; white-space: nowrap">{{ c.label }}</span>
+                                <span style="font-size: 10px; letter-spacing: .1em; white-space: nowrap; opacity: .85">{{ c.act }}</span>
+                              </button>
+                            </sc-for>
+                          </div>
+                        </sc-if>
+
                         <div style="display: grid; grid-template-columns: minmax(0, 1fr); gap: 7px">
                           <sc-for list="{{ t.lines }}" as="l" hint-placeholder-count="2">
                             <!-- One dish, one block. Expedite, hold and fire belong to
@@ -1529,13 +1647,17 @@
                                     <sc-if value="{{ l.hasMark }}" hint-placeholder-val="{{ false }}">
                                       <span style="padding: 3px 7px; border-radius: 7px; font-size: 8.5px; letter-spacing: .14em; text-transform: uppercase; white-space: nowrap; color: {{ l.markColor }}; background: {{ l.markBg }}">{{ l.markText }}</span>
                                     </sc-if>
-                                    <sc-if value="{{ l.hasNote }}" hint-placeholder-val="{{ false }}">
-                                      <span style="padding: 3px 7px; border-radius: 6px; font-size: 8.5px; letter-spacing: .16em; text-transform: uppercase; color: #ffd9a8; background: rgba(255,122,24,.14); border: 1px solid rgba(240,160,60,.28)">Note</span>
-                                    </sc-if>
                                     <sc-if value="{{ l.hasPart }}" hint-placeholder-val="{{ false }}">
                                       <span style="font-size: 10px; letter-spacing: .1em; color: #9fd07f">{{ l.partLabel }}</span>
                                     </sc-if>
                                   </span>
+                                  <!-- The request, in the same box as the dish it is
+                                       about. A "Note" badge that had to be tapped meant
+                                       a cook could start the dish without having read
+                                       the one line that changes how it is made. -->
+                                  <sc-if value="{{ l.hasNote }}" hint-placeholder-val="{{ false }}">
+                                    <span style="width: 100%; padding: 5px 8px; border-radius: 8px; font-size: 11.5px; font-weight: 300; line-height: 1.45; color: {{ l.noteInk }}; background: {{ l.noteBg }}; border: 1px solid {{ l.noteEdge }}; text-wrap: pretty">{{ l.noteText }}</span>
+                                  </sc-if>
                                 </button>
                                 <!-- K2 · Found mid-service that something is finished. Said
                                      here, it reaches the missing list and the guest menu
@@ -1553,10 +1675,12 @@
                           </sc-for>
                         </div>
 
+                        <!-- The kitchen's only ticket press: this round is ready to
+                             serve. It does not carry the food out — a cook saying
+                             "ready" and a waiter saying "carried" are two facts,
+                             and a screen that merges them ticks dishes off before
+                             anybody has walked to the table. -->
                         <button onClick="{{ t.allOut }}" style="width: 100%; margin-top: 7px; min-height: 46px; padding: 13px; border-radius: 11px; font-size: 9.5px; letter-spacing: .22em; text-transform: uppercase; color: {{ t.allColor }}; background: {{ t.allBg }}; border: 1px solid rgba(240,160,60,.2)">{{ t.allLabel }}</button>
-                        <!-- Serve · what is cooked leaves the kitchen. Same stamp the
-                             pass and the guest's phone already read. -->
-                        <button onClick="{{ t.serve }}" style="width: 100%; margin-top: 7px; min-height: 46px; padding: 13px; border-radius: 11px; font-size: 9.5px; letter-spacing: .22em; text-transform: uppercase; color: {{ t.serveColor }}; background: {{ t.serveBg }}; border: 1px solid {{ t.serveEdge }}">{{ t.serveLabel }}</button>
                       </div>
                     </sc-for>
                     <sc-if value="{{ noKitTickets }}" hint-placeholder-val="{{ true }}">
@@ -1663,24 +1787,211 @@
                   <sc-if value="{{ stockLevels }}" hint-placeholder-val="{{ false }}">
                     <div style="display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px">
                       <div style="font-size: 11.5px; font-weight: 300; line-height: 1.7; color: #9d9488; text-wrap: pretty">{{ levelNote }}</div>
-                      <div style="display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(min(320px, 100%), 1fr)); align-items: start">
+                      <!-- What is short, before the sliders rather than after them:
+                           a cook opening this tab mid-service wants the answer, not
+                           the whole store. -->
+                      <sc-if value="{{ lowShow }}" hint-placeholder-val="{{ false }}">
+                        <div style="display: grid; grid-template-columns: minmax(0, 1fr); gap: 5px; padding: 12px 13px; border-radius: 12px; background: rgba(212,103,74,.09); border: 1px solid rgba(212,103,74,.3)">
+                          <span style="font-size: 9px; letter-spacing: .24em; text-transform: uppercase; color: #e8a894">{{ lowCount }}</span>
+                          <span style="font-size: 12.5px; font-weight: 300; line-height: 1.55; color: #f0d2c4; text-wrap: pretty">{{ lowNames }}</span>
+                        </div>
+                      </sc-if>
+                      <div style="display: grid; gap: 7px; grid-template-columns: minmax(0, 1fr); align-items: start">
                         <sc-for list="{{ ingRows }}" as="i" hint-placeholder-count="4">
-                          <div style="padding: 13px; border-radius: 13px; background: rgba(255,255,255,.03); border: 1px solid rgba(240,160,60,.1)">
-                            <div style="display: flex; align-items: baseline; gap: 9px; margin-bottom: 9px">
-                              <span style="flex: 1; min-width: 0; font-size: 13.5px; color: #f0e8dc">{{ i.name }}</span>
-                              <span style="font-size: 11px; font-variant-numeric: tabular-nums; color: #a89d8c">{{ i.have }}</span>
+                          <div style="display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 16px; row-gap: 9px; align-items: center; padding: 14px 16px; border-radius: 13px; background: {{ i.bg }}; border: 1px solid {{ i.edge }}">
+                            <div style="min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 2px">
+                              <span style="font-size: 14.5px; line-height: 1.25; color: #f0e8dc; text-wrap: pretty">{{ i.name }}</span>
+                              <span style="font-size: 10.5px; letter-spacing: .04em; color: {{ i.subColor }}">{{ i.sub }}</span>
                             </div>
-                            <div style="display: flex; gap: 5px">
-                              <sc-for list="{{ i.states }}" as="s" hint-placeholder-count="4">
-                                <button onClick="{{ s.go }}" style="flex: 1; min-height: 40px; padding: 9px 4px; border-radius: 9px; font-size: 9px; letter-spacing: .1em; text-transform: uppercase; color: {{ s.color }}; background: {{ s.bg }}; border: 1px solid {{ s.border }}">{{ s.label }}</button>
-                              </sc-for>
-                            </div>
+                            <!-- The number is the reading; it gets the size and sits
+                                 where the eye lands scanning a column of rows. -->
+                            <span style="font-size: 25px; font-weight: 300; line-height: 1; font-variant-numeric: tabular-nums; color: {{ i.numColor }}">{{ i.pctLabel }}</span>
+                            <input type="range" min="0" max="100" step="5" value="{{ i.pct }}" onInput="{{ i.slide }}" onPointerUp="{{ i.commit }}" onKeyUp="{{ i.commit }}" onBlur="{{ i.commit }}" aria-label="{{ i.name }}" style="grid-column: 1 / -1; --fill: {{ i.track }}" />
                           </div>
                         </sc-for>
                         <sc-if value="{{ noIngs }}" hint-placeholder-val="{{ true }}">
                           <div style="padding: 34px 20px; text-align: center; font-size: 12px; font-weight: 300; letter-spacing: .1em; line-height: 1.7; color: #9d9488">{{ ingEmpty }}</div>
                         </sc-if>
                       </div>
+                    </div>
+                  </sc-if>
+
+                  <!-- A8 · The counted store. Separate from Levels on purpose:
+                       one is a cook's reading, this is the ledger's. -->
+                  <sc-if value="{{ stockCounted }}" hint-placeholder-val="{{ false }}">
+                    <div style="display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px">
+                      <div style="font-size: 11.5px; font-weight: 300; line-height: 1.7; color: #9d9488; text-wrap: pretty">{{ countNote }}</div>
+
+                      <sc-if value="{{ posGateShow }}" hint-placeholder-val="{{ false }}">
+                        <div style="display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; padding: 14px 15px; border-radius: 12px; background: rgba(240,160,60,.07); border: 1px solid rgba(240,160,60,.28)">
+                          <span style="font-size: 9px; letter-spacing: .24em; text-transform: uppercase; color: #f0b87a">{{ posGateTitle }}</span>
+                          <span style="font-size: 12.5px; font-weight: 300; line-height: 1.6; color: #e4d8c8; text-wrap: pretty">{{ posGateText }}</span>
+                        </div>
+                      </sc-if>
+
+                      <sc-if value="{{ posSaidShow }}" hint-placeholder-val="{{ false }}">
+                        <div style="padding: 11px 13px; border-radius: 11px; font-size: 12px; font-weight: 300; line-height: 1.55; color: #cfe0bd; background: rgba(127,174,99,.1); border: 1px solid rgba(127,174,99,.3); text-wrap: pretty">{{ posSaid }}</div>
+                      </sc-if>
+
+                      <sc-if value="{{ posOn }}" hint-placeholder-val="{{ false }}">
+                        <div style="display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px">
+                          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(92px, 1fr)); gap: 7px">
+                            <sc-for list="{{ posStats }}" as="s" hint-placeholder-count="4">
+                              <div style="display: grid; grid-template-columns: minmax(0, 1fr); gap: 4px; padding: 12px 13px; border-radius: 12px; background: rgba(255,255,255,.03); border: 1px solid {{ s.edge }}">
+                                <span style="font-size: 20px; font-weight: 300; line-height: 1; font-variant-numeric: tabular-nums; color: {{ s.color }}">{{ s.n }}</span>
+                                <span style="font-size: 9px; letter-spacing: .18em; text-transform: uppercase; color: #8d8479">{{ s.label }}</span>
+                              </div>
+                            </sc-for>
+                          </div>
+
+                          <!-- A9 · The short list: the answer before the whole store. -->
+                          <sc-if value="{{ shortShow }}" hint-placeholder-val="{{ false }}">
+                            <div style="display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; padding: 13px 14px; border-radius: 12px; background: rgba(212,103,74,.08); border: 1px solid rgba(212,103,74,.3)">
+                              <span style="font-size: 9px; letter-spacing: .24em; text-transform: uppercase; color: #e8a894">{{ shortCount }}</span>
+                              <sc-for list="{{ shortRows }}" as="s" hint-placeholder-count="2">
+                                <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px">
+                                  <span style="font-size: 13px; color: #f0d2c4; text-wrap: pretty">{{ s.name }}</span>
+                                  <span style="flex: 0 0 auto; font-size: 10.5px; letter-spacing: .04em; color: #c99c8a">{{ s.gap }}</span>
+                                </div>
+                              </sc-for>
+                            </div>
+                          </sc-if>
+
+                          <div style="display: grid; grid-template-columns: minmax(0, 1fr); gap: 7px">
+                            <sc-for list="{{ posRows }}" as="i" hint-placeholder-count="4">
+                              <div style="display: grid; grid-template-columns: minmax(0, 1fr); gap: 11px; padding: 14px 16px; border-radius: 13px; background: {{ i.bg }}; border: 1px solid {{ i.edge }}">
+                                <button onClick="{{ i.go }}" style="display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 14px; align-items: center; text-align: left; background: none; padding: 0">
+                                  <span style="min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 3px">
+                                    <span style="font-size: 14.5px; line-height: 1.25; color: #f0e8dc; text-wrap: pretty">{{ i.name }}</span>
+                                    <span style="font-size: 10.5px; letter-spacing: .04em; line-height: 1.5; color: #8d8479; text-wrap: pretty">{{ i.sub }}</span>
+                                  </span>
+                                  <span style="flex: 0 0 auto; font-size: 17px; font-weight: 300; line-height: 1; font-variant-numeric: tabular-nums; color: {{ i.color }}">{{ i.qty }}</span>
+                                </button>
+
+                                <sc-if value="{{ i.open }}" hint-placeholder-val="{{ false }}">
+                                  <div style="display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; padding-top: 12px; border-top: 1px solid rgba(240,160,60,.14)">
+                                    <div style="display: flex; gap: 6px; flex-wrap: wrap">
+                                      <sc-for list="{{ moveKinds }}" as="k" hint-placeholder-count="4">
+                                        <button onClick="{{ k.go }}" style="padding: 8px 13px; border-radius: 9px; font-size: 9.5px; letter-spacing: .16em; text-transform: uppercase; color: {{ k.color }}; background: {{ k.bg }}; border: 1px solid {{ k.border }}">{{ k.label }}</button>
+                                      </sc-for>
+                                    </div>
+                                    <div style="display: grid; grid-template-columns: minmax(0, 1fr); gap: 4px">
+                                      <span style="font-size: 9px; letter-spacing: .2em; text-transform: uppercase; color: #8d8479">{{ moveHint }}</span>
+                                      <input type="text" inputmode="decimal" value="{{ moveQty }}" onInput="{{ onMoveQty }}" aria-label="Quantity" style="width: 100%; box-sizing: border-box; padding: 12px 14px; border-radius: 10px; font-size: 16px; font-variant-numeric: tabular-nums; color: #f4eee4; background: rgba(255,255,255,.04); border: 1px solid rgba(240,160,60,.2)" />
+                                    </div>
+                                    <input type="text" value="{{ moveNote }}" onInput="{{ onMoveNote }}" placeholder="Why, in a few words" aria-label="Note" style="width: 100%; box-sizing: border-box; padding: 11px 14px; border-radius: 10px; font-size: 13px; color: #f4eee4; background: rgba(255,255,255,.04); border: 1px solid rgba(240,160,60,.14)" />
+                                    <button onClick="{{ moveSave }}" style="padding: 13px; border-radius: 10px; font-size: 10px; letter-spacing: .26em; text-transform: uppercase; color: #1a1005; background: linear-gradient(180deg, #ffc27a, #f0a03c); border: 1px solid rgba(255,214,160,.4)">{{ moveSaveLabel }}</button>
+
+                                    <!-- The floor and the cost live on the ingredient, not the
+                                         ledger, so they save on their own button. -->
+                                    <div style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; padding-top: 4px">
+                                      <div style="display: grid; grid-template-columns: minmax(0, 1fr); gap: 4px">
+                                        <span style="font-size: 9px; letter-spacing: .2em; text-transform: uppercase; color: #8d8479">Alert under</span>
+                                        <input type="text" inputmode="decimal" value="{{ moveReorder }}" onInput="{{ onMoveReorder }}" aria-label="Reorder level" style="width: 100%; box-sizing: border-box; padding: 11px 13px; border-radius: 10px; font-size: 15px; font-variant-numeric: tabular-nums; color: #f4eee4; background: rgba(255,255,255,.04); border: 1px solid rgba(240,160,60,.14)" />
+                                      </div>
+                                      <div style="display: grid; grid-template-columns: minmax(0, 1fr); gap: 4px">
+                                        <span style="font-size: 9px; letter-spacing: .2em; text-transform: uppercase; color: #8d8479">Cost per unit</span>
+                                        <input type="text" inputmode="decimal" value="{{ moveCost }}" onInput="{{ onMoveCost }}" aria-label="Cost per unit" style="width: 100%; box-sizing: border-box; padding: 11px 13px; border-radius: 10px; font-size: 15px; font-variant-numeric: tabular-nums; color: #f4eee4; background: rgba(255,255,255,.04); border: 1px solid rgba(240,160,60,.14)" />
+                                      </div>
+                                    </div>
+                                    <button onClick="{{ floorSave }}" style="padding: 11px; border-radius: 10px; font-size: 9.5px; letter-spacing: .22em; text-transform: uppercase; color: rgba(239,231,219,.8); background: rgba(255,255,255,.04); border: 1px solid rgba(240,160,60,.18)">Save alert level</button>
+
+                                    <sc-if value="{{ moveErrShow }}" hint-placeholder-val="{{ false }}">
+                                      <div style="font-size: 11.5px; font-weight: 300; line-height: 1.55; color: #e8a894; text-wrap: pretty">{{ moveErr }}</div>
+                                    </sc-if>
+                                  </div>
+                                </sc-if>
+                              </div>
+                            </sc-for>
+                            <sc-if value="{{ noPosRows }}" hint-placeholder-val="{{ true }}">
+                              <div style="padding: 34px 20px; text-align: center; font-size: 12px; font-weight: 300; letter-spacing: .06em; line-height: 1.7; color: #9d9488; text-wrap: pretty">{{ posEmpty }}</div>
+                            </sc-if>
+                          </div>
+
+                          <!-- The ledger itself. Every gram that moved, and who said why. -->
+                          <div style="display: grid; grid-template-columns: minmax(0, 1fr); gap: 7px; padding-top: 6px">
+                            <span style="font-size: 9px; letter-spacing: .3em; text-transform: uppercase; color: #7d746a">Movements</span>
+                            <sc-for list="{{ moveRows }}" as="v" hint-placeholder-count="3">
+                              <div style="display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 12px; row-gap: 3px; align-items: baseline; padding: 11px 13px; border-radius: 11px; background: rgba(255,255,255,.025); border: 1px solid rgba(240,160,60,.08)">
+                                <span style="font-size: 13px; color: #e8e0d4; text-wrap: pretty">{{ v.name }}</span>
+                                <span style="flex: 0 0 auto; font-size: 13.5px; font-variant-numeric: tabular-nums; color: {{ v.color }}">{{ v.qty }}</span>
+                                <span style="font-size: 10px; letter-spacing: .04em; color: #7d746a">{{ v.what }} · {{ v.when }}</span>
+                                <sc-if value="{{ v.noteShow }}" hint-placeholder-val="{{ false }}">
+                                  <span style="grid-column: 1 / -1; font-size: 10.5px; font-weight: 300; line-height: 1.5; color: #8d8479; text-wrap: pretty">{{ v.note }}</span>
+                                </sc-if>
+                              </div>
+                            </sc-for>
+                            <sc-if value="{{ noMoves }}" hint-placeholder-val="{{ true }}">
+                              <div style="padding: 22px 20px; text-align: center; font-size: 11.5px; font-weight: 300; letter-spacing: .06em; color: #9d9488">{{ movesEmpty }}</div>
+                            </sc-if>
+                          </div>
+                        </div>
+                      </sc-if>
+                    </div>
+                  </sc-if>
+
+                  <!-- A7 · Recipes: what a portion actually takes off the shelf. -->
+                  <sc-if value="{{ stockRecipes }}" hint-placeholder-val="{{ false }}">
+                    <div style="display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px">
+                      <div style="font-size: 11.5px; font-weight: 300; line-height: 1.7; color: #9d9488; text-wrap: pretty">{{ recipeNote }}</div>
+
+                      <sc-if value="{{ posGateShow }}" hint-placeholder-val="{{ false }}">
+                        <div style="display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; padding: 14px 15px; border-radius: 12px; background: rgba(240,160,60,.07); border: 1px solid rgba(240,160,60,.28)">
+                          <span style="font-size: 9px; letter-spacing: .24em; text-transform: uppercase; color: #f0b87a">{{ posGateTitle }}</span>
+                          <span style="font-size: 12.5px; font-weight: 300; line-height: 1.6; color: #e4d8c8; text-wrap: pretty">{{ posGateText }}</span>
+                        </div>
+                      </sc-if>
+
+                      <sc-if value="{{ posOn }}" hint-placeholder-val="{{ false }}">
+                        <div style="display: grid; grid-template-columns: minmax(0, 1fr); gap: 11px">
+                          <div style="display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px">
+                            <sc-for list="{{ recipeCats }}" as="c" hint-placeholder-count="4">
+                              <button onClick="{{ c.go }}" style="flex: 0 0 auto; padding: 8px 13px; border-radius: 9px; font-size: 9.5px; letter-spacing: .16em; text-transform: uppercase; white-space: nowrap; color: {{ c.color }}; background: {{ c.bg }}; border: 1px solid {{ c.border }}">{{ c.label }}</button>
+                            </sc-for>
+                          </div>
+
+                          <select value="{{ rDish }}" onChange="{{ onRDish }}" aria-label="Dish" style="width: 100%; box-sizing: border-box; padding: 13px 14px; border-radius: 10px; font-size: 15px; color: #f4eee4; background: rgba(255,255,255,.04); border: 1px solid rgba(240,160,60,.2)">
+                            <sc-for list="{{ recipeDishes }}" as="d" hint-placeholder-count="5">
+                              <option value="{{ d.id }}">{{ d.name }}</option>
+                            </sc-for>
+                          </select>
+
+                          <sc-if value="{{ rDishOn }}" hint-placeholder-val="{{ false }}">
+                            <div style="display: grid; grid-template-columns: minmax(0, 1fr); gap: 9px">
+                              <sc-if value="{{ rCostShow }}" hint-placeholder-val="{{ false }}">
+                                <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 12px 14px; border-radius: 12px; background: rgba(255,255,255,.03); border: 1px solid rgba(240,160,60,.12)">
+                                  <span style="font-size: 13px; color: #e8e0d4">{{ rCostText }}</span>
+                                  <span style="flex: 0 0 auto; font-size: 12px; letter-spacing: .04em; color: {{ rMarginColor }}">{{ rMargin }}</span>
+                                </div>
+                              </sc-if>
+
+                              <sc-for list="{{ recipeRows }}" as="r" hint-placeholder-count="5">
+                                <div style="display: grid; grid-template-columns: minmax(0, 1fr) 104px; column-gap: 12px; align-items: center; padding: 11px 14px; border-radius: 12px; background: rgba(255,255,255,.03); border: 1px solid rgba(240,160,60,.1)">
+                                  <span style="min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 2px">
+                                    <span style="font-size: 14px; line-height: 1.25; color: #f0e8dc; text-wrap: pretty">{{ r.name }}</span>
+                                    <span style="font-size: 10px; letter-spacing: .04em; color: #7d746a">{{ r.unit }}</span>
+                                  </span>
+                                  <input type="text" inputmode="decimal" value="{{ r.qty }}" onInput="{{ r.onInput }}" placeholder="0" aria-label="{{ r.name }}" style="width: 100%; box-sizing: border-box; padding: 10px 12px; border-radius: 9px; font-size: 15px; text-align: right; font-variant-numeric: tabular-nums; color: #f4eee4; background: rgba(255,255,255,.04); border: 1px solid rgba(240,160,60,.16)" />
+                                </div>
+                              </sc-for>
+
+                              <sc-if value="{{ noPosRows }}" hint-placeholder-val="{{ true }}">
+                                <div style="padding: 30px 20px; text-align: center; font-size: 12px; font-weight: 300; line-height: 1.7; color: #9d9488; text-wrap: pretty">{{ posEmpty }}</div>
+                              </sc-if>
+
+                              <button onClick="{{ recipeSave }}" style="padding: 14px; border-radius: 11px; font-size: 10px; letter-spacing: .26em; text-transform: uppercase; color: #1a1005; background: linear-gradient(180deg, #ffc27a, #f0a03c); border: 1px solid rgba(255,214,160,.4)">{{ recipeSaveLabel }}</button>
+
+                              <sc-if value="{{ moveErrShow }}" hint-placeholder-val="{{ false }}">
+                                <div style="font-size: 11.5px; font-weight: 300; line-height: 1.55; color: #e8a894; text-wrap: pretty">{{ moveErr }}</div>
+                              </sc-if>
+                            </div>
+                          </sc-if>
+
+                          <sc-if value="{{ posSaidShow }}" hint-placeholder-val="{{ false }}">
+                            <div style="padding: 11px 13px; border-radius: 11px; font-size: 12px; font-weight: 300; line-height: 1.55; color: #cfe0bd; background: rgba(127,174,99,.1); border: 1px solid rgba(127,174,99,.3); text-wrap: pretty">{{ posSaid }}</div>
+                          </sc-if>
+                        </div>
+                      </sc-if>
                     </div>
                   </sc-if>
 
@@ -1800,6 +2111,22 @@
                       <sc-if value="{{ offCanAdd }}" hint-placeholder-val="{{ false }}">
                         <button onClick="{{ offAdd }}" style="min-height: 42px; padding: 11px; border-radius: 10px; font-size: 11.5px; letter-spacing: .04em; color: #ffd9a8; background: rgba(255,122,24,.1); border: 1px dashed rgba(240,160,60,.3)">{{ offAddLabel }}</button>
                       </sc-if>
+                      <!-- A3 \u00b7 The dish's own ingredients, so the question can be
+                           answered by tapping rather than by remembering what the
+                           store list is called. -->
+                      <sc-if value="{{ offHasIngs }}" hint-placeholder-val="{{ true }}">
+                        <div style="display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; margin-top: 4px; padding-top: 12px; border-top: 1px solid rgba(240,160,60,.12)">
+                          <span style="font-size: 11.5px; font-weight: 300; line-height: 1.6; color: #9d9488; text-wrap: pretty">{{ offIngNote }}</span>
+                          <div style="display: grid; gap: 6px; grid-template-columns: repeat(auto-fill, minmax(min(160px, 100%), 1fr))">
+                            <sc-for list="{{ offIngs }}" as="g" hint-placeholder-count="4">
+                              <button onClick="{{ g.go }}" style="min-height: 52px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 2px; text-align: left; padding: 9px 12px; border-radius: 10px; background: {{ g.bg }}; border: 1px solid {{ g.border }}">
+                                <span style="font-size: 12.5px; font-weight: 300; line-height: 1.3; color: {{ g.color }}; text-wrap: pretty">{{ g.label }}</span>
+                                <span style="font-size: 10px; letter-spacing: .1em; color: {{ g.subColor }}">{{ g.sub }}</span>
+                              </button>
+                            </sc-for>
+                          </div>
+                        </div>
+                      </sc-if>
                     </div>
                   </sc-if>
 
@@ -1824,6 +2151,64 @@
                   </sc-for>
                   <sc-if value="{{ noCalls }}" hint-placeholder-val="{{ false }}">
                     <div style="padding: 40px 20px; text-align: center; font-size: 12px; font-weight: 300; letter-spacing: .1em; color: #6f665c">{{ L_noCalls }}</div>
+                  </sc-if>
+                </div>
+              </sc-if>
+
+              <!-- A9 · The customer book. Numbers arrive here on their own; this
+                   is the first screen in the app that can read them back. -->
+              <sc-if value="{{ tabBook }}" hint-placeholder-val="{{ false }}">
+                <div style="display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px">
+                  <div style="font-size: 11.5px; font-weight: 300; line-height: 1.7; color: #9d9488; text-wrap: pretty">{{ bookNote }}</div>
+
+                  <sc-if value="{{ bookGateShow }}" hint-placeholder-val="{{ false }}">
+                    <div style="display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; padding: 14px 15px; border-radius: 12px; background: rgba(240,160,60,.07); border: 1px solid rgba(240,160,60,.28)">
+                      <span style="font-size: 9px; letter-spacing: .24em; text-transform: uppercase; color: #f0b87a">{{ bookGateTitle }}</span>
+                      <span style="font-size: 12.5px; font-weight: 300; line-height: 1.6; color: #e4d8c8; text-wrap: pretty">{{ bookGateText }}</span>
+                    </div>
+                  </sc-if>
+
+                  <sc-if value="{{ bookOn }}" hint-placeholder-val="{{ false }}">
+                    <div style="display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px">
+                      <div style="display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px">
+                        <sc-for list="{{ bookFolders }}" as="f" hint-placeholder-count="4">
+                          <button onClick="{{ f.go }}" style="flex: 0 0 auto; padding: 8px 13px; border-radius: 9px; font-size: 9.5px; letter-spacing: .14em; text-transform: uppercase; white-space: nowrap; color: {{ f.color }}; background: {{ f.bg }}; border: 1px solid {{ f.border }}">{{ f.label }}</button>
+                        </sc-for>
+                      </div>
+
+                      <div style="display: flex; gap: 7px">
+                        <input type="search" value="{{ bookQ }}" onInput="{{ onBookQ }}" onKeyDown="{{ onBookKey }}" placeholder="Name or number" aria-label="Search the book" style="flex: 1 1 0; min-width: 0; box-sizing: border-box; padding: 12px 14px; border-radius: 10px; font-size: 16px; color: #f4eee4; background: rgba(255,255,255,.04); border: 1px solid rgba(240,160,60,.18)" />
+                        <button onClick="{{ bookSearch }}" style="flex: 0 0 auto; padding: 0 17px; border-radius: 10px; font-size: 9.5px; letter-spacing: .2em; text-transform: uppercase; color: rgba(239,231,219,.8); background: rgba(255,255,255,.04); border: 1px solid rgba(240,160,60,.18)">Find</button>
+                      </div>
+
+                      <div style="display: grid; grid-template-columns: minmax(0, 1fr); gap: 7px">
+                        <sc-for list="{{ bookRows }}" as="c" hint-placeholder-count="5">
+                          <div style="display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 14px; row-gap: 4px; align-items: baseline; padding: 13px 15px; border-radius: 12px; background: rgba(255,255,255,.03); border: 1px solid rgba(240,160,60,.1)">
+                            <span style="font-size: 14.5px; line-height: 1.25; color: {{ c.nameColor }}; text-wrap: pretty">{{ c.name }}</span>
+                            <a href="tel:{{ c.mobile }}" style="flex: 0 0 auto; font-size: 13px; font-variant-numeric: tabular-nums; color: #f0b87a; text-decoration: none">{{ c.mobile }}</a>
+                            <span style="grid-column: 1 / -1; font-size: 10.5px; letter-spacing: .04em; line-height: 1.5; color: #8d8479; text-wrap: pretty">{{ c.meta }}</span>
+                            <sc-if value="{{ c.foldersShow }}" hint-placeholder-val="{{ false }}">
+                              <span style="grid-column: 1 / -1; font-size: 9px; letter-spacing: .2em; text-transform: uppercase; color: #7d746a">{{ c.folders }}</span>
+                            </sc-if>
+                          </div>
+                        </sc-for>
+                        <sc-if value="{{ noBookRows }}" hint-placeholder-val="{{ true }}">
+                          <div style="padding: 34px 20px; text-align: center; font-size: 12px; font-weight: 300; line-height: 1.7; color: #9d9488; text-wrap: pretty">{{ bookEmpty }}</div>
+                        </sc-if>
+                      </div>
+
+                      <div style="display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; padding: 14px 15px; border-radius: 12px; background: rgba(255,255,255,.025); border: 1px solid rgba(240,160,60,.12)">
+                        <span style="font-size: 9px; letter-spacing: .24em; text-transform: uppercase; color: #7d746a">Add one by hand</span>
+                        <div style="display: flex; gap: 7px; flex-wrap: wrap">
+                          <input type="text" value="{{ bookNewName }}" onInput="{{ onBookNewName }}" placeholder="Name" aria-label="Name" style="flex: 1 1 130px; min-width: 0; box-sizing: border-box; padding: 11px 13px; border-radius: 10px; font-size: 16px; color: #f4eee4; background: rgba(255,255,255,.04); border: 1px solid rgba(240,160,60,.14)" />
+                          <input type="tel" inputmode="tel" value="{{ bookNewMobile }}" onInput="{{ onBookNewMobile }}" placeholder="Mobile" aria-label="Mobile" style="flex: 1 1 130px; min-width: 0; box-sizing: border-box; padding: 11px 13px; border-radius: 10px; font-size: 16px; font-variant-numeric: tabular-nums; color: #f4eee4; background: rgba(255,255,255,.04); border: 1px solid rgba(240,160,60,.14)" />
+                        </div>
+                        <button onClick="{{ bookAdd }}" style="padding: 12px; border-radius: 10px; font-size: 9.5px; letter-spacing: .24em; text-transform: uppercase; color: #1a1005; background: linear-gradient(180deg, #ffc27a, #f0a03c); border: 1px solid rgba(255,214,160,.4)">{{ bookAddLabel }}</button>
+                        <sc-if value="{{ bookAddErrShow }}" hint-placeholder-val="{{ false }}">
+                          <div style="font-size: 11.5px; font-weight: 300; line-height: 1.55; color: #e8a894; text-wrap: pretty">{{ bookAddErr }}</div>
+                        </sc-if>
+                      </div>
+                    </div>
                   </sc-if>
                 </div>
               </sc-if>
@@ -2550,9 +2935,9 @@
   <!-- Signed in and connected. Bottom corner, small enough to ignore, and gone
        the moment either half stops being true. -->
   <sc-if value="{{ showLive }}" hint-placeholder-val="{{ false }}">
-    <div style="position: fixed; left: calc(env(safe-area-inset-left, 0px) + 12px); bottom: calc(env(safe-area-inset-bottom, 0px) + 10px); display: flex; align-items: center; gap: 6px; padding: 5px 9px 5px 7px; border-radius: 20px; background: rgba(10,9,7,.72); border: 1px solid rgba(122,196,110,.28); backdrop-filter: blur(8px); pointer-events: none; z-index: 260">
-      <span style="width: 6px; height: 6px; border-radius: 50%; background: #7ac46e; box-shadow: 0 0 6px rgba(122,196,110,.9); animation: livePulse 2.4s ease-in-out infinite"></span>
-      <span style="font-size: 8.5px; letter-spacing: .22em; text-transform: uppercase; color: rgba(199,225,193,.85)">Live</span>
+    <div style="position: fixed; left: calc(env(safe-area-inset-left, 0px) + 12px); bottom: calc(env(safe-area-inset-bottom, 0px) + 10px); display: flex; align-items: center; gap: 6px; padding: 5px 9px 5px 7px; border-radius: 20px; background: rgba(10,9,7,.72); border: 1px solid {{ liveDot }}; backdrop-filter: blur(8px); pointer-events: none; z-index: 260">
+      <span style="width: 6px; height: 6px; border-radius: 50%; background: {{ liveDot }}; box-shadow: 0 0 6px {{ liveDot }}; animation: livePulse 2.4s ease-in-out infinite"></span>
+      <span style="font-size: 8.5px; letter-spacing: .22em; text-transform: uppercase; color: {{ liveInk }}">{{ liveLabel }}</span>
     </div>
   </sc-if>
 
@@ -2605,7 +2990,7 @@
   </sc-if>
 
   <sc-if value="{{ assistAdmin }}" hint-placeholder-val="{{ false }}">
-    <dc-import name="Assistant" scope="admin" sb="{{ assistSb }}" rid="{{ assistRid }}" tables="{{ assistTables }}" on-kot="{{ takeDictated }}" hint-size="0px,0px"></dc-import>
+    <dc-import name="Assistant" scope="admin" sb="{{ assistSb }}" rid="{{ assistRid }}" tables="{{ assistTables }}" floor="{{ assistFloor }}" on-kot="{{ takeDictated }}" on-rate="{{ takeRating }}" hint-size="0px,0px"></dc-import>
   </sc-if>
 
   <sc-if value="{{ isTv }}" hint-placeholder-val="{{ false }}">
@@ -2794,9 +3179,22 @@
                     <span style="width: 6px; height: 6px; border-radius: 50%; background: {{ t.dot }}"></span>
                     <span style="font-family: 'Cormorant Garamond', serif; font-size: clamp(16px, 2.1vmin, 25px); color: {{ t.color }}; line-height: 1">{{ t.n }}</span>
                     <span style="flex: 1"></span>
+                    <sc-if value="{{ t.coverShow }}" hint-placeholder-val="{{ false }}">
+                      <span style="flex: 0 0 auto; padding: 1px 5px; border-radius: 5px; font-size: clamp(7px, .85vmin, 10px); letter-spacing: .1em; white-space: nowrap; color: #f0b87a; background: rgba(240,160,60,.14); border: 1px solid rgba(240,160,60,.26)">{{ t.coverLabel }}</span>
+                    </sc-if>
                     <span style="font-size: clamp(10px, 1.2vmin, 14px); color: {{ t.ageColor }}; font-variant-numeric: tabular-nums">{{ t.age }}</span>
                   </span>
                   <span style="font-size: clamp(7.5px, .9vmin, 10.5px); letter-spacing: .2em; text-transform: uppercase; color: {{ t.actionColor }}">{{ t.action }}</span>
+                  <!-- Cook first, hold, delivered — read from across the kitchen. Their
+                       own row at the foot of the tile: in the header they were pushed
+                       into the timer and spilled out of the card. -->
+                  <sc-if value="{{ t.flagShow }}" hint-placeholder-val="{{ false }}">
+                    <span style="display: flex; flex-wrap: wrap; gap: 4px; width: 100%; margin-top: 1px">
+                      <sc-for list="{{ t.flags }}" as="f" hint-placeholder-count="0">
+                        <span style="flex: 0 0 auto; padding: 1px 5px; border-radius: 5px; font-size: clamp(7px, .85vmin, 10px); white-space: nowrap; font-variant-numeric: tabular-nums; color: {{ f.ink }}; background: {{ f.bg }}">{{ f.g }}</span>
+                      </sc-for>
+                    </span>
+                  </sc-if>
                 </button>
               </sc-for>
             </div>
@@ -2877,6 +3275,9 @@
                             <span style="flex: 0 0 auto; width: 22px; height: 22px; border-radius: 6px; border: 1px solid #7fae63; background: #7fae63; display: flex; align-items: center; justify-content: center; font-size: 11px; line-height: 1; color: #10200a">&#10003;</span>
                           </sc-if>
                           <span style="flex: 1; min-width: 0; color: {{ line.nameColor }}; text-wrap: pretty; overflow-wrap: anywhere">{{ line.label }}</span>
+                          <sc-for list="{{ line.chips }}" as="f" hint-placeholder-count="0">
+                            <span style="flex: 0 0 auto; padding: 1px 5px; border-radius: 5px; font-size: clamp(8px, .95vmin, 11px); white-space: nowrap; font-variant-numeric: tabular-nums; color: {{ f.ink }}; background: {{ f.bg }}">{{ f.g }}</span>
+                          </sc-for>
                           <sc-if value="{{ line.done }}" hint-placeholder-val="{{ false }}">
                             <span style="flex: 0 0 auto; color: #7fae63; font-size: clamp(10px, 1.2vmin, 14px); font-variant-numeric: tabular-nums; white-space: nowrap">{{ line.sentAgo }}</span>
                           </sc-if>
@@ -2897,7 +3298,24 @@
                       </div>
                     </sc-for>
                   </div>
+                  <sc-if value="{{ p.waitShow }}" hint-placeholder-val="{{ false }}">
+                    <div style="display: flex; flex-direction: column; gap: 6px; padding: 8px 10px; border-radius: 10px; border: 1px dashed rgba(228,197,106,.45); background: rgba(228,197,106,.06)">
+                      <span style="font-size: clamp(8px, .95vmin, 11px); letter-spacing: .24em; text-transform: uppercase; color: #e4c56a">{{ p.waitHead }}</span>
+                      <sc-for list="{{ p.waits }}" as="w" hint-placeholder-count="1">
+                        <div style="display: flex; align-items: center; gap: 8px; font-size: clamp(12px, 1.5vmin, 18px); font-weight: 300">
+                          <span style="flex: 1; min-width: 0; color: #e8dcc0; text-wrap: pretty; overflow-wrap: anywhere">{{ w.label }}</span>
+                          <span style="flex: 0 0 auto; min-width: 2.2em; text-align: right; color: #e4c56a; font-variant-numeric: tabular-nums">{{ w.qty }}</span>
+                        </div>
+                      </sc-for>
+                      <div style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px">
+                        <button onClick="{{ p.deny }}" style="min-height: 44px; border-radius: 10px; border: 1px solid #e2896f; background: {{ p.denyBg }}; color: {{ p.denyInk }}; font-size: clamp(8.5px, 1vmin, 11.5px); letter-spacing: .2em; text-transform: uppercase; transition: transform 140ms cubic-bezier(.23,1,.32,1)" style-active="transform: scale(.975)">{{ p.denyLabel }}</button>
+                        <button onClick="{{ p.authorise }}" style="min-height: 44px; border-radius: 10px; border: 1px solid #9fd07f; background: #9fd07f; color: #10200a; font-size: clamp(8.5px, 1vmin, 11.5px); letter-spacing: .2em; text-transform: uppercase; transition: transform 140ms cubic-bezier(.23,1,.32,1)" style-active="transform: scale(.975)">Authorise</button>
+                      </div>
+                    </div>
+                  </sc-if>
+                  <sc-if value="{{ p.serveShow }}" hint-placeholder-val="{{ true }}">
                   <button onClick="{{ p.serve }}" style="min-height: 44px; width: 100%; border-radius: 10px; font-size: clamp(8.5px, 1vmin, 11.5px); letter-spacing: .22em; text-transform: uppercase; color: #1a1005; background: linear-gradient(180deg, #ffc27a, #f0a03c); transition: transform 140ms cubic-bezier(.23,1,.32,1)" style-active="transform: scale(.975)">{{ p.serveLabel }}</button>
+                  </sc-if>
                 </div>
               </sc-for>
               <sc-if value="{{ tvNoPending }}" hint-placeholder-val="{{ false }}">
@@ -2930,6 +3348,9 @@
                     <sc-for list="{{ o.lines }}" as="line" hint-placeholder-count="3">
                       <div style="display: flex; align-items: baseline; gap: 8px; font-size: clamp(12px, 1.5vmin, 18px); font-weight: 300">
                         <span style="flex: 1; min-width: 0; color: {{ line.color }}; text-wrap: pretty; overflow-wrap: anywhere">{{ line.label }}</span>
+                          <sc-for list="{{ line.chips }}" as="f" hint-placeholder-count="0">
+                            <span style="flex: 0 0 auto; padding: 1px 5px; border-radius: 5px; font-size: clamp(8px, .95vmin, 11px); white-space: nowrap; font-variant-numeric: tabular-nums; color: {{ f.ink }}; background: {{ f.bg }}">{{ f.g }}</span>
+                          </sc-for>
                         <span style="flex: 0 0 auto; min-width: 2.2em; text-align: right; color: {{ line.color }}; font-variant-numeric: tabular-nums">{{ line.qty }}</span>
                       </div>
                     </sc-for>
@@ -3322,6 +3743,12 @@ const STR = {
   ta: { pcLbl: 'பார்சல்', pcSeatlessLbl: 'மேசை இல்லை', pcTakeaway: 'பார்சல் — எடுத்துச் செல்ல', pcSeated: 'அமர்ந்திருக்கிறேன், எண் இல்லை', pcWhoSeat: 'யாரைத் தேட வேண்டும்?', pcNameNoteSeat: 'இந்தப் பெயரைத் தேடி உணவு கொண்டு வரப்படும்.', pcNameNeededSeat: 'வெயிட்டர் தேட பெயரைச் சேர்க்கவும்', pcBillLbl: 'பில்', payNow: 'இப்போதே செலுத்து', paidSoFar: 'செலுத்தியது', balLbl: 'செலுத்த வேண்டியது', ordTotal: 'மொத்தம்', ordAll: 'அனைத்தும்', ordTables: 'மேசைகள்', ordParcels: 'பார்சல்', pcPayFirst: 'பார்சல் கவுண்டரில் முன்பே செலுத்தப்பட வேண்டும்.', billNoLbl: 'பில் எண்', billNoWait: 'கவுண்டரில் வழங்கப்படும்', pcSent: 'ஆர்டர் ஆனது — கவுண்டரில் செலுத்துங்கள்', notifyHere: 'ஆர்டர் நிலை இங்கே தெரியும்', notifyTap: 'முழு விவரத்திற்கு தட்டுங்கள்', clearOrder: 'ஆர்டரை நீக்கு', tableHeld: 'அந்த மேசை பிடிக்கப்பட்டது — ஊழியரைக் கேளுங்கள்', heldShort: 'பிடிப்பு', upiOrScan: 'அல்லது வேறு மொபைலில் ஸ்கேன் செய்யுங்கள்', upiPay: 'உங்கள் UPI செயலியில் செலுத்து', upiPick: 'GPay, PhonePe, Paytm \u2014 நீங்கள் பயன்படுத்துவது', upiBackTitle: 'செலுத்திய பின் இந்தப் பக்கத்திற்கு திரும்பி வாருங்கள்', upiBackNote: 'உங்கள் பணச் செயலி தானாக இங்கே திரும்பாது. பணம் செலுத்திய பின் இந்த தாவலுக்கு வந்து கீழே தட்டுங்கள்.', upiDone: 'செலுத்திவிட்டேன் \u2014 தொடரவும்', upiAgain: 'UPI செயலியில் செலுத்து', upiClaimTitle: 'சரிபார்க்க கவுண்டருக்கு அனுப்பப்பட்டது', upiClaimNote: 'இன்னும் உறுதிசெய்யப்படவில்லை — ஊழியர்கள் தங்கள் பட்டியலுடன் சரிபார்ப்பார்கள்.', claimSent: 'சரிபார்க்க அனுப்பியது', claimOpen: 'புதிய பொருட்கள் \u00b7 செலுத்த', qrType: 'தொகையை நீங்களே பதியுங்கள்:', upiNoApp: 'எதுவும் திறக்கவில்லையா? கீழே உள்ள குறியீட்டை ஸ்கேன் செய்யுங்கள்.', coachOrder: 'மேசை சேர்ந்தது — ஆர்டர் இன்னும் அனுப்பப்படவில்லை', coachOrderTap: 'ஆர்டர் தட்டி அனுப்புங்கள்', coachAdd: 'ஆர்டரில் சேர்க்கப்பட்டது — இன்னும் அனுப்பவில்லை', coachAddTap: 'முடிக்க இங்கே ஆர்டரைத் தட்டுங்கள்', coachSeat: 'உங்கள் மேசையை இங்கே தேர்வு செய்யுங்கள், அல்லது பார்சல்', coachSeatTap: '', coachBell: '\u0b8f\u0ba4\u0bc1\u0bae\u0bcd \u0ba4\u0bc7\u0bb5\u0bc8\u0baf\u0bbe? \u0b87\u0b99\u0bcd\u0b95\u0bc7 \u0b85\u0bb4\u0bc8\u0b95\u0bcd\u0b95\u0bb5\u0bc1\u0bae\u0bcd', coachBellTap: '\u0b89\u0ba3\u0bb5\u0bbf\u0ba9\u0bcd \u0baa\u0bcb\u0ba4\u0bc1 \u0b8e\u0baa\u0bcd\u0baa\u0bcb\u0ba4\u0bc1\u0bae\u0bcd', pcSave: 'சேமித்து தொடரவும்', pcSaved: 'உங்கள் பார்சலுக்கு சேமிக்கப்பட்டது', pcSave: 'Save and keep browsing', pcSaved: 'Saved for your parcel', dishCue: 'இதில் என்ன உள்ளது', coachTable: 'உங்கள் மேசை எண்ணை இங்கே தேர்வு செய்யுங்கள்', coachTableTap: 'தட்டி தேர்ந்தெடுங்கள்', paidAsk: 'செட்டில் செய்ய மீண்டும் தட்டுங்கள்', paidUndoAsk: 'மாற்ற மீண்டும் தட்டுங்கள்', paidLocked: 'மாற்ற ஊழியர் உள்நுழைவு தேவை', clearLocked: 'வெளியேறியுள்ளீர்கள் — அழிக்க உள்நுழையவும்', authFragile: 'இந்த உலாவி உள்நுழைவை சேமிக்கவில்லை — தனி தாவலில் திறக்கவும்', signInAgain: 'உள்நுழை', seatTitle: 'உங்கள் மேசை எண் தெரியுமா?', seatAssign: 'தொடர்வதற்கு முன் மேசையை ஒதுக்கு', seatSkip: 'மேசை ஒதுக்காமல் தொடரு', seatHint: 'பட்டியலில் உங்கள் எண் இல்லையெனில் வெயிட்டரிடம் கேளுங்கள்.', partPaid: 'பாதி செட்டில்', dueLbl: 'பாக்கி', pcShort: 'பேக்', pcReadyShort: 'தயார்', pcRang: 'உங்கள் பார்சல் தயார் — கவுண்டரில் பெறுங்கள்', pcWaitTitle: 'பார்சல் தயாராகிறது', pcReadyTitle: 'கவுண்டரில் தயார்', paidUpAll: 'முழுதும் செட்டில்', pcNoTable: 'மேசை இல்லை', pcBags: 'பார்சல்', pcBagsPl: 'பார்சல்', pcWho: 'யார் பெற்றுக்கொள்வார்?', pcNamePh: 'கவுண்டருக்கு பெயர்', pcMobPh: 'கைபேசி (விருப்பம்)', pcNameNote: 'பார்சல் தயாரானால் இந்தப் பெயரைக் கவுண்டர் அழைக்கும்.', pcMobBad: 'கைபேசி எண் 10 இலக்கங்கள்.', pcNameNeeded: 'கவுண்டர் அழைக்க பெயரைச் சேர்க்கவும்', readyIn: 'இன்னும்', minsUnit: 'நிமிடத்தில்', readySoon: 'வழக்கத்தை விட சிறிது தாமதம் — இங்கே தெரிவிக்கிறோம்', readyNow: 'பெற்றுக்கொள்ள தயார்', collectAt: 'பார்சல் கவுண்டரில் பெறுங்கள்', parcelReady: 'பார்சல் தயார்', parcelNotReady: 'இன்னும் தயாரில்லை', paid: 'செலுத்தியது', unpaid: 'செலுத்தவில்லை', whoseTable: '\u0ba8\u0bc0\u0b99\u0bcd\u0b95\u0bb3\u0bcd \u0b8e\u0ba4\u0bcd\u0ba4\u0ba9\u0bbe\u0bae\u0bcd \u0bae\u0bc7\u0b9c\u0bc8\u0baf\u0bbf\u0bb2\u0bcd?', askWaiter: '\u0bae\u0bc7\u0b9c\u0bc8\u0baf\u0bbf\u0bb2\u0bcd \u0b8e\u0ba3\u0bcd \u0b87\u0bb2\u0bcd\u0bb2\u0bc8\u0baf\u0bc6\u0ba9\u0bcd\u0bb1\u0bbe\u0bb2\u0bcd \u0baa\u0bb0\u0bbf\u0bae\u0bbe\u0bb1\u0bc1\u0baa\u0bb5\u0bb0\u0bbf\u0b9f\u0bae\u0bcd \u0b95\u0bc7\u0b9f\u0bcd\u0b9f\u0bc1\u0b95\u0bcd\u0b95\u0bc6\u0bbe\u0bb3\u0bcd\u0bb3\u0bc1\u0b99\u0bcd\u0b95\u0bb3\u0bcd', pickTableNow: '\u0bae\u0bc7\u0b9c\u0bc8 \u0ba4\u0bc7\u0bb0\u0bcd\u0ba8\u0bcd\u0ba4\u0bc6\u0b9f\u0bc1\u0b95\u0bcd\u0b95', noTableGo: '\u0bae\u0bc7\u0b9c\u0bc8 \u0b87\u0ba9\u0bcd\u0bb1\u0bbf \u0ba4\u0bc6\u0bbe\u0b9f\u0bb0\u0bcd\u0b95', parcelHint: '\u0baa\u0bbe\u0bb0\u0bcd\u0b9a\u0bb2\u0bcd \u0bae\u0bb1\u0bcd\u0bb1\u0bc1\u0bae\u0bcd \u0b95\u0bbe\u0b89\u0ba3\u0bcd\u0b9f\u0bb0\u0bcd \u0b86\u0bb0\u0bcd\u0b9f\u0bb0\u0bcd\u0b95\u0bb3\u0bc1\u0b95\u0bcd\u0b95\u0bc1 \u0ba4\u0bc7\u0bb5\u0bc8\u0baf\u0bbf\u0bb2\u0bcd\u0bb2\u0bc8', sendConfirm: '\u0b85\u0ba9\u0bc1\u0baa\u0bcd\u0baa \u0bae\u0bc7\u0bb2\u0bc1\u0bae\u0bcd \u0ba4\u0b9f\u0bcd\u0b9f\u0bc1\u0b99\u0bcd\u0b95\u0bb3\u0bcd', someUnavailable: '\u0b85\u0ba9\u0bc1\u0baa\u0bcd\u0baa\u0baa\u0bcd\u0baa\u0b9f\u0bcd\u0b9f\u0ba4\u0bc1 \u2014 \u0b9a\u0bbf\u0bb2 \u0b89\u0ba3\u0bb5\u0bc1\u0b95\u0bb3\u0bcd \u0b87\u0ba9\u0bcd\u0bb1\u0bc1 \u0b87\u0bb2\u0bcd\u0bb2\u0bc8', onTheWay: '\u0bb5\u0bb0\u0bc1\u0b95\u0bbf\u0bb1\u0ba4\u0bc1', arrived: '\u0bae\u0bc7\u0b9c\u0bc8\u0baf\u0bbf\u0bb2\u0bcd', menu: '\u0baa\u0b9f\u0bcd\u0b9f\u0bbf\u0baf\u0bb2\u0bcd', order: '\u0b86\u0bb0\u0bcd\u0b9f\u0bb0\u0bcd', orderShort: '\u0b86\u0bb0\u0bcd\u0b9f\u0bb0\u0bcd', rateShort: '\u0b9a\u0bc7\u0bb5\u0bc8', waiterShort: '\u0b85\u0bb4\u0bc8', table: '\u0bae\u0bc7\u0b9c\u0bc8', ratingOne: '\u0bae\u0ba4\u0bbf\u0baa\u0bcd\u0baa\u0bc1', dish: '\u0bb5\u0bbf\u0b95\u0bbf\u0ba4\u0bae\u0bcd', allAvg: '\u0b85\u0ba9\u0bc8\u0ba4\u0bcd\u0ba4\u0bc1\u0bae\u0bcd', dishAvg: '\u0bb5\u0bbf\u0b95\u0bbf\u0ba4 \u0b9a\u0bb0\u0bbe\u0b9a\u0bb0\u0bbf', serviceAvg: '\u0b9a\u0bc7\u0bb5\u0bc8 \u0b9a\u0bb0\u0bbe\u0b9a\u0bb0\u0bbf', assign: '\u0bae\u0bc7\u0b9c\u0bc8 \u0ba4\u0bc7\u0bb0\u0bcd\u0bb5\u0bc1', rate: '\u0bb5\u0bbf\u0b95\u0bbf\u0ba4\u0bae\u0bcd \u0ba4\u0bb0\u0bb5\u0bc1\u0b95', ratings: '\u0bae\u0ba4\u0bbf\u0baa\u0bcd\u0baa\u0bc1\u0b95\u0bb3\u0bcd', dishOf: '\u0bb5\u0bbf\u0b95\u0bbf\u0ba4\u0bae\u0bcd {n} / {t}', ingredients: '\u0baa\u0bc6\u0bbe\u0bb0\u0bc1\u0b9f\u0bcd\u0b95\u0bb3\u0bcd', ingShort: '\u0b89\u0ba3\u0bb5\u0bc1 \u0baa\u0bb1\u0bcd\u0bb1\u0bbf', spice: '\u0b95\u0bbe\u0bb0 \u0b85\u0bb3\u0bb5\u0bc1', arrives: '\u0bb5\u0bb0\u0bc1\u0bae\u0bcd \u0ba8\u0bc7\u0bb0\u0bae\u0bcd', price: '\u0bb5\u0bbf\u0bb2\u0bc8', swipeMore: '\u0bae\u0bc7\u0bb2\u0bc1\u0bae\u0bcd \u0baa\u0bbe\u0bb0\u0bcd\u0b95\u0bcd\u0b95 \u0b95\u0bbf\u0bb4\u0bc7 \u0ba4\u0bb3\u0bcd\u0bb3\u0bc1\u0b99\u0bcd\u0b95\u0bb3\u0bcd', unavailable: '\u0ba4\u0bb1\u0bcd\u0baa\u0bcb\u0ba4\u0bc1 \u0b95\u0bbf\u0b9f\u0bc8\u0b95\u0bcd\u0b95\u0bbe\u0ba4\u0bc1', added: '\u0b86\u0bb0\u0bcd\u0b9f\u0bb0\u0bbf\u0bb2\u0bcd \u0b9a\u0bc7\u0bb0\u0bcd\u0b95\u0bcd\u0b95\u0baa\u0bcd\u0baa\u0b9f\u0bcd\u0b9f\u0ba4\u0bc1', waiterCalled: '\u0baa\u0bb0\u0bbf\u0bae\u0bbe\u0bb1\u0bc1\u0baa\u0bb5\u0bb0\u0bcd \u0bb5\u0bb0\u0bc1\u0b95\u0bbf\u0bb1\u0bbe\u0bb0\u0bcd', orderSent: '\u0b86\u0bb0\u0bcd\u0b9f\u0bb0\u0bcd \u0baa\u0ba4\u0bbf\u0bb5\u0bbe\u0ba9\u0ba4\u0bc1 \u2014 \u0b8a\u0bb4\u0bbf\u0baf\u0bb0\u0bcd\u0b95\u0bb3\u0bcd \u0b9a\u0bae\u0bc8\u0baf\u0bb2\u0bc1\u0b95\u0bcd\u0b95\u0bc1 \u0b85\u0ba9\u0bc1\u0baa\u0bcd\u0baa\u0bc1\u0bb5\u0bbe\u0bb0\u0bcd\u0b95\u0bb3\u0bcd', choose: '\u0b87\u0bb0\u0ba3\u0bcd\u0b9f\u0bc1 \u0bb5\u0bb4\u0bbf', chooseTitle: '\u0b8e\u0ba9\u0bcd\u0ba9 \u0b9a\u0bbe\u0baa\u0bcd\u0baa\u0bbf\u0b9f\u0bb2\u0bbe\u0bae\u0bcd?', pure: '\u0b9a\u0bc1\u0ba4\u0bcd\u0ba4 \u0b9a\u0bc8\u0bb5\u0bae\u0bcd', full: '\u0bae\u0bc1\u0bb4\u0bc1 \u0b9a\u0bae\u0bc8\u0baf\u0bb2\u0bcd', veg: '\u0b9a\u0bc8\u0bb5\u0bae\u0bcd \u0bae\u0b9f\u0bcd\u0b9f\u0bc1\u0bae\u0bcd', all: '\u0b9a\u0bc8\u0bb5\u0bae\u0bcd + \u0b85\u0b9a\u0bc8\u0bb5\u0bae\u0bcd', kitchens: '\u0b92\u0bb0\u0bc1 \u0b9a\u0bae\u0bc8\u0baf\u0bb2\u0bc8\u0ba4\u0bcd \u0ba4\u0bc7\u0bb0\u0bcd\u0bb5\u0bc1', switch: '\u0bae\u0bbe\u0bb1\u0bcd\u0bb1\u0bc1', close: '\u0bae\u0bc2\u0b9f\u0bc1', total: '\u0bae\u0bc6\u0bbe\u0ba4\u0bcd\u0ba4\u0bae\u0bcd', send: '\u0b9a\u0bae\u0bc8\u0baf\u0bb2\u0bc1\u0b95\u0bcd\u0b95\u0bc1 \u0b85\u0ba9\u0bc1\u0baa\u0bcd\u0baa\u0bc1', cartEmpty: '\u0b87\u0ba4\u0bc1\u0bb5\u0bb0\u0bc8 \u0b8e\u0ba4\u0bc1\u0bb5\u0bc1\u0bae\u0bcd \u0b87\u0bb2\u0bcd\u0bb2\u0bc8', qrSlot: 'QR \u0b95\u0b9f\u0bcd\u0b9f\u0ba3\u0bae\u0bcd', payNote: '\u0b8e\u0ba8\u0bcd\u0ba4 UPI \u0b9a\u0bc6\u0baf\u0bb2\u0bbf\u0baf\u0bbf\u0bb2\u0bc1\u0bae\u0bcd \u0bb8\u0bcd\u0b95\u0bc7\u0ba9\u0bcd \u0b9a\u0bc6\u0baf\u0bcd\u0baf\u0bb5\u0bc1\u0bae\u0bcd.', billDue: '\u0b9a\u0bc6\u0bb2\u0bc1\u0ba4\u0bcd\u0ba4 \u0bb5\u0bc7\u0ba3\u0bcd\u0b9f\u0bbf\u0baf \u0ba4\u0bca\u0b95\u0bc8', noTable: '\u0bae\u0bc7\u0b9c\u0bc8 \u0b92\u0ba4\u0bc1\u0b95\u0bcd\u0b95\u0baa\u0bcd\u0baa\u0b9f\u0bb5\u0bbf\u0bb2\u0bcd\u0bb2\u0bc8', staffOnly: '\u0baa\u0ba3\u0bbf\u0baf\u0bbe\u0bb3\u0bb0\u0bcd \u0bae\u0b9f\u0bcd\u0b9f\u0bc1\u0bae\u0bcd', enter: '\u0b89\u0bb3\u0bcd\u0bb3\u0bc7', back: '\u0baa\u0bbf\u0ba9\u0bcd', exit: '\u0bb5\u0bc6\u0bb3\u0bbf\u0baf\u0bc7\u0bb1\u0bc1', hint: '\u0b9f\u0bc6\u0bae\u0bcb \u0b95\u0b9f\u0bb5\u0bc1\u0b9a\u0bcd\u0b9a\u0bc6\u0bbe\u0bb2\u0bcd: Admin@123', wrong: '\u0ba4\u0bb5\u0bb1\u0bbe\u0ba9 \u0b95\u0b9f\u0bb5\u0bc1\u0b9a\u0bcd\u0b9a\u0bc6\u0bbe\u0bb2\u0bcd', rateClose: '\u0bae\u0ba4\u0bbf\u0baa\u0bcd\u0baa\u0bbf\u0b9f\u0bcd\u0b9f\u0bc1 \u0bae\u0bc1\u0b9f\u0bbf', clear: '\u0bae\u0bc7\u0b9c\u0bc8\u0baf\u0bc8 \u0b95\u0bbe\u0bb2\u0bbf \u0b9a\u0bc6\u0baf\u0bcd', attended: '\u0b95\u0bb5\u0ba9\u0bbf\u0b95\u0bcd\u0b95\u0baa\u0bcd\u0baa\u0b9f\u0bcd\u0b9f\u0ba4\u0bc1', noOrders: '\u0ba8\u0bc7\u0bb0\u0b9f\u0bbf \u0b86\u0bb0\u0bcd\u0b9f\u0bb0\u0bcd \u0b87\u0bb2\u0bcd\u0bb2\u0bc8', noCalls: '\u0b95\u0bcb\u0bb0\u0bbf\u0b95\u0bcd\u0b95\u0bc8 \u0b87\u0bb2\u0bcd\u0bb2\u0bc8', pcSave: '\u0b9a\u0bc7\u0bae\u0bbf\u0ba4\u0bcd\u0ba4\u0bc1 \u0ba4\u0bca\u0b9f\u0bb0\u0bb5\u0bc1\u0bae\u0bcd', pcSaved: '\u0b9a\u0bc7\u0bae\u0bbf\u0b95\u0bcd\u0b95\u0baa\u0bcd\u0baa\u0b9f\u0bcd\u0b9f\u0ba4\u0bc1', noFeedback: '\u0b87\u0ba4\u0bc1\u0bb5\u0bb0\u0bc8 \u0b95\u0bb0\u0bc1\u0ba4\u0bcd\u0ba4\u0bc1 \u0b87\u0bb2\u0bcd\u0bb2\u0bc8', starsOnly: '\u0bae\u0ba4\u0bbf\u0baa\u0bcd\u0baa\u0bc6\u0ba3\u0bcd\u0b95\u0bb3\u0bcd \u0bae\u0b9f\u0bcd\u0b9f\u0bc1\u0bae\u0bcd', commentOne: '\u0b95\u0bb0\u0bc1\u0ba4\u0bcd\u0ba4\u0bc1', commentMany: '\u0b95\u0bb0\u0bc1\u0ba4\u0bcd\u0ba4\u0bc1\u0b95\u0bb3\u0bcd', noService: '\u0b9a\u0bc7\u0bb5\u0bc8 \u0bae\u0ba4\u0bbf\u0baa\u0bcd\u0baa\u0bc1 \u0b87\u0bb2\u0bcd\u0bb2\u0bc8', service: '\u0b9a\u0bc7\u0bb5\u0bc8 \u0bae\u0ba4\u0bbf\u0baa\u0bcd\u0baa\u0bc1', latest: '\u0b9a\u0bae\u0bc0\u0baa\u0ba4\u0bcd\u0ba4\u0bbf\u0baf', byDish: '\u0b89\u0ba3\u0bb5\u0bc1 \u0bb5\u0bbe\u0bb0\u0bbf\u0baf\u0bbe\u0b95', commentPlaceholder: '\u0b95\u0bb0\u0bc1\u0ba4\u0bcd\u0ba4\u0bc1 (\u0bb5\u0bbf\u0bb0\u0bc1\u0baa\u0bcd\u0baa\u0bae\u0bcd)', submit: '\u0b85\u0ba9\u0bc1\u0baa\u0bcd\u0baa\u0bc1', skip: '\u0ba4\u0bb5\u0bbf\u0bb0\u0bcd', ratingPrompt: '\u0b8e\u0baa\u0bcd\u0baa\u0b9f\u0bbf \u0b87\u0bb0\u0bc1\u0ba8\u0bcd\u0ba4\u0ba4\u0bc1? \u0bae\u0ba4\u0bbf\u0baa\u0bcd\u0baa\u0bc0\u0b9f\u0bc1 \u0bb5\u0bbf\u0bb0\u0bc1\u0baa\u0bcd\u0baa\u0bae\u0bcd \u0bae\u0bbe\u0ba4\u0bcd\u0ba4\u0bbf\u0bb0\u0bae\u0bcd.', hidden: '\u0bae\u0bb1\u0bc8\u0b95\u0bcd\u0b95\u0baa\u0bcd\u0baa\u0b9f\u0bcd\u0b9f\u0ba4\u0bc1', hide: '\u0bae\u0bb1\u0bc8', show: '\u0b95\u0bbe\u0b9f\u0bcd\u0b9f\u0bc1', mediaSlot: '\u0bb5\u0bbf\u0b9f\u0bbf\u0baf\u0bcb \u0b87\u0b9f\u0bae\u0bcd', unassigned: '\u0bae\u0bc7\u0b9c\u0bc8 \u0b87\u0bb2\u0bcd\u0bb2\u0bc8', servicePrompt: '\u0b9a\u0bc7\u0bb5\u0bc8 \u0b8e\u0baa\u0bcd\u0baa\u0b9f\u0bbf \u0b87\u0bb0\u0bc1\u0ba8\u0bcd\u0ba4\u0ba4\u0bc1? (\u0bb5\u0bbf\u0bb0\u0bc1\u0baa\u0bcd\u0baa\u0bae\u0bcd)', thanks: '\u0ba8\u0ba9\u0bcd\u0bb1\u0bbf' },
 };
 
+/* Seats. A line can be put on a person, and the bill can then be taken one
+   person at a time. Appended rather than typed into the STR literals above,
+   which are one line each and unsafe to edit in place. */
+
+Object.assign(STR.ta, { seatN: 'இருக்கை', seatNone: 'இருக்கை இல்லை', splitShow: 'இருக்கை வாரியாக பிரி', splitHide: 'பிரிப்பை மறை' });
+
 const GROUNDS = [
   'linear-gradient(165deg, #2b1c10 0%, #0d0907 58%, #1c1208 100%)',
   'linear-gradient(155deg, #241a14 0%, #0a0807 52%, #2a1508 100%)',
@@ -3516,19 +3943,24 @@ Object.assign(STR.ta, {
 });
 
 const KEY = 'sulthans.v1';
+/* Split tables are lettered, not decimal: 7A reads as a place in the room, 7.1
+   reads as a version number. Six is the ceiling because past that the number has
+   stopped being a table and become a section of its own. */
+const SPLIT_LETTERS = 'ABCDEF';
+const SPLIT_MAX = SPLIT_LETTERS.length;
 /* The collections that live on the server when Supabase is configured. floor and
    uslots joined them when the room moved off localStorage — they must be in the
    snapshot too, or sync() diffs a live value against undefined and treats every
    patch as a fresh room: a refused table_count write and a duplicate slot insert
    on every order, and a released slot never deleted. */
-const SHARED = ['dishes', 'cats', 'orders', 'waiter', 'feedback', 'service', 'floor', 'uslots'];
+const SHARED = ['dishes', 'cats', 'orders', 'waiter', 'feedback', 'service', 'floor', 'uslots', 'batches', 'ings'];
 const CLEARED = 'sul.cleared.v1';
 const snap = s => JSON.parse(JSON.stringify(SHARED.reduce((o, k) => (o[k] = s[k], o), {})));
 
 const db = {
-  /* ings and offLog are deliberately outside SHARED: the mirror diffs the
-     collections Postgres owns, and these two have their own tables
-     (ingredients.stock_state and dish_offs) written by rpc rather than by
+  /* offLog is deliberately outside SHARED: the mirror diffs the
+     collections Postgres owns, and it has its own table
+     (dish_offs) written by rpc rather than by
      diff. Kept in state so a second tab and a reload still see them.
      cooked is keyed by label:dish rather than living on the item, because
      hydrate rebuilds items from order_items and would drop it. */
@@ -3677,6 +4109,22 @@ const ING_STATES = [
   ['none',     'None',   '#e2896f', 'rgba(212,103,74,.18)', 'rgba(212,103,74,.5)'],
 ];
 const ING_WORD = { enough: 'Enough', moderate: 'Some left', low: 'Low', none: 'Finished' };
+// Worst-first ordering, so two readings of the same line can be compared.
+const ING_RANK = ING_STATES.reduce((o, s, i) => (o[s[0]] = i, o), {});
+/* A4 · The reading staff give is a rough fraction of a sack, not one of four
+   words, so the store line carries a percentage and the four words are what that
+   percentage is called. A quarter is the line the kitchen already works to: below
+   it, the ingredient joins the missing list on its own. */
+const ING_LOW = 25;
+function pctState(p) {
+  const n = Math.max(0, Math.min(100, Math.round(Number(p) || 0)));
+  return n <= 0 ? 'none' : n < ING_LOW ? 'low' : n < 60 ? 'moderate' : 'enough';
+}
+// Where a line sits when it has only ever been set by the old four buttons.
+const STATE_PCT = { enough: 100, moderate: 50, low: 15, none: 0 };
+function pctFill(p) {
+  return p <= 0 ? '#d4674a' : p < ING_LOW ? '#e2896f' : p < 60 ? '#e4c56a' : '#7fae63';
+}
 // Which range a dish is cooked on. The kitchen screen groups by this, because a
 // cook works one range and wants the four tickets that touch it.
 const stationOf = cat => /biriyani|mandi/.test(cat) ? 'Dum'
@@ -3684,6 +4132,17 @@ const stationOf = cat => /biriyani|mandi/.test(cat) ? 'Dum'
   : /starter/.test(cat) ? 'Fry'
   : /dessert|shake|juice/.test(cat) ? 'Cold'
   : /bread|rice|noodle/.test(cat) ? 'Tawa' : 'Pass';
+/* A12 · Which course a dish belongs to. Read off the category rather than
+   stored per line: tagging every dish by hand to get hold-and-fire would be a
+   week of data entry before the first ticket worked, and the menu already
+   groups the food the same way a waiter does. A kitchen that disagrees can
+   still hold the individual line. */
+const COURSES = [['starter', 'Starters'], ['main', 'Mains'],
+  ['dessert', 'Desserts'], ['drink', 'Drinks']];
+const courseOf = cat => /starter/.test(cat) ? 'starter'
+  : /dessert/.test(cat) ? 'dessert'
+  : /shake|juice|drink|soda/.test(cat) ? 'drink' : 'main';
+
 const OFF_REASONS = [['ingredient', 'Something ran out'], ['chef', 'Cook not in'],
   ['slow', 'Takes too long'], ['today', 'Off today'], ['other', 'Other']];
 
@@ -3774,7 +4233,7 @@ class Component extends DCLogic {
     dlvEdit: {},
     skipTable: false, seatlessAsk: false, pulseAssign: false, pcCoach: false, tblCoach: false, ordCoach: false, addCoach: false, seatCoach: false, bellCoach: false, upiSent: false, coachCaret: '20px', coachLeft: null, paidArm: null, ordKind: 'all', pcKind: 'parcel', pcName: '', pcMobile: '', pcSplitAsk: false, linkCopied: false,
     cartNote: null, cartNoteDraft: '', ordNote: null, ordNoteDraft: '', kitNote: null,
-    sheet: null, adminTab: 'orders', fbSort: 'latest', fbOpenDish: null, fbDishOrder: 'cat', newSlotName: '',
+    sheet: null, adminTab: 'orders', fbSort: 'latest', fbOpenDish: null, fbDishOrder: 'cat', newSlotName: '', newSlotAt: '',
     kitView: 'ticket', kitSub: 'bulk', floorSub: 'room',
     alerts: [], alertOver: 0, alertBell: false, atFooter: false,
     authed: false, authMsg: '', clearBlocked: false, syncFail: '', toast: '', ratingStars: 0, tick: 0,
@@ -5595,6 +6054,7 @@ class Component extends DCLogic {
       { key: 'parcel', label: 'Parcels',      sfx: 'alertParcel', tab: 'orders' },
       { key: 'calls',  label: 'Waiter calls', sfx: 'alertCall',   tab: 'calls'  },
       { key: 'ready',  label: 'Bag ready',    sfx: 'alertReady',  tab: 'orders' },
+      { key: 'serve',  label: 'Ready to serve', sfx: 'alertReady', tab: 'orders' },
     ];
   }
 
@@ -5936,7 +6396,7 @@ class Component extends DCLogic {
       return { ...a, pend: false, id: a.gid + ':' + (this._alertId = (this._alertId || 0) + 1) };
     });
     this.setState({ alerts: this._alertList, alertOver: Math.max(0, this._alertList.length - 24) });
-    const order = ['calls', 'table', 'parcel', 'ready'];
+    const order = ['calls', 'serve', 'ready', 'table', 'parcel'];
     const fresh = owed.filter(a => !a.heard);
     if (!fresh.length) return;   // already chimed while pending; do not repeat
     const pick = order.find(c => fresh.some(a => a.ch === c));
@@ -6008,7 +6468,23 @@ class Component extends DCLogic {
         }
         if (pf[ch] && n > 0) fired.push({ ch, key: k, sub: k, label: this.keyLabel(k), n });
       }
-      const ready = !!o.ready;
+      /* The cook's Serve press, from the floor's side. Portions the kitchen has
+         called cooked and nobody has carried out yet: when that number rises,
+         a plate is sitting on the pass with a table number on it, which is the
+         one fact a waiter cannot get by looking at the room. Parcels keep their
+         own bag-ready channel and are left out of this one. */
+      const cookN = (o.items || []).reduce((n, l) =>
+        n + Math.min(this.cookedOf(k, l.id), Math.max(0, this.okOf(l) - (l.sent || 0))), 0);
+      const wasCook = (seen.cook || (seen.cook = {}))[id];
+      seen.cook[id] = cookN;
+      if (!seenFresh && !parcel && cookN > (wasCook || 0) && pf.serve) {
+        fired.push({ ch: 'serve', key: k, sub: k, ordKey: k, label: this.keyLabel(k), n: cookN - (wasCook || 0) });
+      }
+      /* Bagged counts as ready even on a door order, where `ready` means the
+         rider has gone. The kitchen, the pass and the floor display all set one
+         of these two, so the card fires once from whichever screen got there
+         first rather than three times or not at all. */
+      const ready = !!o.ready || !!o.packed;
       const wasReady = seen.ready[id];
       seen.ready[id] = ready;
       if (!seenFresh && parcel && ready && !wasReady && pf.ready) {
@@ -6017,7 +6493,7 @@ class Component extends DCLogic {
     });
     // A cleared ticket leaves nothing behind to shadow the next one on its number.
     Object.keys(seen.qty).forEach(id => {
-      if (!liveIds[id]) { delete seen.qty[id]; delete seen.ready[id]; if (seen.lines) delete seen.lines[id]; }
+      if (!liveIds[id]) { delete seen.qty[id]; delete seen.ready[id]; if (seen.cook) delete seen.cook[id]; if (seen.lines) delete seen.lines[id]; }
     });
 
     /* Retire cards whose work is done. Ignoring a card is only "not me, not now"
@@ -6033,7 +6509,7 @@ class Component extends DCLogic {
     const canRetire = !!(db.state.orders && (db.remote ? db.remote.okAt : true));
     const stale = !canRetire ? [] : (this._alertList || []).filter(a => {
       if (a.ch === 'calls') return !this.callsOf(a.table || '').length;
-      if (a.ch === 'ready') return !orders[a.ordKey || a.key];
+      if (a.ch === 'ready' || a.ch === 'serve') return !orders[a.ordKey || a.key];
       return false;
     });
     if (stale.length) {
@@ -6088,7 +6564,7 @@ class Component extends DCLogic {
       this.setState({ alerts: this._alertList, alertOver: Math.max(0, list.length - 24) });
     }
     // One sound per batch, whichever channel is most urgent — a bell over a bag.
-    const order = ['calls', 'table', 'parcel', 'ready'];
+    const order = ['calls', 'serve', 'ready', 'table', 'parcel'];
     const pick = order.find(c => fired.some(f => f.ch === c));
     const ch = this.ALERT_CHANNELS().find(c => c.key === pick);
     /* Sound follows the mute rule, which is now the card rule: the three held
@@ -7534,6 +8010,70 @@ class Component extends DCLogic {
   }
   slots() { return db.state.uslots || []; }
 
+  /* ---- split tables ----
+     One physical table seating two unrelated parties, each with their own bill:
+     table 7 becomes 7A and 7B. This is not the same job as a cover. A cover is a
+     second party hung off the house ticket's table for the pass to read; a split
+     is the room itself changing shape, so the parts are ordinary table keys and
+     everything downstream — the orders map, the lock, the floor tiles, the
+     assign sheet — treats 7A exactly as it treats 7. Nothing in the app has to
+     learn a new kind of key, which is why this is stored as a shape of the floor
+     rather than a field on a ticket.
+
+     The number that was split stops existing as a key: a table is either whole
+     or in parts, never both, or the same seats would total on two bills. */
+  splits() { return (db.state.floor || {}).splits || {}; }
+
+  splitParts(n) {
+    const v = Math.round(Number(this.splits()[String(n)]) || 0);
+    return v >= 2 ? Math.min(SPLIT_MAX, v) : 0;
+  }
+
+  // The keys table n presents right now: ['7'] whole, ['7A','7B'] split.
+  keysOf(n) {
+    const p = this.splitParts(n);
+    return p ? Array.from({ length: p }, (_, j) => String(n) + SPLIT_LETTERS[j]) : [String(n)];
+  }
+
+  // Every numbered key in the room, in room order. The one list the floor tiles
+  // and the assign sheet both walk, so a split shows up in both or in neither.
+  tableKeys() {
+    const out = [];
+    for (let i = 1; i <= this.tableCount(); i++) out.push.apply(out, this.keysOf(i));
+    return out;
+  }
+
+  // Anything sitting on a key: a ticket, or a cover party hung off it.
+  keyBusy(k) { return !!db.state.orders[k] || this.coversAt(k).length > 0; }
+
+  /* Reshaping a table is refused while a part that would disappear is carrying
+     somebody — un-splitting 7 with food on 7B would strand that bill under a key
+     no screen lists any more. Parts that survive the change are left alone, so
+     going from two parts to three never interrupts A or B. */
+  setSplit(n, parts) {
+    if (!this.staffMode()) { this.chime('deny'); this.say(this.L().clearLocked); return false; }
+    const num = Math.round(Number(n) || 0);
+    if (num < 1 || num > this.tableCount()) { this.chime('deny'); return false; }
+    const want = Math.max(0, Math.min(SPLIT_MAX, Math.round(Number(parts) || 0)));
+    const p = want < 2 ? 0 : want;
+    const before = this.keysOf(num);
+    const after = p ? Array.from({ length: p }, (_, j) => String(num) + SPLIT_LETTERS[j]) : [String(num)];
+    const lost = before.filter(k => after.indexOf(k) < 0 && this.keyBusy(k));
+    if (lost.length) {
+      this.chime('deny');
+      this.say(this.L().table + ' ' + lost.join(', ') + ' \u2014 ' + (this.L().busy || 'in use'));
+      return false;
+    }
+    db.patch(s => {
+      const f = { ...(s.floor || {}) }, sp = { ...(f.splits || {}) };
+      if (p) sp[String(num)] = p; else delete sp[String(num)];
+      f.splits = sp;
+      s.floor = f;
+    });
+    this.chime(p ? 'add' : 'tap');
+    return true;
+  }
+
   /* ---- table lock ----
      A numbered table belongs to the phone that ordered on it for the length of
      the hold window (the same one admin already tunes, two hours by default).
@@ -7648,13 +8188,26 @@ class Component extends DCLogic {
     if (next < 1 || next > 99) { this.chime('deny'); return; }
     // The table being removed is the highest one, so it is the only one that can
     // be orphaned — a live ticket on it blocks the change.
-    if (d < 0 && db.state.orders[String(cur)]) {
-      this.chime('deny');
-      this.say(this.L().table + ' ' + cur + ' \u2014 ' + (this.L().busy || 'in use'));
-      return;
+    // A split table is several keys, and any one of them carrying a party
+    // blocks the removal just as a single ticket does.
+    if (d < 0) {
+      const busy = this.keysOf(cur).filter(k => this.keyBusy(k));
+      if (busy.length) {
+        this.chime('deny');
+        this.say(this.L().table + ' ' + busy.join(', ') + ' \u2014 ' + (this.L().busy || 'in use'));
+        return;
+      }
     }
     this.chime(d > 0 ? 'add' : 'tap');
     this.setTables(next);
+    // The removed number takes its split with it, or raising the count again
+    // would bring back parts nobody asked for.
+    if (d < 0) db.patch(s => {
+      const f = { ...(s.floor || {}) }, sp = { ...(f.splits || {}) };
+      delete sp[String(cur)];
+      f.splits = sp;
+      s.floor = f;
+    });
   }
 
   /* A slot made here is part of the room: staff_made, so it survives the ticket
@@ -7663,18 +8216,36 @@ class Component extends DCLogic {
      and an ungated tap would insert a row the server silently refuses and the
      next hydrate erases. A guest with no table gets their own slot through
      ensureTable instead, which writes it as theirs. */
-  addSlot(name) {
+  /* A13–A14 · covers. Two parties at one table is an ordinary Saturday, and the
+     orders map is keyed by label, so the second party cannot also be "7" — one
+     of them would be eating the other's bill.
+
+     The house already had the shape for this: a slot is a ticket with no seat.
+     A cover is that same slot with the label it is sitting at written on it, so
+     nothing is re-keyed and no order changes hands. The floor map counts them,
+     the ticket keeps its own total, and the kitchen never learns the
+     difference. `seatAt` rather than `at` because a slot's `at` is already its
+     opening timestamp. */
+  addSlot(name, seatAt) {
     if (!this.staffMode()) { this.chime('deny'); this.say(this.L().clearLocked); return null; }
     const nm = String(name || '').trim();
+    const at = String(seatAt == null ? '' : seatAt).trim();
     let id = null;
     db.patch(s => {
       const list = (s.uslots || []).slice();
       id = 'U' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
-      list.push({ id, num: this.freeNum(list), bill: nm || null, at: Date.now(), staff: true });
+      list.push({ id, num: this.freeNum(list), bill: nm || null, at: Date.now(),
+        staff: true, seatAt: at || null });
       s.uslots = list;
     });
     this.chime('add');
     return id;
+  }
+
+  // Extra parties sitting at a numbered table — the house ticket is not one of
+  // them, so a table with one cover open is holding two parties in total.
+  coversAt(label) {
+    return this.slots().filter(sl => sl.seatAt && String(sl.seatAt) === String(label));
   }
 
   /* Removing a slot cannot throw away food the kitchen is cooking — nor may a
@@ -7906,13 +8477,147 @@ class Component extends DCLogic {
   }
 
   /* A round dictated to the assistant from the admin panel.
-     Nothing is written here. The names are matched against the live menu, the
-     cart is filled, and the panel steps out to the menu so the round is on
-     screen with the send button under it — the same two-look path a waiter
-     already has, and the same placeOrder() that already handles the table ask,
-     the parcel gates and a dish marked off while it sat in the cart.
+     The names are matched against the live menu and the cart is filled. What
+     happens next is whatever was dictated: on its own, the round lands in the
+     cart and the panel steps out to the menu so it is on screen with the send
+     button under it — the same two-look path a waiter has. When the instruction
+     carried the rest of the chain ("send it, authorise it, mark it cook first"),
+     the confirm card in the assistant was the human check, and this carries out
+     the presses in the order the counter performs them rather than leaving four
+     taps to be found.
      Matching happens here rather than in the model because only this screen
-     knows which dish id "chicken biryani" is today. */
+     knows which dish id "chicken biryani" is today, and every gate stays where
+     it is: placeOrder still refuses a dish marked off, a locked table or a bag
+     with money owed. */
+  /* The board, in the order the admin panel lists it. One sort, shared by the
+     snapshot the assistant reads and the ticket numbers it acts on, so "order
+     three" means the same row in both. */
+  boardKeys() {
+    return Object.keys(db.state.orders).sort((a, b) => {
+      const oa = db.state.orders[a], ob = db.state.orders[b];
+      return (ob.roundAt || ob.pendingAt || ob.at || 0) - (oa.roundAt || oa.pendingAt || oa.at || 0);
+    });
+  }
+
+  /* What the assistant can see of live service. The tickets are in this page's
+     own store rather than in a table, so nothing the assistant reads through
+     the database reaches them — it answered floor questions from the menu and
+     sounded certain about a board it had never read. Plates, notes and ages
+     only: no amounts, because takings are counter business whichever door the
+     question comes through. */
+  floorSnapshot() {
+    return {
+      tables: IDENTITY.tables,
+      orders: this.boardKeys().map((k, n) => {
+        const o = db.state.orders[k] || {};
+        const parcel = /^U/.test(String(k));
+        return {
+          order: n + 1,
+          table: parcel ? 'Parcel ' + String(k).slice(1) : String(k),
+          kind: parcel ? 'parcel' : 'table',
+          openedMinsAgo: Math.max(0, Math.round((Date.now() - (o.at || Date.now())) / 60000)),
+          items: (o.items || []).map(i => {
+            const d = DISHES.find(x => x.id === i.id);
+            const qty = Math.max(1, Number(i.qty) || 1);
+            const out = Math.min(qty, Number(i.sent) || 0);
+            return {
+              name: d ? d.base.n : 'Dish no longer on the card',
+              qty,
+              note: i.note || undefined,
+              out: out >= qty ? 'all served' : out ? out + ' of ' + qty + ' served' : 'not served yet',
+            };
+          }),
+        };
+      }),
+    };
+  }
+
+  /* Rate-and-close, dictated. The board's own rate button walks staff through
+     one sheet per dish, which on a ticket of six is six sheets and six presses
+     — so the same rows are written here in one go from what was spoken. The
+     assistant has already shown them for a press: closing takes the ticket off
+     the board and nothing on that screen puts it back.
+
+     Names are matched here rather than in the model, and only against the
+     dishes actually on the ticket, so a rating cannot land on a dish nobody at
+     that table ordered. */
+  takeRating(t) {
+    const L = this.L();
+    const norm = v => String(v || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    const keys = this.boardKeys();
+    const label = String(t.table || '').trim();
+    const bare = label.replace(/^(?:table|parcel|tbl)\s*/i, '');
+    const key = label
+      ? (db.state.orders[label] ? label
+        : keys.find(k => norm(k) === norm(label))
+        || keys.find(k => norm(k) === norm(bare))
+        || keys.find(k => norm(k) === 'u' + norm(bare)) || null)
+      : (Number(t.order) >= 1 ? keys[Number(t.order) - 1] || null : null);
+
+    if (!key) {
+      this.chime('deny');
+      const why = label ? 'Table ' + label + ' has no open ticket.' : 'No ticket at that number on the board.';
+      this.say(why);
+      return 'Not closed — ' + why.charAt(0).toLowerCase() + why.slice(1);
+    }
+
+    /* The same gate the board's own clear has: with a database behind the app,
+       a ticket only leaves under a real staff session. Checked before anything
+       is written, so a close the server would refuse cannot look like it
+       worked. */
+    const cfg = window.SULTHANS_CONFIG || {};
+    if (db.remote && cfg.staffEmail && !this.staffSession()) {
+      this.chime('deny');
+      this.say(L.clearLocked || STR.en.clearLocked);
+      return 'Not closed — that needs a staff sign-in on this device.';
+    }
+
+    const o = db.state.orders[key] || {};
+    const onTicket = (o.items || [])
+      .map(i => ({ i, d: DISHES.find(x => x.id === i.id) }))
+      .filter(x => x.d);
+    const rows = [];
+    const miss = [];
+    (t.dishes || []).forEach(r => {
+      const want = norm(r.name);
+      if (!want) return;
+      const hit = onTicket.find(x => norm(x.d.base.n) === want)
+        || onTicket.find(x => norm(x.d.base.n).includes(want))
+        || onTicket.find(x => want.includes(norm(x.d.base.n)));
+      const stars = Math.round(Number(r.stars) || 0);
+      if (!hit || stars < 1 || stars > 5) return miss.push(r.name);
+      if (rows.some(x => x.dishId === hit.d.id)) return;
+      rows.push({ dishId: hit.d.id, stars });
+    });
+
+    const svcRaw = Math.round(Number(t.service) || 0);
+    const svc = svcRaw >= 1 && svcRaw <= 5 ? svcRaw : null;
+
+    if (!rows.length && !svc) {
+      this.chime('deny');
+      const why = miss.length ? 'Not on that ticket: ' + miss.join(', ') : 'Nothing to record.';
+      this.say(why);
+      return 'Not closed — ' + why.charAt(0).toLowerCase() + why.slice(1);
+    }
+
+    const parcel = /^U/.test(String(key));
+    const which = parcel ? 'parcel ' + String(key).slice(1) : 'table ' + key;
+    db.patch(s => {
+      const at = Date.now();
+      rows.forEach(r => s.feedback.push({ dishId: r.dishId, stars: r.stars, text: '', at, byStaff: true }));
+      if (svc) s.service.push({ stars: svc, text: '', at, table: key, byStaff: true });
+      delete s.orders[key];
+    });
+    this.releaseSlot(key);
+    this.chime('toggle');
+    this.say(L.thanks);
+
+    return 'Recorded ' + rows.length + (rows.length === 1 ? ' rating' : ' ratings')
+      + (svc ? ' and the service rating' : '')
+      + ', and closed ' + which + '.'
+      + (miss.length ? ' Left alone: ' + miss.join(', ') + '.' : '');
+  }
+
   takeDictated(t) {
     const norm = v => String(v || '').toLowerCase().replace(/[^a-z0-9]/g, '');
     const cart = [];
@@ -7934,14 +8639,66 @@ class Component extends DCLogic {
 
     if (!cart.length) {
       this.chime('deny');
-      return this.say(miss.length ? 'Not on the menu: ' + miss.join(', ') : 'Nothing to add.');
+      const why = miss.length ? 'Not on the menu: ' + miss.join(', ') : 'Nothing to add.';
+      this.say(why);
+      return why;
     }
 
     /* A dictated table is only taken if it is a slot that exists. Anything else
        is left unset, and placeOrder's own table ask catches it — which is the
        one screen that can show what is actually open. */
     const label = String(t.table || '').trim();
-    const known = label && (db.state.orders[label] || (/^\d+$/.test(label) && Number(label) >= 1 && Number(label) <= IDENTITY.tables));
+    /* Resolved to the key the store actually uses, not the one that was spoken.
+       Split tables are "19A" and "19B", so a dictated "table 19a" matched the
+       slot list on its uppercase form and then committed the raw "19a" — a
+       second, phantom ticket beside the real one, on a key no bill, floor tile
+       or kitchen row shares. It mattered less when a human pressed send with the
+       table in front of them; a dictated chain authorises and rushes it without
+       that screen ever being shown. */
+    const key = !label ? null
+      : db.state.orders[label] ? label
+      : this.tableKeys().indexOf(label.toUpperCase()) >= 0 ? label.toUpperCase()
+      : null;
+    const known = !!key;
+
+    /* How far this round was dictated. The assistant has already shown the chain
+       and taken one press for it. */
+    const steps = Array.isArray(t.steps) ? t.steps : [];
+    const wants = s => steps.indexOf(s) >= 0;
+
+    /* Nothing can be sent to a table nobody has. Rather than half-running the
+       chain, the round is left in the cart with the table picker in front of it
+       — the one screen that can show which slots are actually open. */
+    if (wants('send') && !known) {
+      this.chime('deny');
+      this.releaseAwake();
+      document.body.style.overflow = '';
+      this.setState({ cart, screen: 'categories', sheet: 'order', sendArmed: false });
+      const why = label
+        ? 'Table ' + label + ' is not a slot. Pick one and send.'
+        : 'No table was heard. Pick one and send.';
+      this.say(why);
+      /* Reported back, not just toasted. The assistant has already written that
+         it is sending, and whatever this screen decides is what its transcript
+         has to end up saying. */
+      return 'Not sent — ' + why.charAt(0).toLowerCase() + why.slice(1);
+    }
+
+    if (wants('send')) {
+      this.chime('add');
+      /* Armed here because the confirm card in the assistant already is the
+         second look the arming pair exists to force — staff read the round, the
+         table and the chain on it before pressing. Everything else in
+         placeOrder stands. */
+      /* The presses run in a setState callback, so the answer comes back as a
+         promise: the assistant waits for it rather than guessing. */
+      return new Promise(resolve => {
+        this.setState({
+          cart, table: key, skipTable: false, sheet: null, sendArmed: true,
+          screen: 'admin', adminTab: 'orders',
+        }, () => resolve(this.runDictated(cart, steps, miss)));
+      });
+    }
 
     this.chime('add');
     this.releaseAwake();
@@ -7950,12 +8707,58 @@ class Component extends DCLogic {
       cart,
       screen: 'categories',
       sheet: null,
-      ...(known ? { table: label, skipTable: false } : {}),
+      ...(known ? { table: key, skipTable: false } : {}),
     });
 
-    if (miss.length) this.say('Not on the menu: ' + miss.join(', '));
-    else if (label && !known) this.say('Table ' + label + ' is not a slot. Pick one before sending.');
-    else this.say(this.L().added);
+    if (miss.length) {
+      this.say('Not on the menu: ' + miss.join(', '));
+      return 'In the cart. Not on the menu: ' + miss.join(', ') + '.';
+    }
+    if (label && !known) {
+      this.say('Table ' + label + ' is not a slot. Pick one before sending.');
+      return 'In the cart — table ' + label + ' is not a slot. Pick one before sending.';
+    }
+    this.say(this.L().added);
+    return 'In the cart. Send it on the order screen.';
+  }
+
+  /* The presses themselves, in the counter's own order: the ticket is written,
+     then checked, then marked. Each step reads the ticket the step before it
+     produced, so a refusal anywhere stops the rest rather than marking food
+     that was never sent. */
+  runDictated(cart, steps, miss) {
+    const key = this.placeOrder();
+    /* placeOrder returns nothing when one of its gates caught the round — a
+       dish off the menu, a table claimed in between, a bag owing money. It has
+       already said why on screen and put the right one up; the assistant is
+       told the chain stopped so its transcript does not sit there claiming the
+       food was sent. */
+    if (!key) return 'Not sent. The order screen is asking for something first.';
+
+    const done = ['sent to the kitchen ticket'];
+    if (steps.indexOf('authorise') >= 0) {
+      this.okSend(key);
+      done.push('authorised');
+    }
+    /* Cook first and hold are per line, and a dictated round means the whole
+       round — the same thing the ticket-level press on the pass board does. */
+    const ids = cart.map(l => l.id);
+    if (steps.indexOf('first') >= 0) {
+      ids.forEach(id => this.lineSet(key, id, { rush: Date.now() }));
+      done.push('marked cook first');
+    }
+    if (steps.indexOf('hold') >= 0) {
+      ids.forEach(id => this.lineSet(key, id, { hold: Date.now() }));
+      done.push('put on hold');
+    }
+
+    const report = this.keyLabel(key) + ' \u00b7 ' + done.join(', ');
+    if (miss.length) {
+      this.say('Not on the menu: ' + miss.join(', '));
+      return report + '. Not on the menu: ' + miss.join(', ') + '.';
+    }
+    this.say(report);
+    return report + '.';
   }
 
   /* Notes are a short comma-separated list, because that is how the pass reads
@@ -8050,6 +8853,21 @@ class Component extends DCLogic {
       t.roundAt = Date.now();
     });
     this.say('Sent to the kitchen');
+  }
+  /* The other answer to the same card: what the guest sent and nobody has
+     authorised comes off the order. A line already part-authorised keeps that
+     part; a line with nothing authorised or carried goes entirely. */
+  okDeny(k) {
+    const o = db.state.orders[k];
+    if (!o || !this.pendOf(o)) return;
+    this.chime('toggle');
+    db.patch(s => {
+      const t = s.orders[k];
+      if (!t) return;
+      t.items = (t.items || []).map(i => ({ ...i, qty: Math.max(this.okOf(i), Number(i.sent || 0)), ok: this.okOf(i) }))
+        .filter(i => i.qty > 0);
+    });
+    this.say('Removed from the order');
   }
 
   placeOrder() {
@@ -8262,6 +9080,11 @@ class Component extends DCLogic {
       this._coachT = setTimeout(() => this.setState({ pcCoach: false }), 11000);
     }
     this.say(held.length ? this.L().someUnavailable : this.L().orderSent);
+    /* The key of the ticket just written. Dictation carries a round further than
+       the send — authorise, cook first — and each of those presses needs to know
+       which ticket it is acting on. Every gate above returns early, so a caller
+       that gets a key back knows food was actually written. */
+    return key;
   }
 
   // ---- feed ----
@@ -8997,7 +9820,68 @@ class Component extends DCLogic {
 
   stockMode() { return (db.state.floor || {}).stockMode || 'both'; }
   ingRow(name) { return (db.state.ings || {})[String(name).toLowerCase()] || {}; }
-  ingState(name) { return this.ingRow(name).state || 'enough'; }
+  /* One reading of a store line, used by every page that says what is short.
+     A percentage and a hand-set word can disagree, because they are written by
+     different hands: the slider writes both, the four buttons write both, but
+     the seed and a flagged dish write a word with no percentage, and a row can
+     come back from Postgres with stock_pct set and stock_state still saying
+     'enough'. The percentage used to win outright, and it broke both ways —
+     the missing page listed lines whose badge read Enough, and a cook's
+     "finished" vanished off it whenever a stale percentage sat above the word.
+
+     The rule is the one missing_now already applies in SQL: a hand-set word is
+     a declaration, a percentage is a measurement, and if either says short then
+     it is short. */
+  ingState(name) {
+    const r = this.ingRow(name);
+    const said = r.state && ING_RANK[r.state] != null ? r.state : null;
+    const read = r.pct == null ? null : pctState(r.pct);
+    if (!said) return read || 'enough';
+    if (!read) return said;
+    return ING_RANK[said] > ING_RANK[read] ? said : read;
+  }
+  // True when the word and the percentage disagree, so a page can say which it
+  // is reading instead of quietly showing one and filtering on the other.
+  ingSaidWorse(name) {
+    const r = this.ingRow(name);
+    if (r.pct == null || !r.state || ING_RANK[r.state] == null) return false;
+    return ING_RANK[r.state] > ING_RANK[pctState(r.pct)];
+  }
+  ingPct(name) {
+    const key = String(name).toLowerCase();
+    const d = this.state.ingDraft || {};
+    if (d[key] != null) return d[key];
+    const r = this.ingRow(name);
+    if (r.pct != null) return Math.max(0, Math.min(100, Math.round(Number(r.pct))));
+    return STATE_PCT[r.state || 'enough'];
+  }
+  /* Dragging writes to a local draft and nothing else: a slider fires on every
+     pixel of travel, and putting each of those through the store would be a
+     hundred writes and a hundred syncs for one decision. The commit lands on
+     release, with a timer behind it for the release that never arrives — a
+     finger that leaves the glass outside the element, which fires no pointerup. */
+  ingDrag(name, v) {
+    const key = String(name).toLowerCase();
+    const pct = Math.max(0, Math.min(100, Math.round(Number(v) || 0)));
+    this.setState(st => ({ ingDraft: { ...(st.ingDraft || {}), [key]: pct } }));
+    clearTimeout(this.ingT);
+    this.ingT = setTimeout(() => this.ingCommit(name), 700);
+  }
+  ingCommit(name) {
+    clearTimeout(this.ingT);
+    const key = String(name).toLowerCase();
+    const d = this.state.ingDraft || {};
+    if (d[key] == null) return;
+    const pct = d[key], was = this.ingRow(name);
+    this.setState(st => { const n = { ...(st.ingDraft || {}) }; delete n[key]; return { ingDraft: n }; });
+    if (was.pct != null && Math.round(Number(was.pct)) === pct) return;
+    // Crossing into short is worth hearing; topping a sack back up is not.
+    this.chime(pct < ING_LOW ? 'deny' : 'toggle');
+    db.patch(st => {
+      st.ings = st.ings || {};
+      st.ings[key] = { name, state: pctState(pct), pct, at: Date.now() };
+    });
+  }
   /* The store list is short and the ingredient prose is long, so the match runs
      from the store inward: a line counts as part of a dish when the dish's own
      text mentions its last word. "rice" inside "Basmati rice" is deliberate — a
@@ -9024,7 +9908,7 @@ class Component extends DCLogic {
     this.chime(state === 'enough' ? 'toggle' : 'deny');
     db.patch(s => {
       s.ings = s.ings || {};
-      s.ings[String(name).toLowerCase()] = { name, state, at: Date.now() };
+      s.ings[String(name).toLowerCase()] = { name, state, pct: STATE_PCT[state], at: Date.now() };
     });
   }
   offWhyText(off) {
@@ -9049,7 +9933,11 @@ class Component extends DCLogic {
       }]);
       if (reason === 'ingredient') {
         s.ings = s.ings || {};
-        list.forEach(n => { s.ings[String(n).toLowerCase()] = { name: n, state: 'none', at }; });
+        /* Naming an ingredient here IS the stock reading: a cook saying the
+           paneer is finished has counted it more recently than anyone with the
+           slider. So it goes to zero on the Levels bar too, and turns up on the
+           missing list without a second trip to the office. */
+        list.forEach(n => { s.ings[String(n).toLowerCase()] = { name: n, state: 'none', pct: 0, at }; });
       }
     });
   }
@@ -9065,10 +9953,21 @@ class Component extends DCLogic {
   }
   openOff(id) {
     const d = DISHES.find(x => x.id === id), mode = this.stockMode();
+    /* A dish that is already off has been answered once. Opening the panel from
+       CHANGE started it blank, so the commit wrote "nothing named" over the
+       reason a cook had given — the answer has to come back up so it can be
+       edited rather than retyped. */
+    const was = db.dish(id).off;
     // auto and both pre-fill from what is already flagged; manual asks.
-    const pre = (d && mode !== 'manual') ? this.autoNames(d) : [];
+    const pre = was && was.names && was.names.length ? was.names.slice()
+      : (d && mode !== 'manual') ? this.autoNames(d) : [];
     this.chime('deny');
-    this.setState({ offFor: id, offReason: 'ingredient', offNames: pre, offTyped: '' });
+    this.setState({
+      offFor: id,
+      offReason: (was && was.reason && was.reason !== 'skipped') ? was.reason : 'ingredient',
+      offNames: pre,
+      offTyped: '',
+    });
   }
   closeOff() { this.setState({ offFor: null, offTyped: '' }); }
 
@@ -9103,7 +10002,34 @@ class Component extends DCLogic {
       offTyped: st.offTyped || '',
       offType: e => this.setState({ offTyped: e.target.value }),
       offSuggest: suggest.map(n => ({ label: n, go: () => { this.chime('tap'); add(n); } })),
-      offHasSuggest: !!suggest.length,
+      /* Only while typing. The full list below is the browsable one; showing both
+         unprompted put the same names on screen twice. */
+      offHasSuggest: !!typed && !!suggest.length,
+      /* Everything this dish is made of, with where each line stands. Typing the
+         name of an ingredient from memory was the only way to answer the question
+         before, which asks a cook mid-rush to recall a store list. Tapping one
+         marks it short, and the commit empties its bar. */
+      offIngs: (d ? this.storeIn(d) : []).map(n => {
+        // Same reading as the missing page and the Levels bar.
+        const on = has(n), p = this.ingPct(n), st2 = this.ingState(n);
+        const meta = ING_STATES.find(x => x[0] === st2) || ING_STATES[0];
+        return {
+          label: n,
+          on,
+          color: on ? '#1a1005' : '#f0e8dc',
+          bg: on ? 'linear-gradient(180deg, #ffc27a, #f0a03c)' : 'rgba(255,255,255,.04)',
+          border: on ? 'rgba(255,214,160,.45)' : 'rgba(240,160,60,.14)',
+          sub: on ? 'goes to 0%' : ING_WORD[st2] + ' \u00b7 ' + p + '%',
+          subColor: on ? 'rgba(26,16,5,.66)' : meta[2],
+          go: () => {
+            this.chime('tap');
+            if (on) this.setState(x => ({ offNames: (x.offNames || []).filter(y => y !== n) }));
+            else add(n);
+          },
+        };
+      }),
+      offHasIngs: !!(d && this.storeIn(d).length),
+      offIngNote: 'What this dish is made of. Tap whatever ran out \u2014 it drops to 0% on the Levels bar and shows up on the missing list.',
       offCanAdd: !!typed && !has(typed),
       offAddLabel: 'Add \u201c' + typed + '\u201d',
       offAdd: () => add(typed),
@@ -9131,35 +10057,80 @@ class Component extends DCLogic {
     // off for it. One row per ingredient, with what it is holding up.
     const short = this.storeList().filter(n => ['low', 'none'].indexOf(this.ingState(n)) >= 0);
     const missRows = short.map(n => {
-      const row = this.ingRow(n), state = row.state || 'enough';
+      /* The same reading the list was selected on. Taking the badge off
+         row.state instead was the contradiction: a line on the missing page
+         wearing an Enough badge. */
+      const row = this.ingRow(n), state = this.ingState(n);
       const meta = ING_STATES.find(s => s[0] === state) || ING_STATES[0];
       const blocked = offDishes.filter(d => (db.dish(d.id).off || {}).reason === 'ingredient'
         && ((db.dish(d.id).off || {}).names || []).some(x => x.toLowerCase() === n.toLowerCase()));
       const uses = this.dishesUsing(n);
+      /* A dish can be off for a reason that has nothing to do with this
+         ingredient, and blocked only counts the ones flagged for it. Read
+         literally that was fine; read on the page it was a contradiction —
+         Mutton said "none taken off yet" with a mutton dish sitting in the
+         off list directly underneath. So the other reasons are counted and
+         named as other reasons. */
+      const alsoOff = uses.filter(d => blocked.indexOf(d) < 0
+        && (db.dish(d.id).off || db.dish(d.id).avail === false));
       return {
         name: n, state: meta[1], stateColor: meta[2], stateBg: meta[3],
         edge: state === 'none' ? 'rgba(212,103,74,.3)' : 'rgba(224,138,58,.24)',
         blocks: blocked.length
           ? 'Already off: ' + blocked.map(d => this.nameOf(d)).join(', ')
-          : uses.length + ' dishes use it \u2014 none taken off yet',
+            + (alsoOff.length ? ' \u00b7 ' + alsoOff.length + ' more off for another reason' : '')
+          : alsoOff.length
+            ? uses.length + ' dishes use it \u2014 ' + alsoOff.length
+              + (alsoOff.length === 1 ? ' is off, but not for this' : ' are off, but not for this')
+            : uses.length + ' dishes use it \u2014 none taken off yet',
         who: row.at ? ING_WORD[state] + ' \u00b7 ' + clock(row.at) : ING_WORD[state],
       };
     });
 
     const ingRows = this.storeList().map(n => {
-      const cur = this.ingState(n), uses = this.dishesUsing(n).length;
+      const pct = this.ingPct(n), uses = this.dishesUsing(n).length;
+      /* Mid-drag the finger is the most recent reading of all, so the row
+         follows the draft; at rest it reads the same state the missing page
+         does. Keying the row off the percentage at rest was how a line someone
+         had declared finished sat here at 80% and green. */
+      const dragging = (st.ingDraft || {})[String(n).toLowerCase()] != null;
+      const cur = dragging ? pctState(pct) : this.ingState(n);
+      const said = !dragging && this.ingSaidWorse(n);
+      const out = cur === 'none', low = out || cur === 'low';
+      const meta = ING_STATES.find(x => x[0] === cur) || ING_STATES[0];
       return {
         name: n,
         have: uses + (uses === 1 ? ' dish' : ' dishes'),
-        states: ING_STATES.map(([k, label, color, bg, border]) => ({
-          label,
-          color: cur === k ? color : 'rgba(239,231,219,.5)',
-          bg: cur === k ? bg : 'rgba(255,255,255,.03)',
-          border: cur === k ? border : 'rgba(240,160,60,.12)',
-          go: () => this.setIngState(n, k),
-        })),
+        pct,
+        pctLabel: pct + '%',
+        word: ING_WORD[cur],
+        numColor: out ? '#e8a894' : low ? '#f0b89a' : '#f4eee4',
+        subColor: low ? meta[2] : '#8d8479',
+        sub: (said ? ING_WORD[cur] + ' by hand, ' + pct + '% counted'
+          : out ? 'Finished' : low ? 'Low, under a quarter' : ING_WORD[cur])
+          + ' \u00b7 ' + uses + (uses === 1 ? ' dish' : ' dishes'),
+        edge: out ? 'rgba(212,103,74,.42)'
+          : low ? 'rgba(226,137,111,.34)' : 'rgba(240,160,60,.1)',
+        bg: out ? 'rgba(212,103,74,.07)'
+          : low ? 'rgba(226,137,111,.05)' : 'rgba(255,255,255,.03)',
+        /* Handed to the track as --fill, so the slider itself is the bar — a
+           separate progress bar under a slider would be the same number twice. */
+        track: 'linear-gradient(90deg, ' + (pct <= 0 ? 'transparent' : pctFill(pct))
+          + ' 0 ' + pct + '%, rgba(255,255,255,.06) ' + pct + '% 100%)',
+        lowShow: low,
+        lowText: said
+          ? 'Someone said it is ' + ING_WORD[cur].toLowerCase() + '. The count still reads '
+            + pct + '% \u2014 what a cook declares holds until it is counted again, so it is on the missing list.'
+          : out
+            ? 'Finished. Any dish that needs it should come off the menu.'
+            : 'Low \u2014 under a quarter left. It is on the missing list.',
+        lowColor: out ? '#e8a894' : '#f0b89a',
+        slide: e => this.ingDrag(n, e.target.value),
+        commit: () => this.ingCommit(n),
       };
     });
+    // Same reading as the missing page, so the two counts cannot disagree.
+    const lowIngs = this.storeList().filter(x => ['low', 'none'].indexOf(this.ingState(x)) >= 0);
 
     const MODES = [
       ['auto', 'Count it', 'Recipes deduct as food is punched. The missing list fills itself; nobody taps anything.'],
@@ -9190,13 +10161,20 @@ class Component extends DCLogic {
 
     return {
       tabStock: st.adminTab === 'stock',
-      stockTabs: [['missing', 'Missing'], ['levels', 'Levels'], ['log', 'Log'], ['how', 'How it runs']]
+      /* Counted and Recipes read the server ledger rather than the app's own
+         state, so they fetch on the way in instead of on every admin render. */
+      stockTabs: [['missing', 'Missing'], ['levels', 'Levels'], ['counted', 'Counted'],
+        ['recipes', 'Recipes'], ['log', 'Log'], ['how', 'How it runs']]
         .map(([k, label]) => ({
           label,
           color: sub === k ? '#1a1005' : 'rgba(239,231,219,.7)',
           bg: sub === k ? 'linear-gradient(180deg, #ffc27a, #f0a03c)' : 'rgba(255,255,255,.04)',
           border: sub === k ? 'rgba(255,214,160,.4)' : 'rgba(240,160,60,.14)',
-          go: () => { this.chime('tap'); this.setState({ stockSub: k }); },
+          go: () => {
+            this.chime('tap');
+            this.setState({ stockSub: k });
+            if (k === 'counted' || k === 'recipes') this.posLoad();
+          },
         })),
       stockMissing: sub === 'missing', stockLevels: sub === 'levels',
       stockHow: sub === 'how', stockLog: sub === 'log',
@@ -9209,8 +10187,13 @@ class Component extends DCLogic {
         back: () => this.dishBackOn(d.id),
       })),
       hasOffDishes: !!offDishes.length,
-      levelNote: 'Four readings, because two were never enough. Tap one \u2014 it is what pre-fills the question when a dish using it goes off.',
+      levelNote: 'Drag each line to roughly what is left in the store. Anything under a quarter counts as low and joins the missing list on its own \u2014 as does anything a cook has declared finished, whatever the count still says. Either way it is what pre-fills the question when a dish using it goes off.',
       ingRows, noIngs: !ingRows.length, ingEmpty: 'No store lines yet.',
+      lowShow: !!lowIngs.length,
+      /* Counts the same set the missing page lists, which is short by count OR
+         by a cook's word \u2014 so it cannot claim they are all under a quarter. */
+      lowCount: lowIngs.length === 1 ? '1 line short' : lowIngs.length + ' lines short',
+      lowNames: lowIngs.join(', '),
       modeNote: 'How this kitchen wants to run stock. It changes what happens when a dish is switched off, and nothing else.',
       modeRows: MODES.map(([k, label, hint]) => ({
         label, hint,
@@ -9236,6 +10219,425 @@ class Component extends DCLogic {
       logFilterLabel: st.logDish ? (DISHES.find(d => d.id === st.logDish) || {}).n || '' : '',
       logClear: () => { this.chime('tap'); this.setState({ logDish: null }); },
       stockErrShow: !!st.stockErr, stockErrText: st.stockErr || '',
+    };
+  }
+
+  /* ===== A8 · the counted store ==========================================
+     Levels is a cook's eyeball reading: a fraction of a sack, keyed by name,
+     and it is what decides whether a dish can still be served. This is the
+     other number — a real quantity in kilos and litres, kept by the ledger in
+     stock_moves and never written by hand.
+
+     Two numbers on one shelf sounds like a mistake until you try to merge
+     them. The slider has to stay a five-second answer a cook gives mid-service
+     with wet hands; a count has to be attributable and reversible. Merging
+     would cost one of those. So they sit in separate tabs and neither pretends
+     to be the other. */
+  posBlank() { return { items: [], moves: [], value: 0, out: 0, low: 0, soon: 0 }; }
+  pos() { return this.state.pos || this.posBlank(); }
+  /* Every function in inventory.sql refuses anon, so the panel's own password
+     is not enough — it is the Supabase session behind it that counts. */
+  posReady() { return !!(db.remote && db.remote.sb && db.remote.rid && this.staffSession()); }
+
+  /* A migration that was never run and a session that was refused are
+     different problems with different fixes, and "could not read stock" helps
+     with neither. */
+  posWhy(e) {
+    const m = ((e && e.message) || '') + ' ' + ((e && e.hint) || '');
+    if (/not signed in|requires a signed-in|JWT|row-level/i.test(m)) return 'signin';
+    if (/function|does not exist|schema cache|relation/i.test(m)) return 'missing';
+    return m.trim() || 'The store could not be read.';
+  }
+
+  async posLoad(force) {
+    if (this._posBusy) return;
+    if (!force && this.state.pos) return;
+    if (!this.posReady()) { this.setState({ posErr: 'signin' }); return; }
+    this._posBusy = true;
+    this.setState({ posErr: '' });
+    try {
+      const sb = db.remote.sb, rid = db.remote.rid;
+      const [st, mv] = await Promise.all([
+        sb.rpc('stock_status', { p_rid: rid }),
+        sb.from('stock_moves').select('id,kind,qty,note,created_at,ingredient_id')
+          .eq('restaurant_id', rid).order('created_at', { ascending: false }).limit(60),
+      ]);
+      if (st.error) throw st.error;
+      const d = st.data || {};
+      this.setState({ pos: {
+        items: d.items || [], moves: mv.data || [],
+        value: Number(d.value) || 0, out: d.out || 0, low: d.low || 0, soon: d.soon || 0,
+      } });
+    } catch (e) { this.setState({ posErr: this.posWhy(e) }); }
+    this._posBusy = false;
+  }
+
+  posOpen(id, kind) {
+    const it = this.pos().items.find(x => x.id === id);
+    if (!it) return;
+    this.chime('tap');
+    this.setState({ posMoveErr: '', posSaid: '', posMove: {
+      id: it.id, name: it.name, unit: it.unit, stock: it.stock, kind: kind || 'receive',
+      qty: '', note: '',
+      reorder: it.reorder == null ? '' : String(it.reorder),
+      cost: it.cost == null ? '' : String(it.cost),
+    } });
+  }
+  posSet(p) { this.setState({ posMove: { ...(this.state.posMove || {}), ...p }, posMoveErr: '' }); }
+  posClose() { this.chime('tap'); this.setState({ posMove: null, posMoveErr: '' }); }
+
+  async posDo() {
+    const m = this.state.posMove;
+    if (!m || this._posBusy) return;
+    const n = Number(m.qty);
+    if (m.qty === '' || !isFinite(n)) return this.setState({ posMoveErr: 'Type a quantity first.' });
+    if (m.kind !== 'count' && n === 0) return this.setState({ posMoveErr: 'Nothing to move.' });
+    this._posBusy = true;
+    this.setState({ posMoveErr: '', posSaving: true });
+    try {
+      const sb = db.remote.sb;
+      const r = m.kind === 'count'
+        ? await sb.rpc('stock_count', { p_ingredient: m.id, p_counted: n, p_staff: null, p_note: m.note || null })
+        : await sb.rpc('stock_move', { p_ingredient: m.id, p_kind: m.kind, p_qty: n, p_staff: null, p_note: m.note || null, p_cost: null });
+      if (r.error) throw r.error;
+      const v = r.data || {};
+      this.chime('toggle');
+      /* A count that disagreed with the books is the whole reason to count, so
+         the variance is what gets said back — not a cheerful new balance. */
+      const said = m.kind === 'count' && Number(v.variance)
+        ? m.name + ': the shelf was ' + (Number(v.variance) > 0 ? 'over' : 'short') + ' by '
+          + Math.abs(Number(v.variance)) + ' ' + m.unit
+        : m.name + ' is now ' + (v.stock != null ? v.stock : n) + ' ' + m.unit;
+      this.setState({ posMove: null, posSaving: false, posSaid: said });
+      await this.posLoad(true);
+    } catch (e) {
+      this.chime('deny');
+      const w = this.posWhy(e);
+      this.setState({ posSaving: false, posMoveErr:
+        w === 'signin' ? 'That needs a signed-in terminal.'
+        : w === 'missing' ? 'Run supabase/inventory.sql first.' : w });
+    }
+    this._posBusy = false;
+  }
+
+  /* The reorder level is the hard floor the short list reads; cost is what
+     turns a shelf into a number the office cares about. Both live on the
+     ingredient rather than in the ledger, so they save on their own. */
+  async posSaveFloor() {
+    const m = this.state.posMove;
+    if (!m || this._posBusy) return;
+    this._posBusy = true;
+    this.setState({ posSaving: true, posMoveErr: '' });
+    try {
+      const { error } = await db.remote.sb.from('ingredients').update({
+        reorder_level: Number(m.reorder) || 0,
+        cost: m.cost === '' ? null : Number(m.cost),
+      }).eq('id', m.id);
+      if (error) throw error;
+      this.chime('toggle');
+      this.setState({ posSaving: false, posSaid: m.name + ' — alert level saved' });
+      await this.posLoad(true);
+    } catch (e) {
+      this.chime('deny');
+      this.setState({ posSaving: false, posMoveErr: this.posWhy(e) });
+    }
+    this._posBusy = false;
+  }
+
+  // ----- recipes: what one portion of a dish actually takes off the shelf ---
+  async recipeLoad(slug) {
+    if (!slug) return this.setState({ rDish: '', rQty: {} });
+    const id = ((db.remote || {}).dishId || {})[slug];
+    if (!id) return this.setState({ rDish: slug, rQty: {}, posMoveErr: 'That dish is not in the database yet.' });
+    try {
+      const { data, error } = await db.remote.sb.from('recipes')
+        .select('ingredient_id,qty').eq('dish_id', id);
+      if (error) throw error;
+      const rQty = {};
+      (data || []).forEach(r => { rQty[r.ingredient_id] = String(r.qty); });
+      this.setState({ rDish: slug, rQty, posMoveErr: '' });
+    } catch (e) { this.setState({ rDish: slug, rQty: {}, posMoveErr: this.posWhy(e) }); }
+  }
+
+  async recipeSave() {
+    const S = this.state;
+    if (!S.rDish || this._posBusy) return;
+    const id = ((db.remote || {}).dishId || {})[S.rDish];
+    if (!id) return;
+    this._posBusy = true;
+    this.setState({ posSaving: true, posMoveErr: '' });
+    try {
+      const items = Object.keys(S.rQty || {}).filter(k => Number(S.rQty[k]) > 0)
+        .map(k => ({ ingredientId: k, qty: Number(S.rQty[k]) }));
+      const { data, error } = await db.remote.sb.rpc('recipe_set', { p_dish: id, p_items: items });
+      if (error) throw error;
+      this.chime('toggle');
+      this.setState({ posSaving: false, posSaid: data
+        ? data + (data === 1 ? ' ingredient saved' : ' ingredients saved') : 'Recipe cleared' });
+      await this.posLoad(true);
+    } catch (e) {
+      this.chime('deny');
+      const w = this.posWhy(e);
+      this.setState({ posSaving: false, posMoveErr:
+        w === 'signin' ? 'That needs a signed-in terminal.'
+        : w === 'missing' ? 'Run supabase/inventory.sql first.' : w });
+    }
+    this._posBusy = false;
+  }
+
+  posVals(st) {
+    const P = this.pos(), m = st.posMove, err = st.posErr;
+    const TONE = { out: '#e2896f', low: '#e8a66a', soon: '#e4c56a', ok: '#9fd07f' };
+    const EDGE = { out: 'rgba(212,103,74,.34)', low: 'rgba(224,138,58,.28)',
+      soon: 'rgba(212,176,74,.24)', ok: 'rgba(240,160,60,.1)' };
+    const WORD = { out: 'Nothing left', low: 'Under its floor', soon: 'Running down', ok: 'Fine' };
+    const KINDS = [['receive', 'Received'], ['waste', 'Wasted'], ['count', 'Counted'], ['correct', 'Correction']];
+    const MOVE_WORD = { sale: 'Sold', void: 'Line cancelled', receive: 'Received',
+      waste: 'Wasted', count: 'Count', correct: 'Correction', open: 'Opening' };
+    const ingName = {};
+    P.items.forEach(i => { ingName[i.id] = i.name; });
+
+    const short = P.items.filter(i => i.state === 'out' || i.state === 'low');
+    const rCat = st.rCat || 'all';
+    const rDish = st.rDish || '';
+    const rQty = st.rQty || {};
+    const rDishObj = rDish ? DISHES.find(d => d.id === rDish) : null;
+    const rPrice = rDishObj ? Number(this.priceOf(rDishObj)) : 0;
+    const rCost = Object.keys(rQty).reduce((a, k) => {
+      const it = P.items.find(x => x.id === k);
+      return a + (it && it.cost ? Number(rQty[k]) * Number(it.cost) : 0);
+    }, 0);
+
+    return {
+      stockCounted: (st.stockSub || 'missing') === 'counted',
+      stockRecipes: (st.stockSub || 'missing') === 'recipes',
+      countNote: 'What the ledger says is on the shelf, in kilos and litres. Receiving, wasting and counting all write a row that can be read back — this is the number to trust when the office asks. The Levels slider stays what a cook says by eye.',
+      recipeNote: 'What one portion takes off the shelf. A dish with no recipe deducts nothing, so an untagged menu costs stock accuracy rather than orders.',
+
+      posGateShow: !!err,
+      posGateTitle: err === 'signin' ? 'Not signed in' : err === 'missing' ? 'Not set up yet' : 'Could not read the store',
+      posGateText: err === 'signin'
+        ? 'The counted store is staff-only on the server, so this panel needs a signed-in terminal — not just the panel password. Open the panel with the staff password on a device whose session is live.'
+        : err === 'missing'
+        ? 'Run supabase/inventory.sql in the Supabase SQL editor. It creates the ingredient ledger, recipes and the stock functions this tab reads.'
+        : err,
+      posOn: !err,
+      posSaidShow: !!st.posSaid, posSaid: st.posSaid || '',
+
+      posStats: [
+        { n: money(Math.round(P.value)), label: 'On the shelf', color: '#f4eee4', edge: 'rgba(240,160,60,.1)' },
+        { n: String(P.out), label: 'Finished', color: P.out ? TONE.out : '#8d8479', edge: P.out ? EDGE.out : 'rgba(240,160,60,.1)' },
+        { n: String(P.low), label: 'Under floor', color: P.low ? TONE.low : '#8d8479', edge: P.low ? EDGE.low : 'rgba(240,160,60,.1)' },
+        { n: String(P.soon), label: 'Running down', color: P.soon ? TONE.soon : '#8d8479', edge: P.soon ? EDGE.soon : 'rgba(240,160,60,.1)' },
+      ],
+
+      shortShow: !!short.length,
+      shortCount: short.length === 1 ? '1 line to reorder' : short.length + ' lines to reorder',
+      shortRows: short.map(i => ({
+        name: i.name,
+        gap: i.state === 'out'
+          ? 'nothing left \u00b7 order ' + i.reorder + ' ' + i.unit
+          : 'short by ' + (Math.round((Number(i.reorder) - Number(i.stock)) * 1000) / 1000) + ' ' + i.unit,
+      })),
+
+      posRows: P.items.map(i => ({
+        name: i.name,
+        qty: (Math.round(Number(i.stock) * 1000) / 1000) + ' ' + i.unit,
+        color: TONE[i.state] || '#f4eee4',
+        edge: EDGE[i.state] || 'rgba(240,160,60,.1)',
+        bg: i.state === 'out' ? 'rgba(212,103,74,.07)' : i.state === 'low' ? 'rgba(224,138,58,.05)' : 'rgba(255,255,255,.03)',
+        sub: [WORD[i.state] || '',
+          i.cover != null ? i.cover + ' days left at this rate' : null,
+          'floor ' + i.reorder + ' ' + i.unit,
+          i.cost ? money(i.cost) + '/' + i.unit : null].filter(Boolean).join(' \u00b7 '),
+        open: !!(m && m.id === i.id),
+        go: () => (m && m.id === i.id) ? this.posClose() : this.posOpen(i.id),
+      })),
+      noPosRows: !P.items.length,
+      posEmpty: 'No ingredients in the ledger yet. The counter adds them, or run supabase/ingredients-seed.sql.',
+
+      moveName: (m && m.name) || '', moveUnit: (m && m.unit) || '',
+      moveQty: (m && m.qty) || '', moveNote: (m && m.note) || '',
+      moveReorder: (m && m.reorder) || '', moveCost: (m && m.cost) || '',
+      moveHint: m ? (m.kind === 'count' ? 'what is actually on the shelf, in ' + m.unit
+        : m.kind === 'correct' ? 'signed \u2014 minus takes it off'
+        : 'how much, in ' + m.unit) : '',
+      moveKinds: KINDS.map(([k, label]) => ({
+        label,
+        color: m && m.kind === k ? '#1a1005' : 'rgba(239,231,219,.7)',
+        bg: m && m.kind === k ? 'linear-gradient(180deg, #ffc27a, #f0a03c)' : 'rgba(255,255,255,.04)',
+        border: m && m.kind === k ? 'rgba(255,214,160,.4)' : 'rgba(240,160,60,.14)',
+        go: () => { this.chime('tap'); this.posSet({ kind: k }); },
+      })),
+      onMoveQty: e => this.posSet({ qty: e.target.value }),
+      onMoveNote: e => this.posSet({ note: e.target.value }),
+      onMoveReorder: e => this.posSet({ reorder: e.target.value }),
+      onMoveCost: e => this.posSet({ cost: e.target.value }),
+      moveSave: () => this.posDo(),
+      moveSaveLabel: st.posSaving ? 'Saving\u2026' : 'Record it',
+      floorSave: () => this.posSaveFloor(),
+      moveErrShow: !!st.posMoveErr, moveErr: st.posMoveErr || '',
+
+      moveRows: P.moves.map(v => ({
+        name: ingName[v.ingredient_id] || 'Ingredient',
+        what: MOVE_WORD[v.kind] || v.kind,
+        qty: (Number(v.qty) > 0 ? '+' : '') + (Math.round(Number(v.qty) * 1000) / 1000),
+        color: Number(v.qty) > 0 ? '#9fd07f' : '#e2896f',
+        note: v.note || '',
+        noteShow: !!v.note,
+        when: clock(Date.parse(v.created_at)),
+      })),
+      noMoves: !P.moves.length,
+      movesEmpty: 'Nothing has moved yet.',
+
+      // ----- recipes -----
+      recipeCats: [['all', 'All']].concat(MENU.map(c => [c.key, c.en])).map(([k, label]) => ({
+        label,
+        color: rCat === k ? '#1a1005' : 'rgba(239,231,219,.7)',
+        bg: rCat === k ? 'linear-gradient(180deg, #ffc27a, #f0a03c)' : 'rgba(255,255,255,.04)',
+        border: rCat === k ? 'rgba(255,214,160,.4)' : 'rgba(240,160,60,.14)',
+        go: () => { this.chime('tap'); this.setState({ rCat: k }); },
+      })),
+      recipeDishes: [{ id: '', name: 'Pick a dish\u2026' }].concat(
+        DISHES.filter(d => rCat === 'all' || d.cat === rCat)
+          .map(d => ({ id: d.id, name: this.nameOf(d) }))),
+      rDish,
+      rDishOn: !!rDish,
+      rDishName: rDishObj ? this.nameOf(rDishObj) : '',
+      onRDish: e => this.recipeLoad(e.target.value),
+      recipeRows: P.items.map(i => ({
+        name: i.name,
+        unit: 'per portion, ' + i.unit,
+        qty: rQty[i.id] || '',
+        onInput: e => this.setState({ rQty: { ...(this.state.rQty || {}), [i.id]: e.target.value } }),
+      })),
+      rCostShow: !!(rDish && rCost),
+      rCostText: rCost ? money(Math.round(rCost * 100) / 100) + ' of ingredients' : '',
+      rMargin: rPrice && rCost ? Math.round((1 - rCost / rPrice) * 100) + '% margin at ' + money(rPrice) : '',
+      rMarginColor: rPrice && rCost ? (rCost / rPrice > 0.45 ? '#e8a66a' : '#9fd07f') : '#8d8479',
+      recipeSave: () => this.recipeSave(),
+      recipeSaveLabel: st.posSaving ? 'Saving\u2026' : 'Save recipe',
+    };
+  }
+
+  /* ===== A9 · the customer book =========================================
+     Every mobile the house touches already lands in `customers` — the counter
+     saves one, and a trigger catches whatever the guest app leaves on a parcel
+     or delivery ticket. Nothing in this app could read them back. This is that
+     window.
+
+     Read-back is staff-only on the server and deliberately so: a customer list
+     is the one thing here worth stealing. That is also why the parcel screen
+     cannot prefill a returning guest's name from their number — an anon phone
+     is refused by customer_lookup, and loosening it would publish the book. */
+  async bookLoad(force) {
+    if (this._bookBusy) return;
+    if (!force && this.state.book) return;
+    if (!this.posReady()) { this.setState({ bookErr: 'signin' }); return; }
+    this._bookBusy = true;
+    this.setState({ bookErr: '' });
+    try {
+      const sb = db.remote.sb, rid = db.remote.rid;
+      const [rows, folders] = await Promise.all([
+        sb.rpc('customer_book', {
+          p_rid: rid,
+          p_folder: this.state.bookFolder || null,
+          p_q: this.state.bookQ || null,
+          p_limit: 200,
+        }),
+        sb.rpc('customer_folder_counts', { p_rid: rid }),
+      ]);
+      if (rows.error) throw rows.error;
+      this.setState({ book: { rows: rows.data || [], folders: folders.data || [] } });
+    } catch (e) { this.setState({ bookErr: this.posWhy(e) }); }
+    this._bookBusy = false;
+  }
+
+  async bookAdd() {
+    const n = this.state.bookNew || {};
+    if (!(n.mobile || '').trim() || this._bookBusy) return;
+    this._bookBusy = true;
+    this.setState({ bookSaving: true, bookAddErr: '' });
+    try {
+      const { data, error } = await db.remote.sb.rpc('customer_note', {
+        p_rid: db.remote.rid, p_mobile: n.mobile, p_name: (n.name || '').trim() || null,
+        p_folder: 'manual', p_table: null, p_count: false,
+      });
+      if (error) throw error;
+      /* mobile_key returns null for anything that is not a phone number, and
+         the function answers with null rather than inventing a row. */
+      if (!data) throw new Error('That does not look like a phone number.');
+      this.chime('toggle');
+      this.setState({ bookSaving: false, bookNew: { name: '', mobile: '' } });
+      await this.bookLoad(true);
+    } catch (e) {
+      this.chime('deny');
+      const w = this.posWhy(e);
+      this.setState({ bookSaving: false, bookAddErr:
+        w === 'signin' ? 'That needs a signed-in terminal.'
+        : w === 'missing' ? 'Run supabase/customers.sql first.' : w });
+    }
+    this._bookBusy = false;
+  }
+
+  bookVals(st) {
+    const B = st.book || { rows: [], folders: [] };
+    const err = st.bookErr;
+    const n = st.bookNew || {};
+    const fol = st.bookFolder || '';
+    const when = t => {
+      if (!t) return 'never ordered';
+      const d = Date.now() - Date.parse(t);
+      if (d < 864e5) return 'today';
+      const days = Math.floor(d / 864e5);
+      return days === 1 ? 'yesterday' : days < 30 ? days + ' days ago'
+        : days < 365 ? Math.floor(days / 30) + ' months ago' : Math.floor(days / 365) + 'y ago';
+    };
+    return {
+      tabBook: st.adminTab === 'book',
+      bookNote: 'Every number the house has taken, filed by where it came from. The counter and the guest app both write into this without being asked; nothing here is typed twice.',
+      bookGateShow: !!err,
+      bookGateTitle: err === 'signin' ? 'Not signed in' : err === 'missing' ? 'Not set up yet' : 'Could not read the book',
+      bookGateText: err === 'signin'
+        ? 'A customer list is staff-only on the server, so this needs a signed-in terminal rather than just the panel password.'
+        : err === 'missing'
+        ? 'Run supabase/customers.sql in the Supabase SQL editor. It creates the book, the folders, and the trigger that files numbers as they arrive.'
+        : err,
+      bookOn: !err,
+
+      bookFolders: [{ slug: '', name: 'Everyone', n: B.rows.length }]
+        .concat(B.folders || []).map(f => ({
+          label: f.slug === '' ? f.name : f.name + ' \u00b7 ' + f.n,
+          color: fol === f.slug ? '#1a1005' : 'rgba(239,231,219,.7)',
+          bg: fol === f.slug ? 'linear-gradient(180deg, #ffc27a, #f0a03c)' : 'rgba(255,255,255,.04)',
+          border: fol === f.slug ? 'rgba(255,214,160,.4)' : 'rgba(240,160,60,.14)',
+          go: () => { this.chime('tap'); this.setState({ bookFolder: f.slug }, () => this.bookLoad(true)); },
+        })),
+
+      bookQ: st.bookQ || '',
+      onBookQ: e => this.setState({ bookQ: e.target.value }),
+      bookSearch: () => this.bookLoad(true),
+      onBookKey: e => { if (e.key === 'Enter') this.bookLoad(true); },
+
+      bookRows: (B.rows || []).map(c => ({
+        name: c.name || 'No name',
+        nameColor: c.name ? '#f0e8dc' : '#8d8479',
+        mobile: c.raw_mobile || c.mobile,
+        meta: [c.orders_count ? c.orders_count + (c.orders_count === 1 ? ' order' : ' orders') : 'no orders yet',
+          when(c.last_order_at),
+          c.last_table ? 'last on ' + c.last_table : null].filter(Boolean).join(' \u00b7 '),
+        folders: (c.folders || []).join(' \u00b7 '),
+        foldersShow: !!(c.folders || []).length,
+      })),
+      noBookRows: !(B.rows || []).length,
+      bookEmpty: st.bookQ || fol ? 'Nobody matches that.' : 'No numbers yet. They arrive on their own as parcels and deliveries are taken.',
+
+      bookNewName: n.name || '', bookNewMobile: n.mobile || '',
+      onBookNewName: e => this.setState({ bookNew: { ...n, name: e.target.value } }),
+      onBookNewMobile: e => this.setState({ bookNew: { ...n, mobile: e.target.value.replace(/[^0-9+ ]/g, '') } }),
+      bookAdd: () => this.bookAdd(),
+      bookAddLabel: st.bookSaving ? 'Saving\u2026' : 'Add to the book',
+      bookAddErrShow: !!st.bookAddErr, bookAddErr: st.bookAddErr || '',
     };
   }
 
@@ -9293,6 +10695,17 @@ class Component extends DCLogic {
     if (!this.flagsShared()) return local;
     const it = (((db.state.orders || {})[k] || {}).items || []).find(x => x.id === id);
     return { rush: (it && it.rush) || 0, hold: (it && it.held) || 0, fired: local.fired };
+  }
+  /* The tile's three marks, per dish: cook first, on hold, delivered. Same
+     glyphs and colours as the floor tile so the wall and the ticket agree. */
+  lineChips(k, i) {
+    const left = Math.max(0, (i.qty || 0) - (i.sent || 0)), gone = i.sent || 0;
+    const lf = left > 0 ? this.lineFlags(k, i.id) : {};
+    return [
+      lf.rush ? { g: '\u25b2 ' + left, ink: '#e2896f', bg: 'rgba(212,103,74,.16)' } : null,
+      lf.hold ? { g: '\u2016 ' + left, ink: '#e0b070', bg: 'rgba(224,176,112,.14)' } : null,
+      gone ? { g: '\u2713 ' + gone, ink: '#9fd07f', bg: 'rgba(127,174,99,.14)' } : null,
+    ].filter(Boolean);
   }
   lineSet(k, id, patch) {
     if (this.dragging()) return;
@@ -9450,10 +10863,11 @@ class Component extends DCLogic {
      therefore a declaration with two phases: on the range with a countdown the
      chef typed, then ready with a count that only goes down.
 
-     Batches live outside SHARED for the reason `kit` does — Postgres has no
-     table for them yet. That is also why the tray is depleted by this device's
-     own serves and taps rather than derived from the order log: `orders` holds
-     only OPEN tickets, so a settled bill would put portions back on the tray. */
+     Batches are shared: bulk-batches.sql gives them a table, so the kitchen
+     tablet, the admin phone and the counter all read one tray. The tray is
+     still depleted by serves and taps rather than derived from the order log,
+     because `orders` holds only OPEN tickets — a settled bill would otherwise
+     put its portions back on the tray. */
   batchReady(b) { return !!b.ready || (Number(b.mins) > 0 && Date.now() >= b.at + b.mins * 60000); }
   batchLeft(b) { return Math.max(0, Number(b.qty || 0) - Number(b.used || 0)); }
   batchEdit(id, fn) {
@@ -9488,55 +10902,29 @@ class Component extends DCLogic {
     });
   }
 
-  /* Serve, from the kitchen's side of the pass: the portions this ticket has
-     already cooked leave, and nothing else does. It writes the same `sent`,
-     `sentLog`, `served` and parcel `ready` the floor display writes, because a
-     dish handed over is one fact — the wall, the counter and the guest's phone
-     must not each hold their own version of it. */
-  kitServe(k, lines, kind) {
-    const counts = {};
-    lines.forEach(l => { const n = l.owed - l.left; if (n > 0) counts[l.id] = n; });
-    if (!Object.keys(counts).length) { this.chime('deny'); return; }
-    this.chime('serve');
-    const wasEmpty = {};
-    (db.state.batches || []).forEach(b => { wasEmpty[b.id] = this.batchLeft(b) === 0; });
-    db.patch(s => {
-      const t = s.orders[k];
-      if (!t) return;
-      const now = Date.now();
-      t.items.forEach(i => {
-        const was = i.sent || 0;
-        if (!counts[i.id]) return;
-        i.sent = Math.min(i.qty, was + counts[i.id]);
-        // One stamp per portion, so a line that goes out over two courses keeps
-        // both times rather than only the latest.
-        if (i.sent > was) i.sentLog = (i.sentLog || []).concat(Array.from({ length: i.sent - was }, () => now));
-      });
-      /* The cooked tally counts portions of what is still owed. Serving is what
-         makes those portions stop being owed, so the tally has to come down with
-         them — otherwise the next round at this table opens pre-cooked. */
-      s.cooked = s.cooked || {};
-      Object.keys(counts).forEach(id => {
-        const key = this.cookedKey(k, id);
-        s.cooked[key] = Math.max(0, Number(s.cooked[key] || 0) - counts[id]);
-        /* A pre-cooked dish is plated, not cooked, so the portion that leaves
-           here is a portion off the tray. Serve and not the cooked tally,
-           because the tally is reversible and a tray is not. */
-        this.batchTake(s, id, counts[id]);
-      });
-      if (!t.items.some(i => i.qty - (i.sent || 0) > 0)) {
-        t.served = now;
-        if (kind === 'parcel' && !(t.dlv && t.dlv.mode === 'door')) t.ready = true;
-      }
-    });
-    /* A tray running out mid-service is news: the dish is still on the menu and
-       the next order for it has to be cooked from scratch. The card goes red on
-       its own, but a chef at the range is not reading cards. */
-    const drained = (db.state.batches || []).filter(b => !wasEmpty[b.id] && this.batchLeft(b) === 0);
-    if (drained.length) {
-      const d = DISHES.find(y => y.id === drained[0].dish);
-      this.say((d ? this.nameOf(d) : 'Batch') + ' \u00b7 tray finished');
-    }
+  /* The kitchen used to have a Serve press of its own, which wrote the same
+     `sent` the floor writes — so a cook marking a plate done ticked the dish off
+     on the waiter's screen before anybody had carried it anywhere. The two facts
+     are now kept apart: the kitchen says ready, the floor says carried, and the
+     only screens that write `sent` are the ones where somebody is holding the
+     plate. The pass board keeps its own press for bagging parcels, where the
+     counter is the one handing over. */
+
+  /* A portion leaving the pass, from whichever screen sent it. The waiter's tap
+     on an order line and the pass board's serve both land here, because what has
+     to happen is the same either way: the cooked tally comes down with the food,
+     and a pre-cooked portion comes off its tray.
+
+     This is what lets a waiter work ahead of the kitchen. A cook who is too busy
+     to press anything is not a blocked waiter: the plate is checked at the hatch,
+     carried out, and tapped here — which clears the line off the kitchen board in
+     the same motion, so nobody cooks it twice. */
+  servedOut(s, k, dishId, n) {
+    if (n <= 0) return;
+    s.cooked = s.cooked || {};
+    const key = this.cookedKey(k, dishId);
+    s.cooked[key] = Math.max(0, Number(s.cooked[key] || 0) - n);
+    this.batchTake(s, dishId, n);
   }
 
   kitVals(st, h) {
@@ -9573,8 +10961,18 @@ class Component extends DCLogic {
           tally: left ? '\u00d7' + left : '\u2713',
           tallyColor: left ? '#1a1005' : '#9fd07f',
           tallyBg: left ? 'linear-gradient(180deg, #ffc27a, #f0a03c)' : 'rgba(127,174,99,.18)',
-          bg: held ? 'rgba(255,255,255,.02)' : rush ? 'rgba(212,103,74,.1)' : left ? 'rgba(255,255,255,.04)' : 'rgba(127,174,99,.07)',
-          edge: held ? 'rgba(240,160,60,.08)' : rush ? 'rgba(226,137,111,.45)' : left ? 'rgba(240,160,60,.16)' : 'rgba(127,174,99,.26)',
+          /* A finished dish goes green across the whole box, not just on its
+             tick. A cook scanning a card of six wants to see what is left to
+             cook without reading anything, and a faint tint on a small glyph
+             does not carry across a kitchen. */
+          bg: held ? 'rgba(255,255,255,.02)' : rush ? 'rgba(212,103,74,.1)' : left ? 'rgba(255,255,255,.04)' : 'rgba(127,174,99,.17)',
+          edge: held ? 'rgba(240,160,60,.08)' : rush ? 'rgba(226,137,111,.45)' : left ? 'rgba(240,160,60,.16)' : 'rgba(127,174,99,.5)',
+          /* The note takes the box's colour too: once the dish is cooked the
+             request has been honoured, and a request still glowing orange on a
+             finished dish reads as something outstanding. */
+          noteInk: left ? '#ffd9a8' : '#b6d49b',
+          noteBg: left ? 'rgba(255,122,24,.12)' : 'rgba(127,174,99,.14)',
+          noteEdge: left ? 'rgba(240,160,60,.26)' : 'rgba(127,174,99,.34)',
 
           /* The three punches, per dish. Only on a line still to cook: a cooked
              line has nothing left to reorder, and half a card of dead buttons is
@@ -9655,6 +11053,12 @@ class Component extends DCLogic {
       const landed = shown.reduce((m, l) => Math.max(m, l.left > 0 ? (l.added || 0) : 0), 0)
         || o.roundAt || o.pendingAt || o.at;
       const cookedUnits = shown.reduce((n, l) => n + (l.owed - l.left), 0);
+      const courseGroups = {};
+      active.forEach(l => {
+        const c = courseOf(((l.dish || {}).cat) || '');
+        (courseGroups[c] = courseGroups[c] || []).push(l);
+      });
+      const courseKeys = COURSES.filter(([c]) => courseGroups[c]);
       return {
         k, count: shown.length, waiting, portions, heldLines: heldSome,
         rush, held, since, landed,
@@ -9687,11 +11091,39 @@ class Component extends DCLogic {
           ((b.rush ? 1 : 0) - (a.rush ? 1 : 0)) ||
           (a.since - b.since)),
 
-        allLabel: allDone ? 'Whole round cooked' : 'All of it cooked',
+        /* A12 · Courses. The three punches stay per dish — a cook works a
+           dish, not a ticket. What was missing is the waiter's verb: park the
+           mains while the table eats its starters, then send them as one.
+           Only shown when a ticket actually spans courses; on a single-course
+           card it would just be the line buttons again with a longer name. */
+        hasCourses: courseKeys.length > 1,
+        courses: courseKeys.map(([c, label]) => {
+          const ls = courseGroups[c], allHeld = ls.every(l => l.held);
+          return {
+            label: label + ' \u00b7 ' + ls.reduce((a, l) => a + l.left, 0),
+            act: allHeld ? '\u25b6 Send' : '\u2016 Hold',
+            color: allHeld ? '#1a1005' : 'rgba(239,231,219,.78)',
+            bg: allHeld ? 'linear-gradient(180deg, #d8cdba, #b5a892)' : 'rgba(255,255,255,.04)',
+            edge: allHeld ? 'rgba(216,205,186,.5)' : 'rgba(240,160,60,.14)',
+            go: () => {
+              this.chime(allHeld ? 'bell' : 'tap');
+              ls.forEach(l => this.lineSet(k, l.id, allHeld
+                ? { hold: 0, fired: Date.now() } : { hold: Date.now() }));
+            },
+          };
+        }),
+
+        /* Nothing is served at a parcel — it is bagged, and the next pair of
+           hands is the counter's, not a waiter's. Same press, same fact, named
+           the way the ticket actually leaves the building. */
+        allLabel: h.kindOf(k) === 'parcel'
+          ? (allDone ? 'Whole bag ready' : 'Bag ready')
+          : (allDone ? 'Whole round ready to serve' : 'All of it ready to serve'),
         allColor: allDone ? '#9fd07f' : '#1a1005',
         allBg: allDone ? 'rgba(127,174,99,.14)' : 'linear-gradient(180deg, #ffc27a, #f0a03c)',
         allOut: () => {
           this.chime('bell');
+          const parcel = h.kindOf(k) === 'parcel';
           db.patch(s => {
             s.cooked = s.cooked || {};
             // Cooked + left is the whole owed count, read back rather than
@@ -9700,21 +11132,18 @@ class Component extends DCLogic {
             shown.forEach(l => {
               s.cooked[this.cookedKey(k, l.id)] = allDone ? 0 : this.cookedOf(k, l.id) + l.left;
             });
+            const t = s.orders[k];
+            if (!parcel || !t) return;
+            /* A bag called ready by the kitchen is the same event as one called
+               ready at the pass or on the floor display — all three raise the one
+               bag-ready card, so whoever is nearest the counter picks it up.
+               Packed is its own stamp because a door order still has a dispatch
+               press after this one: the food is bagged, the rider has not left. */
+            t.packed = allDone ? null : Date.now();
+            if (!(t.dlv && t.dlv.mode === 'door')) t.ready = !allDone;
           });
         },
 
-        /* Serve · what is cooked leaves the kitchen. Deliberately a second press
-           rather than a consequence of the first: food sits on the pass under a
-           lamp for a minute, and the moment it is carried is the moment the
-           guest's phone should stop counting down. */
-        canServe: cookedUnits > 0,
-        serveLabel: cookedUnits > 0
-          ? 'Serve ' + cookedUnits + (cookedUnits > 1 ? ' portions' : ' portion')
-          : 'Nothing cooked to serve',
-        serveColor: cookedUnits > 0 ? '#1a1005' : '#7d7469',
-        serveBg: cookedUnits > 0 ? 'linear-gradient(180deg, #b9d99a, #7fae63)' : 'rgba(255,255,255,.03)',
-        serveEdge: cookedUnits > 0 ? 'rgba(185,217,154,.45)' : 'rgba(240,160,60,.1)',
-        serve: () => this.kitServe(k, shown, h.kindOf(k)),
       };
     }).filter(t => t.count);
 
@@ -9879,28 +11308,46 @@ class Component extends DCLogic {
        does it have to be cooked. Tapping a dish starts a batch of it. */
     // Same rooms the order board is set to, so both halves of the tab agree.
     const bSel = this.kitSel();
-    const trayQty = {}, potQty = {};
+    const trayQty = {}, potQty = {}, trayCap = {};
     (db.state.batches || []).forEach(b => {
-      if (this.batchReady(b)) trayQty[b.dish] = (trayQty[b.dish] || 0) + this.batchLeft(b);
-      else potQty[b.dish] = (potQty[b.dish] || 0) + Number(b.qty || 0);
+      if (this.batchReady(b)) {
+        trayQty[b.dish] = (trayQty[b.dish] || 0) + this.batchLeft(b);
+        // What was cooked, so the bar has something to be a fraction of.
+        trayCap[b.dish] = (trayCap[b.dish] || 0) + Number(b.qty || 0);
+      } else potQty[b.dish] = (potQty[b.dish] || 0) + Number(b.qty || 0);
     });
-    const bulkDishes = DISHES
+    const bulkQ = (st.bulkQ || '').trim().toLowerCase();
+    const bulkAll = DISHES
       .filter(d => this.availOf(d) && !this.hiddenOf(d))
       .filter(d => {
         const k = this.kitchenOf(d);
         return bSel.length === 0 ? true : bSel.indexOf(k || 'none') >= 0;
-      })
+      });
+    const bulkDishes = bulkAll
+      .filter(d => !bulkQ || this.nameOf(d).toLowerCase().indexOf(bulkQ) >= 0)
       .map(d => {
         const tray = trayQty[d.id] || 0, pot = potQty[d.id] || 0;
+        const cap = trayCap[d.id] || 0;
+        /* Against what was cooked, not against a target nobody set: a bar that
+           starts full when the tray comes out and empties as the tray does is
+           the only reading a chef can act on without arithmetic. It comes down
+           on every serve, because a serve already takes its portions off the
+           tray — the bar is that number drawn. */
+        const pct = cap ? Math.max(0, Math.min(100, Math.round(tray / cap * 100))) : 0;
         return {
           id: d.id,
           name: this.nameOf(d),
           station: this.kitchenName(this.kitchenOf(d)),
-          note: tray ? tray + ' standing ready' : pot ? pot + ' on the range' : 'cooked to order',
-          noteColor: tray ? '#9fd07f' : pot ? '#ffd9a8' : '#8d8479',
+          note: tray ? tray + ' of ' + cap + ' left' : pot ? pot + ' on the range' : 'cooked to order',
+          noteColor: tray ? (pct <= 20 ? '#e2896f' : '#9fd07f') : pot ? '#ffd9a8' : '#8d8479',
           qtyLabel: tray ? '\u00d7' + tray : '',
           bg: tray ? 'rgba(127,174,99,.07)' : 'rgba(255,255,255,.03)',
-          edge: tray ? 'rgba(127,174,99,.24)' : 'rgba(240,160,60,.1)',
+          edge: tray ? (pct <= 20 ? 'rgba(226,137,111,.34)' : 'rgba(127,174,99,.24)') : 'rgba(240,160,60,.1)',
+          barShow: tray > 0,
+          w: pct + '%',
+          fill: pct <= 20 ? 'linear-gradient(90deg, #d4674a, #e2896f)'
+            : pct <= 50 ? 'linear-gradient(90deg, #f0a03c, #ffc27a)'
+            : 'linear-gradient(90deg, #7fae63, #b9d99a)',
           put: () => { this.chime('tap'); this.setState({ batchOpen: true, batchDish: d.id }); },
         };
       })
@@ -9937,7 +11384,13 @@ class Component extends DCLogic {
       batchStart: () => this.batchAdd(bDish, bQty, bMins, false),
       batchStartNow: () => this.batchAdd(bDish, bQty, 0, true),
       bulkDishes,
-      hasBulkDishes: !!bulkDishes.length,
+      hasBulkDishes: !!bulkAll.length,
+      bulkQ: st.bulkQ || '',
+      bulkSearch: e => this.setState({ bulkQ: e.target.value }),
+      bulkClear: () => { this.chime('tap'); this.setState({ bulkQ: '' }); },
+      bulkHasQ: !!bulkQ,
+      bulkNoHits: !!bulkQ && !bulkDishes.length,
+      bulkNoHitText: 'No dish here matches \u201c' + (st.bulkQ || '').trim() + '\u201d.',
       bulkDishNote: bulkDishes.filter(x => x.qtyLabel).length
         ? bulkDishes.filter(x => x.qtyLabel).length + ' of ' + bulkDishes.length + ' standing ready'
         : bulkDishes.length + (bulkDishes.length === 1 ? ' dish on' : ' dishes on'),
@@ -10338,6 +11791,19 @@ class Component extends DCLogic {
       const settled = o.paidAmt != null ? o.paidAmt : (o.paid ? total : 0);
       const due = Math.max(0, total - settled);
       const clear = settled > 0 && due === 0;
+      /* Seats used to live here: a per-line seat number the floor could take a
+         bill from one seat at a time. It came out because the counter terminal
+         is where a bill is actually divided and tendered in parts, so tagging
+         chairs on this screen was data entry nothing downstream read. What the
+         floor wants from a line is the kitchen's two presses — cook this first,
+         park this one — and those sit in its place.
+
+         Cooked against owed for the whole ticket. okOf is what the kitchen was
+         actually authorised to cook, cookedOf is what it has called ready, and
+         both already exist for the pass board — this side only reads them. */
+      const tkOwed = (o.items || []).reduce((n, it) => n + Math.max(0, this.okOf(it) - (it.sent || 0)), 0);
+      const tkCooked = (o.items || []).reduce((n, it) =>
+        n + Math.min(this.cookedOf(k, it.id), Math.max(0, this.okOf(it) - (it.sent || 0))), 0);
       const armed = this.state.paidArm === k;
       /* claimTot is the total the guest claimed against; claimAmt is the figure
          they were shown. Either answers the counter's question, so it reads the
@@ -10510,11 +11976,32 @@ class Component extends DCLogic {
           });
           this.say(clear ? L.unpaid : L.paidUpAll);
         },
+        /* What the kitchen has called ready, on the ticket. The same cooked
+           counts the pass board writes when a cook presses Serve, read from
+           the other side: the waiter learns the food is up without walking to
+           the hatch, and nothing new is stored to make that true. */
+        cookShow: !parcel && tkOwed > 0,
+        cookLine: tkCooked >= tkOwed
+          ? 'All ' + tkOwed + ' ready to serve'
+          : tkCooked > 0
+            ? tkCooked + ' of ' + tkOwed + ' ready to serve'
+            : tkOwed + ' still cooking',
+        cookInk: tkCooked >= tkOwed ? '#9fd07f' : tkCooked > 0 ? '#ffd9a8' : '#8d8479',
+        cookBg: tkCooked >= tkOwed ? 'rgba(127,174,99,.1)' : tkCooked > 0 ? 'rgba(255,122,24,.08)' : 'rgba(255,255,255,.03)',
+        cookEdge: tkCooked >= tkOwed ? 'rgba(127,174,99,.28)' : 'rgba(240,160,60,.14)',
         lines: o.items.map((i, ix) => {
           const d = DISHES.find(x => x.id === i.id);
           const gone = i.sent || 0, left = i.qty - gone;
           const note = (i.note || '').trim();
           const nKey = k + '#' + ix, nOpen = st.ordNote === nKey;
+          /* Priority is the kitchen's own rush/hold flag, not a second one: the
+             pass board sorts and colours by these, and they travel on the order
+             item like any other column, so a waiter's press here lands on the
+             kitchen screen without anything in between. */
+          const lf = this.lineFlags(k, i.id);
+          const lRush = !!lf.rush, lHeld = !!lf.hold;
+          const lOwed = Math.max(0, this.okOf(i) - gone);
+          const lCooked = Math.min(this.cookedOf(k, i.id), lOwed);
           return {
             label: (d ? this.nameOf(d) : i.id) + '  \u00d7' + i.qty,
             /* The guest's note, and the same field a waiter types into when the
@@ -10538,12 +12025,35 @@ class Component extends DCLogic {
             noteSave: () => { this.chime('toggle'); this.ordNoteSet(k, ix, st.ordNoteDraft); },
             noteClear: () => { this.chime('back'); this.ordNoteSet(k, ix, ''); },
             amount: money(i.price * i.qty),
+            // Nothing to prioritise once every portion is off the range.
+            fireShow: !parcel && lOwed - lCooked > 0,
+            firstLbl: lRush ? '\u25b2 First' : '\u25b2 Cook first',
+            firstInk: lRush ? '#1a1005' : '#e2896f',
+            firstBg: lRush ? 'linear-gradient(180deg, #ffab8e, #e2896f)' : 'rgba(212,103,74,.1)',
+            firstEdge: lRush ? 'rgba(255,190,165,.45)' : 'rgba(212,103,74,.3)',
+            cookFirst: () => { this.chime(lRush ? 'back' : 'deny'); this.lineSet(k, i.id, { rush: lRush ? 0 : Date.now() }); },
+            holdLbl: lHeld ? '\u2016 On hold' : '\u2016 Hold',
+            holdInk: lHeld ? '#1a1005' : 'rgba(239,231,219,.78)',
+            holdBg: lHeld ? 'linear-gradient(180deg, #ffd9a8, #e0b070)' : 'rgba(255,255,255,.04)',
+            holdEdge: lHeld ? 'rgba(255,214,160,.45)' : 'rgba(240,160,60,.16)',
+            holdTap: () => { this.chime(lHeld ? 'back' : 'toggle'); this.lineSet(k, i.id, { hold: lHeld ? 0 : Date.now() }); },
+            readyShow: !parcel && lCooked > 0,
+            readyText: lCooked >= lOwed ? 'Ready to serve' : lCooked + ' of ' + lOwed + ' ready',
             /* Portions go out one at a time from a shared pass, so the count
                that matters is how many are still owed, not a done flag. */
             tally: left > 0 ? String(left) : '\u2713',
             tallyColor: left > 0 ? '#ffc27a' : '#9fd07f',
             tallyBg: left > 0 ? 'rgba(255,122,24,.07)' : 'rgba(159,208,127,.08)',
             lineColor: left > 0 ? '#cfc6ba' : '#7d746a',
+            /* The dish and its note are one box, because they are one instruction:
+               "Royal Delight ×2, no onion" is a single thing a cook reads and a
+               waiter carries, and splitting it across two cards made the note
+               look like a separate row to tick off. The whole box goes green once
+               every portion has been carried — the state belongs to the dish, so
+               it is the dish's container that shows it, not a tick in a corner. */
+            boxBg: left > 0 ? 'rgba(255,255,255,.02)' : 'rgba(159,208,127,.07)',
+            boxEdge: left > 0 ? 'rgba(240,160,60,.14)' : 'rgba(127,174,99,.34)',
+            noteDiv: left > 0 ? 'rgba(240,160,60,.12)' : 'rgba(127,174,99,.2)',
             /* Tap sends one portion; when all are out, tapping again takes the
                whole line back — a mis-bump at the pass is common and walking to
                a settings screen to undo it is not an option mid-service. */
@@ -10551,7 +12061,15 @@ class Component extends DCLogic {
               this.chime(left > 0 ? 'tap' : 'back');
               db.patch(s => {
                 const it = s.orders[k] && s.orders[k].items[ix];
-                if (it) it.sent = left > 0 ? gone + 1 : 0;
+                if (!it) return;
+                const was = it.sent || 0;
+                it.sent = left > 0 ? gone + 1 : 0;
+                const now = Date.now();
+                const d = (it.sent || 0) - was;
+                // One stamp per portion, so a line carried over two courses keeps
+                // both times rather than only the latest.
+                if (d > 0) it.sentLog = (it.sentLog || []).concat(Array.from({ length: d }, () => now));
+                this.servedOut(s, k, it.id, d);
               });
             },
           };
@@ -10593,7 +12111,7 @@ class Component extends DCLogic {
       : st.ordKind === 'parcel' ? orderRows.filter(r => r.kind === 'parcel')
       : orderRows.filter(r => r.kind !== 'parcel');
 
-    const adminCats = MENU.map(c => ({
+    const adminCats = MENU.map(c => { const catHid = !!db.cat(c.key).hidden; const catN = DISHES.filter(x => x.cat === c.key).length; return ({
       title: (st.lang === 'ta' ? c.ta : c.en) + (c.veg ? ' · veg' : ' · non-veg'),
       hideLabel: db.cat(c.key).hidden ? L.show : L.hide,
       hideColor: db.cat(c.key).hidden ? '#d4674a' : 'rgba(239,231,219,.7)',
@@ -10635,7 +12153,20 @@ class Component extends DCLogic {
           toggleHide: () => { this.chime('toggle'); db.patch(s => { s.dishes[d.id] = { ...(s.dishes[d.id] || {}), hidden: !hid }; }); },
         };
       }),
-    }));
+      /* The same fact said three ways — the title greys, the dishes grey, and a
+         line of prose states it. One of the three is the one a member of staff
+         happens to be looking at. */
+      isHidden: catHid,
+      titleColor: catHid ? '#6f665c' : '#f0e8dc',
+      hideBg: catHid ? 'rgba(212,103,74,.16)' : 'rgba(255,255,255,.04)',
+      hideBorder: catHid ? 'rgba(212,103,74,.42)' : 'rgba(240,160,60,.14)',
+      dim: catHid ? '.32' : '1',
+      grey: catHid ? 'grayscale(1)' : 'none',
+      eye: eyeIcon(true),
+      hiddenNote: 'Hidden from the guest menu \u2014 nobody can see or order '
+        + (catN === 1 ? 'this dish' : 'these ' + catN + ' dishes') + '.',
+      undoLabel: L.show,
+    }); });
 
     const fb = db.state.feedback;
     const svc = db.state.service.slice().sort((a, b) => b.at - a.at);
@@ -10743,7 +12274,7 @@ class Component extends DCLogic {
     // Tickets — not portions — still waiting for a staff press.
     const waitOk = Object.keys(db.state.orders || {})
       .filter(k2 => this.pendOf(db.state.orders[k2]) > 0).length;
-    const tabs = [['orders', 'Orders'], ['calls', 'Waiter'], ['floor', 'Floor'], ['kitchen', 'Kitchen'], ['menu', 'Menu'], ['stock', 'Stock'], ['feedback', 'Feedback']];
+    const tabs = [['orders', 'Orders'], ['calls', 'Waiter'], ['floor', 'Floor'], ['kitchen', 'Kitchen'], ['menu', 'Menu'], ['stock', 'Stock'], ['book', 'Book'], ['feedback', 'Feedback']];
 
     // ---- wall display ----
     const ageTone = at => {
@@ -10784,11 +12315,15 @@ class Component extends DCLogic {
         lines: [
           ...o.items.filter(i => i.qty - (i.sent || 0) > 0).map(i => {
             const d = DISHES.find(x => x.id === i.id);
-            return { label: d ? this.nameOf(d) : i.id, qty: '\u00d7' + (i.qty - (i.sent || 0)), color: '#e2896f' };
+            const lf = this.lineFlags(k, i.id), left = i.qty - (i.sent || 0);
+            return { label: d ? this.nameOf(d) : i.id, qty: '\u00d7' + left, color: '#e2896f', chips: [
+              lf.rush ? { g: '\u25b2 ' + left, ink: '#e2896f', bg: 'rgba(212,103,74,.16)' } : null,
+              lf.hold ? { g: '\u2016 ' + left, ink: '#e0b070', bg: 'rgba(224,176,112,.14)' } : null,
+            ].filter(Boolean) };
           }),
           ...o.items.filter(i => (i.sent || 0) > 0).map(i => {
             const d = DISHES.find(x => x.id === i.id);
-            return { label: d ? this.nameOf(d) : i.id, qty: '\u00d7' + i.sent, color: '#9fd07f' };
+            return { label: d ? this.nameOf(d) : i.id, qty: '\u00d7' + i.sent, color: '#9fd07f', chips: [{ g: '\u2713 ' + i.sent, ink: '#9fd07f', bg: 'rgba(127,174,99,.14)' }] };
           }),
         ],
       };
@@ -10935,6 +12470,7 @@ class Component extends DCLogic {
     // Pending is the same order set filtered, not a second store: one ticket
     // cannot drift out of step with itself.
     const pendingKeys = tvKeys.filter(k => owed(db.state.orders[k]).length);
+    let tvPlates = 0, tvWaitN = 0;
     const tvPending = pendingKeys.map(k => {
       const o = db.state.orders[k];
       const late = (nowMs - (o.pendingAt || o.at)) / 60000 >= 20;
@@ -10949,7 +12485,28 @@ class Component extends DCLogic {
          keeps running as courses leave: a dish carried out does not shorten the wait
          of the dish still on the pass. It restarts only when new food is ordered. */
       const since = o.pendingAt || o.at;
+      /* Food the guest sent that nobody at the counter has looked at yet. It
+         is shown here, not hidden, so the wall is where it gets waved through
+         or turned away; the kitchen only sees it after the OK. */
+      const waits = (o.items || []).map(i => ({ i, n: Number(i.qty || 0) - this.okOf(i) })).filter(x => x.n > 0);
+      const okOwed = due.some(x => this.okOf(x.i) - (x.i.sent || 0) > 0);
+      tvWaitN += waits.reduce((n, x) => n + x.n, 0);
+      due.forEach(x => { tvPlates += Math.max(0, this.okOf(x.i) - (x.i.sent || 0)); });
+      const denyArmed = st.tvDeny === k;
       return {
+        waitShow: waits.length > 0,
+        waitHead: 'Awaiting \u00b7 ' + waits.reduce((n, x) => n + x.n, 0),
+        waits: waits.map(x => { const d = DISHES.find(y => y.id === x.i.id); return { label: d ? this.nameOf(d) : x.i.id, qty: '\u00d7' + x.n }; }),
+        authorise: () => { this.setState({ tvDeny: null }); this.okSend(k); },
+        deny: () => {
+          if (!denyArmed) { this.chime('tap'); this.setState({ tvDeny: k }); return; }
+          this.setState({ tvDeny: null });
+          this.okDeny(k);
+        },
+        denyLabel: denyArmed ? 'Tap again to remove' : 'Deny',
+        denyInk: denyArmed ? '#1a0a05' : '#e2896f',
+        denyBg: denyArmed ? '#e2896f' : 'transparent',
+        serveShow: okOwed,
         title: this.keyLabel(k),
         age: ago(since), ageColor: tone(since, 600, 1200),
         bg: late ? 'rgba(212,103,74,.12)' : 'rgba(255,122,24,.07)',
@@ -10967,9 +12524,10 @@ class Component extends DCLogic {
            card is the record of what this table is owed AND what it already has, so
            a waiter can answer "where is my curry" without opening anything. Owed
            lines sort above delivered ones. */
-        lines: o.items.slice().sort((a, b) => (b.qty - (b.sent || 0) > 0) - (a.qty - (a.sent || 0) > 0)).map(i => {
+        lines: o.items.filter(i => this.okOf(i) > 0 || (i.sent || 0) > 0)
+          .sort((a, b) => (this.okOf(b) - (b.sent || 0) > 0) - (this.okOf(a) - (a.sent || 0) > 0)).map(i => {
           const d = DISHES.find(y => y.id === i.id);
-          const left = i.qty - (i.sent || 0), gone = i.sent || 0;
+          const left = Math.max(0, this.okOf(i) - (i.sent || 0)), gone = i.sent || 0;
           const x = { i, n: left };
           const c = left > 0 ? pick(x) : 0, all = left > 0 && c === left;
           const log = i.sentLog || [];
@@ -10977,6 +12535,7 @@ class Component extends DCLogic {
           return {
             label: d ? this.nameOf(d) : i.id,
             pend: left > 0, done: left === 0,
+            chips: this.lineChips(k, i),
             qty: '\u00d7' + (left > 0 ? left : gone),
             qtyColor: left > 0 ? '#ffc27a' : '#9fd07f',
             nameColor: left > 0 ? '#cfc6b9' : '#93a884',
@@ -11020,11 +12579,15 @@ class Component extends DCLogic {
             const now = Date.now();
             t.items.forEach(i => {
               const was = i.sent || 0;
-              if (!any) i.sent = i.qty;
-              else if (counts[i.id]) i.sent = Math.min(i.qty, was + counts[i.id]);
+              // Only authorised food can leave: a line awaiting the counter's OK stays owed.
+              if (!any) i.sent = Math.max(was, this.okOf(i));
+              else if (counts[i.id]) i.sent = Math.min(this.okOf(i), was + counts[i.id]);
               // One stamp per portion that just left, so a line delivered across two
               // courses keeps both times rather than only the latest.
               if (i.sent > was) i.sentLog = (i.sentLog || []).concat(Array.from({ length: i.sent - was }, () => now));
+              // Same bookkeeping the order panel does: what leaves the pass comes
+              // off the kitchen's ready tally and off its tray.
+              this.servedOut(s, k, i.id, (i.sent || 0) - was);
             });
             if (!t.items.some(i => i.qty - (i.sent || 0) > 0)) {
               t.served = Date.now();
@@ -11079,7 +12642,10 @@ class Component extends DCLogic {
       /* Signed in AND connected, on the screens staff work from. Either half
          failing takes it away — an empty corner is the whole message, so there
          is no amber middle state to learn. */
-      showLive: this.staffMode() && st.screen !== 'tv' && st.screen !== 'hero' && st.screen !== 'feed' && this.netLive(),
+      showLive: this.staffMode() && st.screen !== 'tv' && st.screen !== 'hero' && st.screen !== 'feed',
+      liveLabel: this.netLive() ? 'Live' : 'Offline',
+      liveDot: this.netLive() ? '#7ac46e' : '#d9534f',
+      liveInk: this.netLive() ? 'rgba(199,225,193,.85)' : 'rgba(240,190,185,.9)',
       isCategories: st.screen === 'categories', isCarousels: st.screen === 'carousels',
       isFeed: st.screen === 'feed', isAdmin: st.screen === 'admin',
       // Behind the password, not merely on the admin route: the keypad screen
@@ -11093,6 +12659,8 @@ class Component extends DCLogic {
       assistRid: db.remote ? db.remote.rid : '',
       assistTables: IDENTITY.tables,
       takeDictated: t => this.takeDictated(t),
+      assistFloor: () => this.floorSnapshot(),
+      takeRating: t => this.takeRating(t),
       reelPage: this.reelPaged(), reelStops: this.reelPaged() ? st.feedIds.map(id => ({ id })) : [],
       showGuestBar: st.screen !== 'hero' && st.screen !== 'tv' && st.screen !== 'admin',
 
@@ -11120,7 +12688,7 @@ class Component extends DCLogic {
       tvParcels, tvHasParcels: !!tvParcels.length, tvNoParcels: !tvParcels.length,
       tvParcelCount: String(tvParcels.length),
       tvPending, tvNoPending: !tvPending.length,
-      tvPendingCount: String(tvPending.length),
+      tvPendingCount: tvPlates + (tvPlates === 1 ? ' plate' : ' plates') + ' \u00b7 ' + tvPending.length + (tvPending.length === 1 ? ' order' : ' orders') + (tvWaitN ? ' \u00b7 ' + tvWaitN + ' awaiting' : ''),
       tvUnassigned: unassignedCount > 0,
       tvUnassignedLabel: [
         parcelCount ? parcelCount + ' ' + (parcelCount === 1 ? L.pcBags : L.pcBagsPl) : '',
@@ -11129,7 +12697,7 @@ class Component extends DCLogic {
       tvHeadline: 'Kitchen & floor',
       tvClock: new Date(nowMs).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       tvDate: new Date(nowMs).toLocaleDateString([], { weekday: 'short', day: '2-digit', month: 'short' }),
-      tvOccupancy: busyCount + ' / ' + this.tableCount(),
+      tvOccupancy: busyCount + ' / ' + this.tableKeys().length,
       tvSyncLabel: new Date(nowMs).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
       tvCalls: (() => {
         const by = {};
@@ -11206,19 +12774,62 @@ class Component extends DCLogic {
         };
       }),
       tvNoSlots: !this.slots().length,
-      tvTables: Array.from({ length: this.tableCount() }, (_, i) => {
-        const n = String(i + 1), o = db.state.orders[n], busy = !!o;
+      tvTables: this.tableKeys().map(n => {
+        const o = db.state.orders[n], busy = !!o;
         const armed = st.tvArm === n, hasFood = busy && (o.items || []).length > 0;
+        /* A second party is its own ticket, so the tile has to say so — freeing
+           the house ticket would otherwise look like clearing the table while
+           somebody is still sitting at it. */
+        const cov = this.coversAt(n);
+        const parties = cov.length + (busy ? 1 : 0);
+        /* Occupied is about the room, not the orders map. A cover with no house
+           ticket behind it — staff seated the second party, or the first party
+           settled and left while the second is still eating — is still somebody
+           sitting at this table, and a tile that paints green and says "tap to
+           assign" sends a waiter to seat strangers on top of them. */
+        const occupied = busy || cov.length > 0;
+        // Plates still owed that the floor or the kitchen has flagged.
+        let rushN = 0, holdN = 0, doneN = 0, plainN = 0;
+        if (busy) (o.items || []).forEach(i => {
+          const gone = Math.min(i.sent || 0, i.qty || 0), left = Math.max(0, (i.qty || 0) - gone);
+          doneN += gone;
+          if (!left) return;
+          const lf = this.lineFlags(n, i.id);
+          if (lf.rush) rushN += left;
+          else if (lf.hold) holdN += left;
+          else plainN += left;
+        });
         return {
           n,
-          color: busy ? '#f7f2e8' : '#8d8479',
-          dot: busy ? '#d4674a' : '#7fae63',
-          bg: busy ? 'rgba(212,103,74,.13)' : 'rgba(127,174,99,.07)',
-          border: armed ? 'rgba(212,103,74,.75)' : busy ? 'rgba(212,103,74,.34)' : 'rgba(127,174,99,.24)',
+          color: occupied ? '#f7f2e8' : '#8d8479',
+          dot: occupied ? '#d4674a' : '#7fae63',
+          bg: occupied ? 'rgba(212,103,74,.13)' : 'rgba(127,174,99,.07)',
+          border: armed ? 'rgba(212,103,74,.75)' : occupied ? 'rgba(212,103,74,.34)' : 'rgba(127,174,99,.24)',
           age: busy ? ago(o.at) : '',
           ageColor: busy ? tone(o.at, 1800, 3600) : 'transparent',
-          action: armed ? 'Tap again to free' : busy ? (hasFood ? 'Occupied' : 'Held \u00b7 tap to free') : 'Tap to assign',
-          actionColor: armed ? '#ffc27a' : busy ? 'rgba(212,103,74,.85)' : 'rgba(127,174,99,.8)',
+          coverShow: cov.length > 0,
+          coverLabel: parties === 1 ? '1 party' : parties + ' parties',
+          /* Priority, on the wall. A table with something rushed or something
+             parked is a table the pass has to treat differently, and the person
+             reading this screen is across the kitchen from the ticket — so the
+             two flags travel up to the tile rather than living only on the line.
+             Glyphs, not words: the tile is small and these are read at a glance
+             from several metres away. */
+          flagShow: busy && (rushN > 0 || holdN > 0 || doneN > 0 || plainN > 0),
+          flags: [
+            rushN ? { g: '\u25b2 ' + rushN, ink: '#e2896f', bg: 'rgba(212,103,74,.16)' } : null,
+            holdN ? { g: '\u2016 ' + holdN, ink: '#e0b070', bg: 'rgba(224,176,112,.14)' } : null,
+            plainN ? { g: '\u25cb ' + plainN, ink: '#c9b9a4', bg: 'rgba(255,255,255,.06)' } : null,
+            doneN ? { g: '\u2713 ' + doneN, ink: '#9fd07f', bg: 'rgba(127,174,99,.14)' } : null,
+          ].filter(Boolean),
+          /* Freeing is only ever offered for the house ticket. With covers still
+             open the tile says who is left rather than pretending the table can
+             be cleared from here — those tickets are closed in Parcel slots. */
+          action: armed ? 'Tap again to free'
+            : busy ? (hasFood ? 'Occupied' : 'Held \u00b7 tap to free')
+            : cov.length ? (cov.length === 1 ? 'Second party \u00b7 no house ticket' : cov.length + ' parties \u00b7 no house ticket')
+            : 'Tap to assign',
+          actionColor: armed ? '#ffc27a' : occupied ? 'rgba(212,103,74,.85)' : 'rgba(127,174,99,.8)',
           /* Freeing a table that still has food on it needs two taps — a mis-tap on a
              live ticket would otherwise wipe the bill. */
           toggle: () => {
@@ -11552,8 +13163,8 @@ class Component extends DCLogic {
         };
       }),
       noSlotList: !this.slots().filter(sl => sl.staff || st.table === sl.id || this.staffMode()).length,
-      tableList: Array.from({ length: this.tableCount() }, (_, i) => {
-        const n = String(i + 1), busy = !!db.state.orders[n], mine = st.table === n;
+      tableList: this.tableKeys().map(n => {
+        const busy = !!db.state.orders[n], mine = st.table === n;
         const held = !mine && this.tableLocked(n);
         return {
           n, state: mine ? (L.release || STR.en.release) : held ? (L.heldShort || STR.en.heldShort) : busy ? 'busy' : 'free',
@@ -11982,13 +13593,19 @@ class Component extends DCLogic {
           : k === 'orders' && waitOk ? 'rgba(224,168,58,.12)' : 'rgba(255,255,255,.04)',
         border: st.adminTab === k ? 'rgba(255,214,160,.4)'
           : k === 'orders' && waitOk ? 'rgba(224,168,58,.42)' : 'rgba(240,160,60,.14)',
-        go: () => this.setState({ adminTab: k }),
+        go: () => {
+          this.setState({ adminTab: k });
+          // The book lives on the server, so it fetches on the way in.
+          if (k === 'book') this.bookLoad();
+        },
       })),
       tabOrders: st.adminTab === 'orders', tabMenu: st.adminTab === 'menu',
       tabCalls: st.adminTab === 'calls', tabFeedback: st.adminTab === 'feedback',
       tabFloor: st.adminTab === 'floor',
       ...this.kitVals(st, { ago, tone, owed, kindOf }),
       ...this.stockVals(st),
+      ...this.posVals(st),
+      ...this.bookVals(st),
       ...this.offVals(st),
       /* Filtered at the edge, not in the store: the switch changes what is read,
          never what exists. A seated guest without a number sits with the tables —
@@ -12030,7 +13647,7 @@ class Component extends DCLogic {
       floorSubRoom: (st.floorSub || 'room') === 'room',
       floorSubKitchens: (st.floorSub || 'room') === 'kitchens',
       floorSubParcel: (st.floorSub || 'room') === 'parcel',
-      floorSubs: [['room', 'Floor', this.tableCount()], ['kitchens', 'Kitchens', this.kitchens().length], ['parcel', 'Parcel', this.slots().length]]
+      floorSubs: [['room', 'Floor', this.tableKeys().length], ['kitchens', 'Kitchens', this.kitchens().length], ['parcel', 'Parcel', this.slots().length]]
         .map(([k2, label, n]) => ({
           label,
           count: n ? String(n) : '',
@@ -12045,6 +13662,33 @@ class Component extends DCLogic {
       blurFloorTables: () => this.numBlur('floor:tables'),
       floorTablesUp: () => this.bumpTables(1),
       floorTablesDown: () => this.bumpTables(-1),
+
+      /* Splitting the room. One chip per numbered table; a tap cycles it whole →
+         two parts → three → four → whole again. Four is the last stop because a
+         long table seating four unrelated parties is the most the room does, and
+         a cycle beats a stepper per table when there are twenty of them on a
+         phone screen. */
+      splitList: Array.from({ length: this.tableCount() }, (_, i) => {
+        const num = i + 1, parts = this.splitParts(num);
+        const keys = this.keysOf(num);
+        const busy = keys.some(k => this.keyBusy(k));
+        return {
+          label: String(num),
+          letters: parts ? keys.map(k => k.slice(String(num).length)).join(' ') : '\u2014',
+          split: parts > 0,
+          lettersColor: parts ? '#ffc27a' : '#6f665c',
+          bg: parts ? 'rgba(255,122,24,.12)' : 'rgba(255,255,255,.04)',
+          border: parts ? 'rgba(255,205,150,.42)' : 'rgba(240,160,60,.14)',
+          color: parts ? '#f7f2e8' : '#bdb4a6',
+          dot: busy ? '#d4674a' : 'transparent',
+          cycle: () => { this.setSplit(num, parts === 0 ? 2 : parts < 4 ? parts + 1 : 0); },
+        };
+      }),
+      splitNote: (() => {
+        const on = Array.from({ length: this.tableCount() }, (_, i) => i + 1).filter(n => this.splitParts(n));
+        if (!on.length) return 'Every table is whole. Tap a number to break it into 7A, 7B \u2014 separate keys with separate bills, so two unrelated parties at one table never land on one ticket.';
+        return 'Split now: ' + on.map(n => this.keysOf(n).join('/')).join(', ') + '. The plain number is gone while a table is split \u2014 staff and guests pick the part, and the floor display lists each one on its own tile.';
+      })(),
       floorHold: this.numDraft('floor:hold', this.holdMins()),
       setFloorHold: e => this.numType('floor:hold', e, v => db.patch(s => { s.floor = { ...(s.floor || {}), holdMins: Math.max(5, Math.min(1440, v)) }; })),
       blurFloorHold: () => this.numBlur('floor:hold'),
@@ -12101,13 +13745,20 @@ class Component extends DCLogic {
       floorHoldNote: 'A walk-in phone keeps its slot for this long, so a second round joins the same ticket instead of opening a new one. Clearing or closing the ticket ends the hold early.',
       newSlotName: st.newSlotName,
       setNewSlotName: e => this.setState({ newSlotName: e.target.value.slice(0, 20) }),
-      addNewSlot: () => { this.addSlot(st.newSlotName); this.setState({ newSlotName: '' }); },
+      newSlotAt: st.newSlotAt || '',
+      setNewSlotAt: e => this.setState({ newSlotAt: e.target.value.replace(/[^0-9]/g, '').slice(0, 3) }),
+      addNewSlot: () => {
+        this.addSlot(st.newSlotName, st.newSlotAt);
+        this.setState({ newSlotName: '', newSlotAt: '' });
+      },
       slotRows: this.slots().map(sl => {
         const o = db.state.orders[sl.id], live = !!(o && (o.items || []).length);
         const held = !!(sl.holdAt && Date.now() - sl.holdAt < this.holdMins() * 60000);
         return {
           id: sl.id, label: this.keyLabel(sl.id),
           bill: sl.bill || '',
+          seatShow: !!sl.seatAt,
+          seatAt: sl.seatAt ? 'at ' + L.table.toLowerCase() + ' ' + sl.seatAt : '',
           // A held or working slot says so, and a mobile the guest left rides on
           // the same line, because the reason to have it is to ring it from here.
           note: (live ? (o.items.reduce((n, i) => n + i.qty, 0) + ' \u00d7 ordered \u00b7 ' + ago(o.at))
@@ -12188,6 +13839,7 @@ class Component extends DCLogic {
           parcel: { tag: 'New parcel',  cta: 'Open',  bg: 'linear-gradient(180deg, #ffd08f, #f0a03c)' },
           calls:  { tag: 'Waiter call', cta: 'Go',    bg: 'linear-gradient(180deg, #ff9d7a, #ec7a4a)' },
           ready:  { tag: 'Bag ready',   cta: 'Hand over', bg: 'linear-gradient(180deg, #a8d59a, #74b06a)' },
+          serve:  { tag: 'Ready to serve', cta: 'Carry it', bg: 'linear-gradient(180deg, #a8d59a, #74b06a)' },
         }[a.ch] || {};
         const ch = this.ALERT_CHANNELS().find(c => c.key === a.ch) || {};
         const count = a.ch === 'calls' ? Math.max(1, this.callsOf(a.table || '').length) : (a.count || 1);

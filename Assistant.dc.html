@@ -10,18 +10,42 @@
 <helmet>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,500&display=swap" rel="stylesheet" />
   <style>
+    @keyframes sa-zoom{0%,100%{scale:1}50%{scale:.88}}
+    @keyframes sa-va{0%{transform:rotate(0deg)}100%{transform:rotate(70deg)}}
+    @keyframes sa-vb{0%{transform:rotate(180deg)}100%{transform:rotate(110deg)}}
+    @keyframes sa-bob{0%{translate:0 -8%}100%{translate:0 8%}}
+    @keyframes sa-surge{0%{transform:rotate(0deg)}22%{transform:rotate(130deg)}34%{transform:rotate(150deg)}58%{transform:rotate(250deg)}70%{transform:rotate(262deg)}100%{transform:rotate(360deg)}}
     @keyframes sa-pulse { 0%, 100% { opacity: .35; transform: scale(1) } 50% { opacity: 1; transform: scale(1.35) } }
     @keyframes sa-rise { from { opacity: 0; transform: translateY(6px) } to { opacity: 1; transform: none } }
     @keyframes sa-ring-admin { 0% { box-shadow: 0 0 0 0 rgba(240,160,60,.5) } 100% { box-shadow: 0 0 0 16px rgba(240,160,60,0) } }
+    @keyframes sa-spin { to { transform: rotate(1turn) } }
+    @keyframes sa-wave{0%,100%{transform:translate(0,0) skewX(0deg) scale(1.05)}25%{transform:translate(9%,-7%) skewX(9deg) scale(1.15)}50%{transform:translate(-2%,7%) skewX(-2deg) scale(1.08)}75%{transform:translate(-9%,-5%) skewX(-9deg) scale(1.16)}}
+    @keyframes sa-drift{0%,100%{transform:translate(-16%,5%) scale(1.1)}33%{transform:translate(8%,-8%) scale(1.2)}66%{transform:translate(14%,6%) scale(1.05)}}
+    @keyframes sa-breathe { 0%, 100% { opacity: .55; transform: scale(.85) } 50% { opacity: 1; transform: scale(1.12) } }
+    @keyframes sa-bar { 0%, 100% { transform: scaleY(.3) } 50% { transform: scaleY(1) } }
+    @media (prefers-reduced-motion: reduce) { [data-sa] * { animation: none !important } }
     @keyframes sa-ring-counter { 0% { box-shadow: 0 0 0 0 rgba(200,162,74,.45) } 100% { box-shadow: 0 0 0 16px rgba(200,162,74,0) } }
+  @supports (-webkit-touch-callout: none) { input, textarea, select { font-size: 16px !important; } }
   </style>
 </helmet>
 
 <sc-if value="{{ closed }}" hint-placeholder-val="{{ true }}">
-  <button onClick="{{ open }}" aria-label="Assistant" style="position: fixed; right: 18px; bottom: 18px; z-index: 400; width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center; cursor: pointer; background: {{ c.bub }}; border: 1px solid {{ c.bubEdge }}; box-shadow: 0 10px 30px rgba(0,0,0,.55)">
-    <span style="width: 7px; height: 7px; border-radius: 50%; animation: sa-pulse 2.6s ease-in-out infinite; background: {{ c.acc }}"></span>
+  <button data-sa="" onClick="{{ orbClick }}" onPointerDown="{{ orbDown }}" aria-label="Assistant (drag to move)" style="position: fixed; left: {{ orbL }}; right: {{ orbR }}; bottom: 18px; translate: {{ orbDrag }}; touch-action: none; z-index: 400; width: 66px; height: 66px; border-radius: 50%; display: grid; place-items: center; cursor: pointer; background: transparent; border: none; padding: 0; color: {{ c.ink }}; box-shadow: 0 14px 22px -6px rgba(40,24,4,.55), 0 4px 8px rgba(40,24,4,.3), 0 0 26px rgba(214,165,60,.45); overflow: visible; transition: {{ orbTrans }}" style-hover="transform: translateY(-2px) scale(1.04); box-shadow: 0 16px 34px rgba(90,58,14,.4), 0 0 36px rgba(224,172,64,.62)" style-active="transform: scale(.96)">
+    <span aria-hidden="true" style="position: absolute; inset: 0; border-radius: 50%; overflow: hidden; clip-path: circle(50%); -webkit-mask-image: -webkit-radial-gradient(white, black); transform: translateZ(0); background: #e2b654; isolation: isolate">
+      <span style="position: absolute; inset: -22%; background: url(assets/silk-gold.jpg) center / cover; filter: sepia(.4) contrast(1.3) saturate(1.9) brightness(1); animation: sa-spin 22s linear infinite, sa-bob 3s cubic-bezier(.45,0,.55,1) infinite alternate, sa-zoom 6s cubic-bezier(.45,0,.55,1) infinite"></span>
+      <span style="position: absolute; inset: 0; background: #d4981f; mix-blend-mode: color; opacity: 1"></span>
+      <span style="position: absolute; inset: -22%; background: url(assets/silk-gold.jpg) center / cover; filter: sepia(.4) contrast(1.3) saturate(1.9); mix-blend-mode: soft-light; opacity: .35; animation: sa-wave 3.6s ease-in-out infinite"></span>
+      <span style="position: absolute; inset: -30%; mix-blend-mode: normal; animation: sa-surge 9s cubic-bezier(.45,0,.55,1) infinite"><span style="position: absolute; inset: 0; background: conic-gradient(from -32deg, rgba(200,140,40,0) 0deg, rgba(200,140,40,.35) 14deg, rgba(212,150,40,.9) 28deg, rgba(255,220,130,.75) 36deg, rgba(200,140,40,.35) 50deg, rgba(200,140,40,0) 64deg); filter: blur(7px); animation: sa-va 3.2s cubic-bezier(.45,0,.55,1) infinite alternate"></span><span style="position: absolute; inset: 0; background: conic-gradient(from -32deg, rgba(200,140,40,0) 0deg, rgba(200,140,40,.35) 14deg, rgba(212,150,40,.9) 28deg, rgba(255,220,130,.75) 36deg, rgba(200,140,40,.35) 50deg, rgba(200,140,40,0) 64deg); filter: blur(7px); animation: sa-vb 3.2s cubic-bezier(.45,0,.55,1) infinite alternate"></span></span>
+      <span style="position: absolute; inset: 0; border-radius: 50%; animation: sa-breathe 4.8s cubic-bezier(.45,0,.55,1) infinite; background: radial-gradient(circle at 50% 50%, rgba(255,214,120,.34), rgba(255,214,120,0) 36%)"></span>
+      <span style="position: absolute; inset: 0; border-radius: 50%; background: radial-gradient(circle at 38% 32%, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 42%, rgba(120,72,8,.26) 68%, rgba(96,56,4,.55) 88%, rgba(70,40,2,.75) 100%)"></span>
+      <span data-sa-mid="" style="position: absolute; inset: 0; border-radius: 50%; opacity: .85; background: radial-gradient(circle at 50% 52%, rgba(255,230,160,1) 0%, rgba(236,180,72,.8) 28%, rgba(196,132,30,.4) 50%, rgba(196,132,30,0) 66%), conic-gradient(from 30deg at 50% 52%, rgba(255,240,190,.55), rgba(160,100,20,.5), rgba(255,230,160,.55), rgba(150,92,16,.5), rgba(255,240,190,.55)); -webkit-mask: radial-gradient(circle at 50% 52%, #000 0%, #000 40%, transparent 70%); mask: radial-gradient(circle at 50% 52%, #000 0%, #000 40%, transparent 70%); mix-blend-mode: overlay"></span>
+      <span style="position: absolute; inset: 0; border-radius: 50%; background: radial-gradient(ellipse 58% 30% at 50% 88%, rgba(255,214,130,.55), rgba(255,214,130,0) 70%); mix-blend-mode: screen"></span>
+      <span style="position: absolute; inset: 0; border-radius: 50%; background: radial-gradient(ellipse 62% 40% at 44% 16%, rgba(255,236,170,.6), rgba(255,220,130,.14) 55%, rgba(255,220,130,0) 72%)"></span>
+      <span style="position: absolute; left: 24%; top: 17%; width: 22%; height: 14%; border-radius: 50%; background: radial-gradient(ellipse at center, rgba(255,248,215,.95), rgba(255,236,170,0) 72%); transform: rotate(-28deg); filter: blur(.5px)"></span>
+      <span style="position: absolute; inset: 0; border-radius: 50%; box-shadow: inset -6px -9px 16px rgba(60,34,4,.55), inset 5px 6px 12px rgba(255,240,200,.35), inset 0 0 0 1.5px rgba(196,146,48,.95), inset 0 0 0 2.5px rgba(255,214,120,.5)"></span>
+    </span>
     <sc-if value="{{ unread }}" hint-placeholder-val="{{ false }}">
       <span style="position: absolute; top: 10px; right: 10px; width: 6px; height: 6px; border-radius: 50%; background: {{ c.bad }}"></span>
     </sc-if>
@@ -29,18 +53,18 @@
 </sc-if>
 
 <sc-if value="{{ shown }}" hint-placeholder-val="{{ false }}">
-  <div style="position: fixed; right: 18px; bottom: 18px; z-index: 400; display: flex; flex-direction: column; width: min(380px, calc(100vw - 28px)); max-height: min(640px, calc(100dvh - 36px)); border-radius: 16px; overflow: hidden; animation: sa-rise .18s ease-out; box-shadow: 0 24px 64px rgba(0,0,0,.7); background: {{ c.panel }}; border: 1px solid {{ c.edge }}">
+  <div style="position: {{ pPos }}; right: {{ pEdge }}; bottom: {{ pEdge }}; z-index: {{ pZ }}; display: flex; flex-direction: column; box-sizing: border-box; width: {{ pW }}; height: {{ pH }}; max-height: {{ pMax }}; border-radius: 16px; overflow: hidden; animation: sa-rise .18s ease-out; box-shadow: {{ pShadow }}; background: {{ c.panel }}; border: 1px solid {{ c.edge }}">
 
     <div style="flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 13px 15px; border-bottom: 1px solid {{ c.line }}">
       <div style="display: flex; flex-direction: column; gap: 3px; min-width: 0">
         <div style="font-size: 8px; letter-spacing: .38em; text-transform: uppercase; color: {{ c.dim }}">{{ scopeLabel }}</div>
-        <div style="font-family: 'Cormorant Garamond', serif; font-size: 19px; font-weight: 300; line-height: 1.1; color: {{ c.ink }}">Assistant</div>
+        <div style="display: flex; align-items: center; gap: 9px"><sc-if value="{{ insBulb }}" hint-placeholder-val="{{ false }}"><span style="flex: 0 0 auto; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border-radius: 9px; background: radial-gradient(circle at 50% 40%, rgba(255,214,120,.38), rgba(200,162,74,.12) 70%); color: #ffd678; box-shadow: 0 0 14px -2px rgba(255,200,90,.6)"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="filter: drop-shadow(0 0 4px rgba(255,210,110,.75))"><path d="M12 2.5a6.5 6.5 0 0 0-3.8 11.8c.5.4.8 1 .8 1.6V16h6v-.1c0-.6.3-1.2.8-1.6A6.5 6.5 0 0 0 12 2.5z" fill="rgba(255,214,120,.35)"></path><path d="M9 18h6"></path><path d="M10 21.5h4"></path><path d="M12 6.5a3 3 0 0 0-3 3" stroke="#fff4d6"></path></svg></span></sc-if><sc-if value="{{ ic_hub }}" hint-placeholder-val="{{ false }}"><span style="flex: 0 0 auto; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border-radius: 9px; background: radial-gradient(circle at 50% 40%, rgba(255,214,120,.38), rgba(200,162,74,.12) 70%); color: #ffd678; box-shadow: 0 0 14px -2px rgba(255,200,90,.6)"><svg width="18" height="18" viewBox="2 2 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="filter: drop-shadow(0 0 4px rgba(255,210,110,.75))"><path d="M4.5 8L12 5M4.5 8L12 12M4.5 8L12 19M4.5 16L12 5M4.5 16L12 12M4.5 16L12 19M12 5L19.5 8M12 5L19.5 16M12 12L19.5 8M12 12L19.5 16M12 19L19.5 8M12 19L19.5 16" stroke-width="1" opacity=".6"></path><circle cx="4.5" cy="8" r="1.9" fill="rgba(255,214,120,.45)" stroke-width="1.3"></circle><circle cx="4.5" cy="16" r="1.9" fill="rgba(255,214,120,.45)" stroke-width="1.3"></circle><circle cx="12" cy="5" r="1.9" fill="rgba(255,214,120,.45)" stroke-width="1.3"></circle><circle cx="12" cy="19" r="1.9" fill="rgba(255,214,120,.45)" stroke-width="1.3"></circle><circle cx="19.5" cy="8" r="1.9" fill="rgba(255,214,120,.45)" stroke-width="1.3"></circle><circle cx="19.5" cy="16" r="1.9" fill="rgba(255,214,120,.45)" stroke-width="1.3"></circle><circle cx="12" cy="12" r="2.4" fill="#ffd678" stroke="#fff4d6" stroke-width="1.2"></circle></svg></span></sc-if><sc-if value="{{ ic_studio }}" hint-placeholder-val="{{ false }}"><span style="flex: 0 0 auto; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border-radius: 9px; background: radial-gradient(circle at 50% 40%, rgba(255,214,120,.38), rgba(200,162,74,.12) 70%); color: #ffd678; box-shadow: 0 0 14px -2px rgba(255,200,90,.6)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="filter: drop-shadow(0 0 4px rgba(255,210,110,.75))"><rect x="3" y="3" width="18" height="18" rx="3" fill="rgba(255,214,120,.3)"></rect><circle cx="9" cy="9" r="1.8" stroke="#fff4d6"></circle><path d="M21 15l-5-5L5 21"></path></svg></span></sc-if><span style="font-family: 'Cormorant Garamond', serif; font-size: 19px; font-weight: 300; line-height: 1.1; color: {{ c.ink }}">{{ title }}</span></div>
       </div>
       <div style="display: flex; align-items: center; gap: 6px">
         <sc-if value="{{ engineShown }}" hint-placeholder-val="{{ false }}">
           <span style="font-size: 8px; letter-spacing: .2em; text-transform: uppercase; padding: 4px 7px; border-radius: 6px; color: {{ c.dim }}; border: 1px solid {{ c.edgeSoft }}">{{ engine }}</span>
         </sc-if>
-        <button onClick="{{ close }}" aria-label="Close" style="width: 44px; height: 44px; border-radius: 10px; background: transparent; font-size: 17px; line-height: 1; cursor: pointer; border: 1px solid {{ c.edgeSoft }}; color: {{ c.mut }}">×</button>
+        <sc-if value="{{ closable }}" hint-placeholder-val="{{ true }}"><button onClick="{{ close }}" aria-label="Close" style="width: 44px; height: 44px; border-radius: 10px; background: transparent; font-size: 17px; line-height: 1; cursor: pointer; border: 1px solid {{ c.edgeSoft }}; color: {{ c.mut }}">×</button></sc-if>
       </div>
     </div>
 
@@ -48,7 +72,7 @@
 
       <sc-if value="{{ empty }}" hint-placeholder-val="{{ true }}">
         <div style="display: flex; flex-direction: column; gap: 12px; padding: 8px 2px">
-          <div style="font-size: 12.5px; line-height: 1.6; text-wrap: pretty; color: {{ c.mut }}">Ask about the numbers, or hold the mic and dictate an order in Tamil or Telugu.</div>
+          <div style="font-size: 12.5px; line-height: 1.6; text-wrap: pretty; color: {{ c.mut }}">{{ intro }}</div>
           <div style="display: flex; flex-direction: column; gap: 7px">
             <sc-for list="{{ prompts }}" as="p" hint-placeholder-count="3">
               <button onClick="{{ p.go }}" style="text-align: left; min-height: 44px; padding: 11px; border-radius: 9px; font-size: 11.5px; line-height: 1.45; cursor: pointer; border: 1px solid {{ c.edgeSoft }}; background: {{ c.chip }}; color: {{ c.body }}">{{ p.text }}</button>
@@ -91,11 +115,56 @@
           <sc-if value="{{ kotUnmatched }}" hint-placeholder-val="{{ false }}">
             <div style="font-size: 10.5px; line-height: 1.5; padding: 8px 10px; border-radius: 7px; color: {{ c.warn }}; background: {{ c.warnBg }}">{{ kotWarn }}</div>
           </sc-if>
+          <!-- The chain, spelled out. One press now carries the round as far as
+               it was dictated, so what that press is about to do has to be
+               readable before it happens — not discovered afterwards on the
+               kitchen screen. -->
+          <sc-if value="{{ hasKotSteps }}" hint-placeholder-val="{{ false }}">
+            <div style="display: flex; flex-direction: column; gap: 5px; padding: 9px 10px; border-radius: 9px; background: rgba(255,255,255,.03); border: 1px solid {{ c.edgeSoft }}">
+              <sc-for list="{{ kotSteps }}" as="s" hint-placeholder-count="2">
+                <div style="display: flex; align-items: baseline; gap: 8px">
+                  <span style="flex: 0 0 auto; font-size: 10px; color: {{ c.acc }}">{{ s.mark }}</span>
+                  <span style="flex: 1 1 auto; min-width: 0; font-size: 11px; line-height: 1.45; color: {{ c.body }}">{{ s.text }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
           <div style="display: flex; gap: 7px">
-            <button onClick="{{ kotConfirm }}" style="flex: 1 1 auto; min-height: 44px; padding: 10px; border-radius: 9px; font-size: 9.5px; letter-spacing: .2em; text-transform: uppercase; cursor: pointer; border: 1px solid {{ c.goEdge }}; background: {{ c.go }}; color: {{ c.goInk }}">Send to kitchen</button>
+            <button onClick="{{ kotConfirm }}" style="flex: 1 1 auto; min-height: 44px; padding: 10px; border-radius: 9px; font-size: 9.5px; letter-spacing: .2em; text-transform: uppercase; cursor: pointer; border: 1px solid {{ c.goEdge }}; background: {{ c.go }}; color: {{ c.goInk }}">{{ kotGoLabel }}</button>
             <button onClick="{{ kotDiscard }}" style="flex: 0 0 auto; min-height: 44px; padding: 10px 15px; border-radius: 9px; background: transparent; font-size: 9.5px; letter-spacing: .2em; text-transform: uppercase; cursor: pointer; border: 1px solid {{ c.edgeSoft }}; color: {{ c.mut }}">Discard</button>
           </div>
           <div style="font-size: 9px; letter-spacing: .14em; text-transform: uppercase; color: {{ c.mut }}">{{ kotBy }}</div>
+        </div>
+      </sc-if>
+
+      <!-- Ratings about to be written, and the ticket about to leave the board.
+           Same card, same single press, for the same reason: this one cannot be
+           undone afterwards. -->
+      <sc-if value="{{ hasClose }}" hint-placeholder-val="{{ false }}">
+        <div style="display: flex; flex-direction: column; gap: 11px; padding: 13px; border-radius: 12px; background: {{ c.chip }}; border: 1px solid {{ c.tintEdge }}">
+          <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 10px">
+            <div style="font-size: 8px; letter-spacing: .3em; text-transform: uppercase; color: {{ c.dim }}">Rate and close</div>
+            <div style="font-size: 11px; color: {{ c.body }}">{{ closeWhich }}</div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 7px">
+            <sc-for list="{{ closeRows }}" as="r" hint-placeholder-count="2">
+              <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 10px">
+                <span style="flex: 1 1 auto; min-width: 0; font-size: 12.5px; line-height: 1.4; color: {{ c.ink }}">{{ r.name }}</span>
+                <span style="flex: 0 0 auto; font-size: 12px; letter-spacing: .1em; color: {{ c.acc }}">{{ r.stars }}</span>
+              </div>
+            </sc-for>
+            <sc-if value="{{ hasCloseSvc }}" hint-placeholder-val="{{ false }}">
+              <div style="padding-top: 6px; border-top: 1px solid {{ c.edgeSoft }}; font-size: 11.5px; letter-spacing: .08em; color: {{ c.body }}">{{ closeSvc }}</div>
+            </sc-if>
+          </div>
+          <sc-if value="{{ closeUnnamed }}" hint-placeholder-val="{{ false }}">
+            <div style="font-size: 10.5px; line-height: 1.5; padding: 8px 10px; border-radius: 7px; color: {{ c.warn }}; background: {{ c.warnBg }}">{{ closeWarn }}</div>
+          </sc-if>
+          <div style="display: flex; gap: 7px">
+            <button onClick="{{ closeConfirm }}" style="flex: 1 1 auto; min-height: 44px; padding: 10px; border-radius: 9px; font-size: 9.5px; letter-spacing: .2em; text-transform: uppercase; cursor: pointer; border: 1px solid {{ c.goEdge }}; background: {{ c.go }}; color: {{ c.goInk }}">{{ closeGoLabel }}</button>
+            <button onClick="{{ closeDiscard }}" style="flex: 0 0 auto; min-height: 44px; padding: 10px 15px; border-radius: 9px; background: transparent; font-size: 9.5px; letter-spacing: .2em; text-transform: uppercase; cursor: pointer; border: 1px solid {{ c.edgeSoft }}; color: {{ c.mut }}">Discard</button>
+          </div>
+          <div style="font-size: 9px; letter-spacing: .14em; text-transform: uppercase; color: {{ c.mut }}">{{ closeBy }}</div>
         </div>
       </sc-if>
 
@@ -105,8 +174,27 @@
     </div>
 
     <div style="flex: 0 0 auto; display: flex; align-items: flex-end; gap: 8px; padding: 11px; border-top: 1px solid {{ c.line }}">
-      <button onPointerDown="{{ micDown }}" onPointerUp="{{ micUp }}" onPointerLeave="{{ micUp }}" aria-label="Hold to talk" style="flex: 0 0 auto; width: 44px; height: 44px; border-radius: 11px; display: grid; place-items: center; cursor: pointer; border: 1px solid {{ micEdge }}; background: {{ micBg }}; animation: {{ micAnim }}">
-        <span style="width: 10px; height: 14px; border-radius: 5px 5px 4px 4px; background: {{ micInk }}"></span>
+      <button onClick="{{ micTap }}" data-sa="" aria-label="{{ micLabel }}" style="flex: 0 0 auto; position: relative; width: 78px; height: 44px; border-radius: 22px; display: grid; place-items: center; cursor: pointer; touch-action: none; user-select: none; border: none; padding: 0; background: transparent; box-shadow: 0 8px 16px -6px rgba(40,24,4,.55), 0 0 18px rgba(214,165,60,.35); animation: {{ micAnim }}; transition: transform .16s cubic-bezier(.2,.8,.2,1)" style-hover="transform: translateY(-1px)" style-active="transform: scale(.94)">
+        <span aria-hidden="true" style="position: absolute; inset: 0; border-radius: 22px; overflow: hidden; clip-path: inset(0 round 22px); -webkit-mask-image: -webkit-radial-gradient(white, black); transform: translateZ(0); background: #e2b654; isolation: isolate">
+          <span style="position: absolute; inset: -40% -22%; background: url(assets/silk-gold.jpg) center / cover; filter: sepia(.4) contrast(1.3) saturate(1.9); animation: sa-wave 3.6s ease-in-out infinite, sa-bob 3s cubic-bezier(.45,0,.55,1) infinite alternate, sa-zoom 6s cubic-bezier(.45,0,.55,1) infinite; animation-play-state: {{ micPlay }}"></span>
+          <span style="position: absolute; inset: 0; background: #d4981f; mix-blend-mode: color"></span>
+          <span style="position: absolute; inset: -60% -30%; animation: sa-drift 2.8s ease-in-out infinite; animation-play-state: {{ micPlay }}"><span style="position: absolute; inset: 0; background: conic-gradient(from -32deg, rgba(200,140,40,0) 0deg, rgba(212,150,40,.9) 28deg, rgba(255,220,130,.75) 36deg, rgba(200,140,40,0) 64deg); filter: blur(7px); animation: sa-va 3.2s cubic-bezier(.45,0,.55,1) infinite alternate; animation-play-state: {{ micPlay }}"></span></span>
+          <span style="position: absolute; inset: 0; background: linear-gradient(180deg, rgba(60,34,4,.7) 0%, rgba(60,34,4,.35) 45%, rgba(60,34,4,0) 70%)"></span>
+          <span style="position: absolute; inset: 0; background: radial-gradient(ellipse 70% 45% at 50% 100%, rgba(255,226,150,.8), rgba(255,214,130,0) 75%); mix-blend-mode: screen; animation: sa-breathe 4.8s cubic-bezier(.45,0,.55,1) infinite; animation-play-state: {{ micPlay }}"></span>
+          <span style="position: absolute; inset: -20% -10%; background: url(assets/silk-gold.jpg) center / cover; filter: sepia(.3) contrast(1.4) saturate(2) brightness(1.15); mix-blend-mode: screen; opacity: .85; -webkit-mask-image: radial-gradient(ellipse 55% 60% at 50% 50%, #000 30%, transparent 75%); mask-image: radial-gradient(ellipse 55% 60% at 50% 50%, #000 30%, transparent 75%); animation: sa-drift 2.8s ease-in-out infinite reverse; animation-play-state: {{ micPlay }}"></span>
+          <span style="position: absolute; inset: 0; border-radius: inherit; box-shadow: inset 0 -5px 10px rgba(255,236,170,.35), inset 0 0 0 1.5px rgba(196,146,48,.95), inset 0 0 0 2.5px rgba(255,214,120,.4)"></span>
+        </span>
+        <sc-if value="{{ micRec }}" hint-placeholder-val="{{ false }}">
+          <span style="position: relative; display: flex; align-items: center; gap: 2.5px; height: 16px; --sa-bar: #fff4d6">
+            <span style="width: 3px; height: 7px; border-radius: 2px; transform-origin: center; animation: sa-bar 0.8s cubic-bezier(.45,0,.55,1) 0s infinite; background: #fff4d6"></span>
+      <span style="width: 3px; height: 13px; border-radius: 2px; transform-origin: center; animation: sa-bar 0.8s cubic-bezier(.45,0,.55,1) -0.16s infinite; background: #fff4d6"></span>
+      <span style="width: 3px; height: 16px; border-radius: 2px; transform-origin: center; animation: sa-bar 0.8s cubic-bezier(.45,0,.55,1) -0.32s infinite; background: #fff4d6"></span>
+      <span style="width: 3px; height: 10px; border-radius: 2px; transform-origin: center; animation: sa-bar 0.8s cubic-bezier(.45,0,.55,1) -0.48s infinite; background: #fff4d6"></span>
+          </span>
+        </sc-if>
+        <sc-if value="{{ micIdle }}" hint-placeholder-val="{{ true }}">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff4d6" style="position: relative; filter: drop-shadow(0 1px 2px rgba(40,24,4,.6))" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5.5 11a6.5 6.5 0 0 0 13 0"></path><path d="M12 17.5V21"></path></svg>
+        </sc-if>
       </button>
       <textarea ref="{{ inputRef }}" value="{{ draft }}" onChange="{{ onDraft }}" onKeyDown="{{ onKey }}" rows="1" placeholder="{{ placeholder }}" style="flex: 1 1 auto; box-sizing: border-box; resize: none; min-height: 44px; max-height: 96px; padding: 12px; border-radius: 11px; font-family: inherit; font-size: 12.5px; line-height: 1.45; outline: none; background: rgba(0,0,0,.35); border: 1px solid {{ c.fieldEdge }}; color: {{ c.ink }}"></textarea>
       <button onClick="{{ send }}" aria-label="Send" style="flex: 0 0 auto; width: 44px; height: 44px; border-radius: 11px; display: grid; place-items: center; font-size: 16px; line-height: 1; cursor: pointer; border: 1px solid {{ c.tintEdge }}; background: {{ c.tint }}; color: {{ c.acc }}">↑</button>
@@ -135,11 +223,22 @@
   &quot;apiBase&quot;: { &quot;editor&quot;: &quot;text&quot;, &quot;default&quot;: &quot;&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Placement&quot; },
   &quot;staff&quot;: { &quot;editor&quot;: &quot;text&quot;, &quot;default&quot;: &quot;&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Placement&quot; },
   &quot;tables&quot;: { &quot;editor&quot;: &quot;int&quot;, &quot;default&quot;: 0, &quot;tsType&quot;: &quot;number&quot;, &quot;section&quot;: &quot;Placement&quot; },
+  &quot;desk&quot;: { &quot;editor&quot;: &quot;text&quot;, &quot;default&quot;: &quot;&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Desk&quot; },
+  &quot;title&quot;: { &quot;editor&quot;: &quot;text&quot;, &quot;default&quot;: &quot;Assistant&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Desk&quot; },
+  &quot;hideOrb&quot;: { &quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: false, &quot;tsType&quot;: &quot;boolean&quot;, &quot;section&quot;: &quot;Desk&quot; },
+  &quot;label&quot;: { &quot;editor&quot;: null, &quot;tsType&quot;: &quot;string&quot; },
+  &quot;intro&quot;: { &quot;editor&quot;: null, &quot;tsType&quot;: &quot;string&quot; },
+  &quot;placeholder&quot;: { &quot;editor&quot;: null, &quot;tsType&quot;: &quot;string&quot; },
+  &quot;height&quot;: { &quot;editor&quot;: null, &quot;tsType&quot;: &quot;string&quot; },
+  &quot;seeds&quot;: { &quot;editor&quot;: null, &quot;tsType&quot;: &quot;string[]&quot; },
+  &quot;brief&quot;: { &quot;editor&quot;: null, &quot;tsType&quot;: &quot;string | (() =&gt; string)&quot; },
   &quot;sb&quot;: { &quot;editor&quot;: null, &quot;tsType&quot;: &quot;SupabaseClient | null&quot; },
   &quot;rid&quot;: { &quot;editor&quot;: null, &quot;tsType&quot;: &quot;string&quot; },
   &quot;groqKey&quot;: { &quot;editor&quot;: null, &quot;tsType&quot;: &quot;string&quot; },
   &quot;geminiKey&quot;: { &quot;editor&quot;: null, &quot;tsType&quot;: &quot;string&quot; },
-  &quot;onKot&quot;: { &quot;editor&quot;: null, &quot;tsType&quot;: &quot;(ticket: { table: string; items: { name: string; qty: number; note?: string }[]; staff: string }) =&gt; void&quot; }
+  &quot;floor&quot;: { &quot;editor&quot;: null, &quot;tsType&quot;: &quot;() =&gt; { tables?: number; orders: { order: number; table: string; kind: string; openedMinsAgo: number; items: { name: string; qty: number; note?: string; out: string }[] }[] } | null&quot; },
+  &quot;onKot&quot;: { &quot;editor&quot;: null, &quot;tsType&quot;: &quot;(ticket: { table: string; items: { name: string; qty: number; note?: string }[]; staff: string }) =&amp;gt; void&quot; },
+  &quot;onRate&quot;: { &quot;editor&quot;: null, &quot;tsType&quot;: &quot;(close: { order: number | null; table: string; dishes: { name: string; stars: number }[]; service: number | null; staff: string }) =&amp;gt; void | string | Promise&amp;lt;string&amp;gt;&quot; }
 }">
 // The assistant that follows staff around the admin panel and the counter.
 //
@@ -153,8 +252,8 @@
 //
 // Voice is push-to-talk, not continuous: MediaRecorder while the button is
 // held, one round trip on release. Gemini hears it, the chat model answers,
-// Qwen puts the answer back into the speaker's language, and the browser
-// speaks it.
+// Gemini puts the answer back into the speaker's language and reads it aloud.
+// Qwen and the browser voice are the fallbacks under those last two steps.
 
 // The two screens this mounts on do not share a palette, and a persistent
 // floating panel in the wrong gold reads as something bolted on. Counter is
@@ -215,13 +314,15 @@ const PHASE = {
   dishRatings: 'Reading the ratings',
   kitchenBottlenecks: 'Reading the kitchen',
   sellouts: 'Reading the sell-outs',
+  dishesOff: 'Reading what is off',
+  menu: 'Reading the menu',
   daypartMix: 'Reading the hours',
 };
 
 class Component extends DCLogic {
   state = {
-    open: false, log: [], draft: '', busy: false, phase: '',
-    kot: null, note: '', lang: 'ta', rec: false, engine: '', unread: false,
+    open: false, log: [], draft: '', busy: false, phase: '', orbSide: (() => { try { return localStorage.getItem('sa-orb-side') || 'right'; } catch (_) { return 'right'; } })(), orbDrag: '0px 0px', orbDragging: false,
+    kot: null, close: null, note: '', lang: 'ta', rec: false, engine: '', unread: false,
   };
 
   cfg() { return (typeof window !== 'undefined' && window.SULTHANS_CONFIG) || {}; }
@@ -262,6 +363,13 @@ class Component extends DCLogic {
   }
 
   scope() { return this.props.scope === 'counter' ? 'counter' : 'admin'; }
+  /* Desk mode: mounted inline inside one AI Engine section, always open, no
+     orb, with that section's own brief and starter questions. */
+  desk() { return this.props.desk || ''; }
+  brief() {
+    const b = typeof this.props.brief === 'function' ? this.props.brief() : this.props.brief;
+    return b ? '\n\nTHIS DESK\n' + b : '';
+  }
   skin() { return SKIN[this.scope()]; }
 
   // Who a dictated ticket is credited to. The counter already signs staff in
@@ -273,7 +381,7 @@ class Component extends DCLogic {
   componentWillUnmount() {
     this._mounted = false;
     this.stopRec();
-    try { window.speechSynthesis.cancel(); } catch (e) {}
+    this.stopAudio();
   }
 
   scrollLog() {
@@ -314,7 +422,7 @@ class Component extends DCLogic {
 
     this.push('you', text);
     this.push('agent', '');
-    this.setState({ busy: true, draft: '', phase: 'thinking', note: '', kot: null });
+    this.setState({ busy: true, draft: '', phase: 'thinking', note: '', kot: null, close: null });
 
     const msgs = this.state.log
       .filter(m => m.text)
@@ -325,7 +433,9 @@ class Component extends DCLogic {
     if (mode === 'direct') {
       reply = await this.askDirect(msgs);
     } else {
-      const body = JSON.stringify({ messages: msgs });
+      // ponytail: the server route has no desk field, so the brief rides as the opening turn.
+      const b = this.brief();
+      const body = JSON.stringify({ messages: b ? [{ role: 'user', content: b.trim() }, { role: 'assistant', content: 'Understood.' }, ...msgs] : msgs, scope: this.scope() });
       try {
         reply = await this.stream(body, false);
       } catch (e) {
@@ -340,7 +450,7 @@ class Component extends DCLogic {
     }
 
     this.setState({ busy: false, phase: '' });
-    if (reply) this.takeKot(reply);
+    if (reply) { this.takeKot(reply); this.takeClose(reply); }
     return reply;
   }
 
@@ -364,7 +474,14 @@ class Component extends DCLogic {
         geminiKey: this.geminiKey(),
         sb,
         rid: this.rid(),
-        system: systemPrompt({ scope: this.scope(), tables: this.props.tables }),
+        system: systemPrompt({ scope: this.scope(), tables: this.props.tables }) + this.brief(),
+        /* Also passed on its own, not only baked into the prompt: outside the
+           counter the money tools are cut from the wire and the rupees are
+           stripped from what is left, which a prompt line alone cannot do. */
+        scope: this.scope(),
+        /* The live board is this page's own state, not a table, so the tool for
+           it reads through here rather than through the database. */
+        ctx: { floor: () => (typeof this.props.floor === 'function' ? this.props.floor() : null) },
         messages,
         onPhase: p => { if (this._mounted) this.setState({ phase: p }); },
       });
@@ -403,8 +520,9 @@ class Component extends DCLogic {
     return out;
   }
 
-  // The kot block is machinery, not conversation — strip it from the bubble.
-  visible(t) { return t.replace(/```kot[\s\S]*$/, '').trim(); }
+  // The kot and close blocks are machinery, not conversation — strip them from
+  // the bubble.
+  visible(t) { return t.replace(/```(?:kot|close)[\s\S]*$/, '').trim(); }
 
   takeKot(raw) {
     const m = raw.match(/```kot\s*([\s\S]*?)```/);
@@ -412,12 +530,80 @@ class Component extends DCLogic {
     try {
       const k = JSON.parse(m[1]);
       const items = (k.items || []).filter(i => i && i.name);
-      if (items.length) this.setState({ kot: { table: k.table || '', items } });
+      /* How far the round was dictated. Kept in the order the counter performs
+         them and filtered to the four that exist, because an invented step is
+         a press nobody can undo. */
+      const order = ['send', 'authorise', 'first', 'hold'];
+      const asked = (Array.isArray(k.steps) ? k.steps : [])
+        .map(s => String(s || '').toLowerCase().trim())
+        .map(s => s === 'approve' || s === 'authorize' ? 'authorise'
+          : s === 'rush' || s === 'priority' ? 'first'
+          : s === 'punch' || s === 'kitchen' ? 'send' : s);
+      const steps = order.filter(s => asked.indexOf(s) >= 0);
+      /* Authorising or rushing means the ticket has to exist first. Staff say
+         "push it to the kitchen" and mean the whole chain, so the send is
+         implied rather than refused. */
+      if (steps.length && steps.indexOf('send') < 0) steps.unshift('send');
+      if (items.length) this.setState({ kot: { table: k.table || '', items, steps } });
     } catch (e) {
       // A malformed block is a misheard order, so it must not become a silent
       // no-op: staff are told to type it rather than left waiting.
       this.setState({ note: 'Could not read that order back. Please enter it on the order screen.' });
     }
+  }
+
+  /* Rating and closing a ticket, spoken. Same shape as the kot block and the
+     same reason for existing: the board's own rate button is one sheet per
+     dish, and a table of six is six sheets. This only ever builds the confirm
+     card — a closed ticket is off the board for good, so the press is not
+     optional. */
+  takeClose(raw) {
+    const m = raw.match(/```close\s*([\s\S]*?)```/);
+    if (!m) return;
+    const star = v => {
+      const n = Math.round(Number(v));
+      return n >= 1 && n <= 5 ? n : 0;
+    };
+    try {
+      const k = JSON.parse(m[1]);
+      const dishes = (Array.isArray(k.dishes) ? k.dishes : [])
+        .map(d => ({ name: String((d && d.name) || '').trim(), stars: star(d && d.stars) }))
+        .filter(d => d.name && d.stars);
+      const service = star(k.service);
+      if (!dishes.length && !service) return;
+      this.setState({
+        close: {
+          order: Number(k.order) >= 1 ? Number(k.order) : null,
+          table: k.table == null ? '' : String(k.table).trim(),
+          dishes,
+          service: service || null,
+        },
+      });
+    } catch (e) {
+      this.setState({ note: 'Could not read those ratings back. Close the table on the board instead.' });
+    }
+  }
+
+  // ---- close handoff ----
+  fireClose() {
+    const c = this.state.close;
+    if (!c) return;
+    if (typeof this.props.onRate !== 'function') {
+      this.setState({ close: null, note: 'Not connected to the order board here — close it on that screen.' });
+      return;
+    }
+    const which = c.table ? 'Table ' + c.table : c.order ? 'ticket ' + c.order : 'that ticket';
+    this.setState({ close: null, note: '' });
+    this.push('agent', 'Recording ' + c.dishes.length
+      + (c.dishes.length === 1 ? ' rating' : ' ratings')
+      + (c.service ? ' and the service rating' : '')
+      + ', then closing ' + which.charAt(0).toLowerCase() + which.slice(1) + '.');
+    /* What the board decides is what the transcript has to end up saying, so
+       the sentence above is replaced by whatever comes back. */
+    Promise.resolve(this.props.onRate({ ...c, staff: this.staff(), at: Date.now() })).then(
+      r => { if (r) this.patchLast(String(r)); },
+      () => {},
+    );
   }
 
   // ---- voice ----
@@ -438,8 +624,33 @@ class Component extends DCLogic {
       rec.start();
       this.setState({ rec: true, note: '' });
     } catch (e) {
-      this.setState({ note: 'No microphone access. Type instead.' });
+      this.setState({ note: this.micNote(e) });
     }
+  }
+
+  // Why the mic did not open. One line covered four unrelated causes and named
+  // none of them, so staff kept tapping a button that was never going to work.
+  // The common one on a phone is not permission at all: inside a preview or
+  // embedded frame the browser refuses the mic outright, however many times
+  // access is granted, and the only fix is to open the app in its own tab.
+  micNote(e) {
+    const name = (e && e.name) || '';
+    let framed = false;
+    try { framed = window.self !== window.top; } catch (err) { framed = true; }
+
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.MediaRecorder) {
+      return window.isSecureContext === false
+        ? 'Voice needs a secure (https) page. Type instead.'
+        : 'This browser cannot record audio. Type instead.';
+    }
+    if (name === 'NotAllowedError' || name === 'SecurityError') {
+      return framed
+        ? 'The preview frame blocks the microphone. Open the app in its own tab to dictate.'
+        : 'Microphone permission was refused. Allow it for this site, then tap the mic again.';
+    }
+    if (name === 'NotFoundError' || name === 'OverconstrainedError') return 'No microphone on this device. Type instead.';
+    if (name === 'NotReadableError' || name === 'AbortError') return 'The microphone is in use by another app. Close it and try again.';
+    return 'Could not start the microphone. ' + String((e && e.message) || 'Type instead.');
   }
 
   micUp() { this.stopRec(); }
@@ -503,8 +714,14 @@ class Component extends DCLogic {
     });
   }
 
+  // Speaking the reply. Two steps, both Gemini in direct mode: it writes the
+  // native wording, then it reads that wording aloud. The browser's own voice
+  // is the floor under both — on most of these phones it has no Tamil or
+  // Telugu voice at all and reads the script with an English one, so it is
+  // what you get when Gemini is unavailable, not what you get by default.
   async say(text, lang) {
-    if (!text || !window.speechSynthesis) return;
+    this.stopAudio();
+    if (!text) return;
     let spoken = text;
     if (lang && lang !== 'en') {
       try {
@@ -520,13 +737,52 @@ class Component extends DCLogic {
           if (d.spoken) spoken = d.spoken;
         }
       } catch (e) { /* English aloud beats silence */ }
+
+      if (this.mode() === 'direct' && this.geminiKey()) {
+        try {
+          const { nativeAudio } = await this.mod();
+          const wav = await nativeAudio(this.geminiKey(), spoken, lang);
+          if (wav && (await this.playAudio(wav))) return;
+        } catch (e) { /* fall through to the browser voice */ }
+      }
     }
+    if (!window.speechSynthesis) return;
     try {
       const u = new SpeechSynthesisUtterance(spoken);
       u.lang = { ta: 'ta-IN', te: 'te-IN', en: 'en-IN' }[lang] || 'en-IN';
       window.speechSynthesis.cancel();
+      u.onend = u.onerror = () => { if (this._mounted) this.setState({ talk: false }); };
+      this.setState({ talk: true });
       window.speechSynthesis.speak(u);
     } catch (e) {}
+  }
+
+  // iOS will reject play() when it decides the gesture that started this has
+  // expired, which is why this reports success rather than assuming it: a
+  // rejection sends the caller to the browser voice instead of silence.
+  async playAudio(blob) {
+    let url = '';
+    try {
+      url = URL.createObjectURL(blob);
+      const a = new Audio(url);
+      a.onended = () => { URL.revokeObjectURL(url); if (this._audio === a) { this._audio = null; this.setState({ talk: false }); } };
+      this._audio = a;
+      this.setState({ talk: true });
+      await a.play();
+      return true;
+    } catch (e) {
+      if (url) URL.revokeObjectURL(url);
+      this._audio = null;
+      return false;
+    }
+  }
+
+  stopAudio() {
+    const a = this._audio;
+    this._audio = null;
+    if (a) { try { a.pause(); } catch (e) {} }
+    try { window.speechSynthesis.cancel(); } catch (e) {}
+    if (this._mounted && this.state.talk) this.setState({ talk: false });
   }
 
   // ---- kot handoff ----
@@ -538,12 +794,44 @@ class Component extends DCLogic {
     if (!k) return;
     const ticket = { ...k, staff: this.staff(), dictated: true, at: Date.now() };
     if (typeof this.props.onKot === 'function') {
-      this.props.onKot(ticket);
+      /* The panel does not own the order store, so it does not get to say what
+         happened to the round. It says what it is handing over and then waits:
+         the order screen refuses for reasons only it can see — a dish marked off
+         while the round was being dictated, a table claimed in between, a bag
+         with money owed — and it reports back. A "Done:" written here from the
+         dictated steps alone read as food in the kitchen on every one of those
+         paths. */
       this.setState({ kot: null, note: '' });
-      this.push('agent', 'Sent to the order screen.');
+      this.push('agent', this.chainWords(k.steps, ticket.table));
+      Promise.resolve(this.props.onKot(ticket)).then(
+        r => { if (r) this.patchLast(String(r)); },
+        () => {},
+      );
     } else {
       this.setState({ kot: null, note: 'Not connected to the order screen yet — enter it there.' });
     }
+  }
+
+  /* The dictated chain in words, used twice: on the card before the press and
+     in the transcript after it. One list, so the two can never disagree. */
+  chainLines(steps) {
+    const has = s => (steps || []).indexOf(s) >= 0;
+    const out = [];
+    if (has('send')) out.push('Put the round on the ticket');
+    if (has('authorise')) out.push('Authorise it \u00b7 push to the kitchen screen');
+    if (has('first')) out.push('Mark every dish cook first');
+    if (has('hold')) out.push('Park it on hold');
+    return out;
+  }
+  /* Forward-looking, because nothing has happened yet when this is written. The
+     order screen overwrites it with what it did. */
+  chainWords(steps, table) {
+    const lines = this.chainLines(steps);
+    if (!lines.length) return 'Handed to the order screen.';
+    const where = table ? ' to table ' + table : '';
+    // "Sending" already says the first step, so only the rest are named.
+    const rest = lines.slice(1).join(', ').toLowerCase();
+    return 'Sending' + where + (rest ? ' \u2014 ' + rest : '') + '.';
   }
 
   renderVals() {
@@ -551,6 +839,7 @@ class Component extends DCLogic {
     const scope = this.scope();
     const c = this.skin();
     const kot = st.kot;
+    const desk = this.desk();
 
     const ROLE = {
       you: { align: 'flex-end', who: 'You', ink: c.ink, bg: c.mine, edge: c.mineEdge, label: c.dim },
@@ -564,24 +853,60 @@ class Component extends DCLogic {
     const SEEDS = scope === 'counter'
       ? ['Which dishes are slow or badly rated?', 'Table 7 wants two chicken biryani, less spicy', 'Which dishes ran out today?']
       : direct
-        ? ['Which dishes are slow or badly rated?', 'How did the week trade?', 'Where is the kitchen losing time?']
+        /* No takings seed off the counter — the figure is not readable here,
+           so offering the question only tees up a refusal. */
+        ? ['Which dishes are slow or badly rated?', 'Which dishes ran out this week?', 'Where is the kitchen losing time?']
         : ['How did the week trade?', 'Which dishes are rated badly but selling?', 'Work out the margin across the whole menu this month'];
 
     return {
       c,
-      closed: !st.open,
-      shown: st.open,
+      closed: !st.open && !desk && !this.props.hideOrb,
+      shown: st.open || !!desk,
+      pPos: desk ? 'relative' : 'fixed', pEdge: desk ? 'auto' : '18px', pZ: desk ? 'auto' : '400',
+      pW: desk ? '100%' : 'min(380px, calc(100vw - 28px))', pH: desk ? (this.props.height || '520px') : 'auto',
+      pMax: desk ? 'none' : 'min(640px, calc(100dvh - 36px))', pShadow: desk ? 'none' : '0 24px 64px rgba(0,0,0,.7)',
+      title: this.props.title || 'Assistant', closable: !desk,
+      intro: this.props.intro || 'Ask about the numbers, or hold the mic and dictate an order in Tamil or Telugu.',
       unread: st.unread,
       open: () => this.setState({ open: true, unread: false }),
-      close: () => { this.stopRec(); try { window.speechSynthesis.cancel(); } catch (e) {} this.setState({ open: false }); },
+      orbL: this.state.orbSide === 'left' ? '18px' : 'auto',
+      orbR: this.state.orbSide === 'left' ? 'auto' : '18px',
+      orbDrag: this.state.orbDrag || '0px 0px',
+      orbTrans: this.state.orbDragging ? 'none' : 'translate .45s cubic-bezier(.2,.8,.2,1), transform .18s cubic-bezier(.2,.8,.2,1), box-shadow .18s cubic-bezier(.2,.8,.2,1)',
+      orbClick: () => { if (this._drag && this._drag.moved) { this._drag = null; return; } this.setState({ open: true, unread: false }); },
+      orbDown: (e) => {
+        if (e.button > 0) return;
+        const el = e.currentTarget, d = this._drag = { x: e.clientX, y: e.clientY, moved: false };
+        const mv = (ev) => {
+          const dx = ev.clientX - d.x, dy = Math.min(0, ev.clientY - d.y);
+          if (!d.moved && Math.hypot(dx, dy) < 6) return;
+          d.moved = true;
+          this.setState({ orbDragging: true, orbDrag: dx + 'px ' + dy + 'px' });
+        };
+        const up = (ev) => {
+          window.removeEventListener('pointermove', mv);
+          window.removeEventListener('pointerup', up);
+          if (!d.moved) return;
+          const r = el.getBoundingClientRect(), side = ev.clientX < innerWidth / 2 ? 'left' : 'right';
+          const base = side === 'left' ? 18 : innerWidth - 18 - r.width;
+          const dy = Math.min(0, ev.clientY - d.y);
+          try { localStorage.setItem('sa-orb-side', side); } catch (_) {}
+          this.setState({ orbSide: side, orbDrag: (r.left - base) + 'px ' + dy + 'px' }, () =>
+            requestAnimationFrame(() => requestAnimationFrame(() => this.setState({ orbDragging: false, orbDrag: '0px 0px' }))));
+        };
+        window.addEventListener('pointermove', mv);
+        window.addEventListener('pointerup', up);
+      },
+      close: () => { this.stopRec(); this.stopAudio(); this.setState({ open: false }); },
 
-      scopeLabel: scope === 'counter' ? "Sulthan's · Counter" : "Sulthan's · Service desk",
+      insBulb: desk === 'insights', ic_hub: desk === 'hub', ic_studio: desk === 'studio',
+      scopeLabel: desk && this.props.label ? this.props.label : scope === 'counter' ? "Sulthan's · Counter" : "Sulthan's · Service desk",
       engine: st.engine === 'whisper' ? 'whisper' : '8B',
       engineShown: !!st.engine,
 
       log: st.log.filter(m => m.text).map(m => ({ ...ROLE[m.role], text: m.text })),
       empty: !st.log.some(m => m.text),
-      prompts: SEEDS.map(text => ({ text, go: () => this.ask(text) })),
+      prompts: (Array.isArray(this.props.seeds) && this.props.seeds.length ? this.props.seeds : SEEDS).map(text => ({ text, go: () => this.ask(text) })),
 
       thinking: st.busy,
       thinkingLabel: PHASE[st.phase] || (st.phase ? 'Reading the numbers' : 'Working'),
@@ -589,7 +914,7 @@ class Component extends DCLogic {
       logRef: el => { this._log = el; },
       inputRef: el => { this._input = el; },
       draft: st.draft,
-      placeholder: scope === 'counter' ? 'Ask, or dictate an order' : 'Ask about the business',
+      placeholder: this.props.placeholder ? this.props.placeholder : scope === 'counter' ? 'Ask, or dictate an order' : 'Ask about the business',
       onDraft: e => this.setState({ draft: e.target.value }),
       onKey: e => {
         if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); this.ask(st.draft); }
@@ -598,10 +923,15 @@ class Component extends DCLogic {
 
       micDown: () => this.micDown(),
       micUp: () => this.micUp(),
+      micTap: () => (st.rec ? this.stopRec() : this.micDown()),
+      micLabel: st.rec ? 'Stop voice chat' : 'Tap to talk',
+      micPlay: (st.rec || st.talk) ? 'running' : 'paused',
       micEdge: st.rec ? c.tintEdge : c.fieldEdge,
       micBg: st.rec ? c.tint : 'rgba(0,0,0,.35)',
       micInk: st.rec ? c.acc : c.mut,
       micAnim: st.rec ? c.ring : 'none',
+      micRec: !!(st.rec || st.talk),
+      micIdle: !(st.rec || st.talk),
 
       langShown: !st.log.length || st.rec,
       langs: [['ta', 'Tamil'], ['te', 'Telugu'], ['en', 'English']].map(([k, label]) => ({
@@ -626,9 +956,44 @@ class Component extends DCLogic {
       // thing standing between that and the kitchen.
       kotUnmatched: !!(kot && !kot.table),
       kotWarn: 'No table number was heard. Check it before sending.',
+      /* Steps are what this press will carry out, not a second confirmation:
+         staff dictated them, and re-asking for each one turns a spoken sentence
+         back into four taps. */
+      hasKotSteps: !!(kot && this.chainLines(kot.steps).length),
+      kotSteps: kot ? this.chainLines(kot.steps).map((text, n) => ({ mark: (n + 1) + '.', text })) : [],
+      /* The label has to match the last thing the press does, or it reads as a
+         send that mysteriously also rushed the ticket. */
+      kotGoLabel: !(kot && (kot.steps || []).length) ? 'Send to kitchen'
+        : (kot.steps.indexOf('first') >= 0 ? 'Send, authorise, cook first'
+          : kot.steps.indexOf('hold') >= 0 ? 'Send and hold'
+          : kot.steps.indexOf('authorise') >= 0 ? 'Send and authorise' : 'Send to kitchen'),
       kotBy: this.staff() ? 'Dictated · ' + this.staff() : 'Dictated · no staff signed in',
       kotConfirm: () => this.fireKot(),
       kotDiscard: () => this.setState({ kot: null }),
+
+      hasClose: !!st.close,
+      closeWhich: st.close
+        ? (st.close.table ? 'Table ' + st.close.table
+          : st.close.order ? 'Board ticket ' + st.close.order : 'Ticket not named')
+        : '',
+      closeRows: st.close
+        ? st.close.dishes.map(d => ({
+            name: d.name,
+            /* Stars, not a numeral: the row is read at arm's length at the pass
+               and a miscounted 4 for 5 is the whole point of the card. */
+            stars: '\u2605'.repeat(d.stars) + '\u2606'.repeat(5 - d.stars),
+          }))
+        : [],
+      hasCloseSvc: !!(st.close && st.close.service),
+      closeSvc: st.close && st.close.service
+        ? 'Service  ' + '\u2605'.repeat(st.close.service) + '\u2606'.repeat(5 - st.close.service)
+        : '',
+      closeWarn: 'No ticket was named. Check the board number before closing.',
+      closeUnnamed: !!(st.close && !st.close.table && !st.close.order),
+      closeGoLabel: 'Record and close',
+      closeConfirm: () => this.fireClose(),
+      closeDiscard: () => this.setState({ close: null }),
+      closeBy: this.staff() ? 'Dictated \u00b7 ' + this.staff() : 'Dictated \u00b7 no staff signed in',
 
       hasNote: !!st.note,
       note: st.note,
