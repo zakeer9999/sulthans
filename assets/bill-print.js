@@ -33,7 +33,7 @@
 
   /* bill:  the row bill_print returned (no, total, cgst, lines, …)
      house: the restaurant row — name, address, phone, gstin, fssai, footer
-     meta:  {table, staff, mode, split, payments, copy} */
+     meta:  {table, staff, mode, split, payments, copy, guest, mobile} */
   function receiptHtml(bill, house, meta, size) {
     const b = BOX[size] || BOX['80mm'];
     const h = house || {}, m = meta || {};
@@ -89,6 +89,8 @@
         <td style="text-align:right">${esc(m.table || '—')}</td></tr>
     <tr><td>Date</td><td style="text-align:right">${esc(when(bill.printed_at))}</td></tr>
     ${m.staff ? `<tr><td>Cashier</td><td style="text-align:right">${esc(m.staff)}</td></tr>` : ''}
+    ${m.guest ? `<tr><td>Customer</td><td style="text-align:right">${esc(m.guest)}</td></tr>` : ''}
+    ${m.mobile ? `<tr><td>Mobile</td><td style="text-align:right">${esc(m.mobile)}</td></tr>` : ''}
   </table>
   <div class="rule"></div>
   <table>
@@ -125,8 +127,25 @@
   /* Printed from a detached iframe, and the iframe is kept until afterprint
      fires: removing it on a timer raced the print dialog on Android, which
      cancelled the job the moment the node went away. */
+  /* iOS Safari will not print from an iframe — contentWindow.print() returns
+     without opening anything, which reads as a dead button. There a real tab
+     is the only thing that prints, and it is also the guest's way out when no
+     printer is paired: the system sheet offers Save to Files or AirDrop. */
+  const IOS = /iP(hone|ad|od)/.test(navigator.userAgent)
+    || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+  function printWindow(html) {
+    const w = window.open('', '_blank');
+    if (!w) return null;
+    w.document.open(); w.document.write(html); w.document.close();
+    const go = () => { try { w.focus(); w.print(); } catch (e) { console.warn('[print]', e.message); } };
+    setTimeout(go, 350);
+    return w;
+  }
+
   function print(bill, house, meta, size) {
     const html = receiptHtml(bill, house, meta, size || width() || '80mm');
+    if (IOS && printWindow(html)) return null;
     const f = document.createElement('iframe');
     f.setAttribute('aria-hidden', 'true');
     f.style.cssText = 'position:fixed;left:-10000px;top:0;width:420px;height:800px;border:0;opacity:0';
@@ -155,7 +174,9 @@
     const h = house || {}, m = meta || {};
     const out = [(h.legal_name || h.name || "Sulthan's")];
     if (h.phone) out.push(h.phone);
-    out.push('', 'Bill ' + (bill.no || '—') + '  ·  ' + (m.table || '—'), when(bill.printed_at), '');
+    out.push('', 'Bill ' + (bill.no || '—') + '  ·  ' + (m.table || '—'), when(bill.printed_at));
+    if (m.guest || m.mobile) out.push([m.guest, m.mobile].filter(Boolean).join('  ·  '));
+    out.push('');
     (bill.lines || []).forEach(l => {
       out.push(l.qty + ' x ' + l.name + '  ' + money((Number(l.amount) || 0) - (Number(l.discount) || 0)));
     });
@@ -219,6 +240,7 @@
 
   function printKot(kot, meta, size) {
     const html = kotHtml(kot, meta, size || width() || '80mm');
+    if (IOS && printWindow(html)) return null;
     const f = document.createElement('iframe');
     f.style.cssText = 'position:fixed;left:-10000px;top:0;width:420px;height:800px;border:0;opacity:0';
     document.body.appendChild(f);

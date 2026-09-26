@@ -32,6 +32,10 @@
   };
   const ms = t => new Date(t).getTime();
   const DEAD_KEY = 'sul.cleared.ids.v2';
+  /* Reasons a dish is off that the server has not acknowledged. Survives a
+     reload so the first poll back cannot erase a cook's answer — see
+     loadOffPend. */
+  const OFFPEND_KEY = 'sul.offs.pending.v1';
 
   class Remote {
     constructor(sb, db, cfg) {
@@ -177,19 +181,31 @@
     roomCols() {
       return 'table_count'
         + (this.dlvDef$ === false ? '' : ',dlv_fee_default,dlv_charge_default')
-        + (this.stockMode$ === false ? '' : ',stock_mode');
+        + (this.stockMode$ === false ? '' : ',stock_mode')
+        + (this.splits$ === false ? '' : ',table_splits');
     }
 
     /* ---------- read: server -> db.state ---------- */
     async hydrate() {
       const sb = this.sb, rid = this.rid;
+      /* Re-read before deciding which columns to ask for. this.staff was set
+         once at boot, and a token expires in about an hour: a phone left on the
+         counter overnight kept claiming to be signed in while Postgres treated
+         it as anonymous, so the staff-only reads came back empty rather than
+         failing — and an empty read looks exactly like "nothing is off". */
+      try {
+        const { data: s } = await sb.auth.getSession();
+        const live = !!(s && s.session);
+        if (!live && this.staff && this.reauth) await this.reauth().catch(() => {});
+        else this.staff = live;
+      } catch (e) {}
       const fbCols = this.staff ? 'dish_id,stars,comment,created_at' : 'dish_id,stars,created_at';
       const svcCols = this.staff ? 'stars,comment,created_at,table_label' : 'stars,created_at,table_label';
       // guest_mobile is revoked from anon, so asking for it while signed out
       // fails the whole select rather than returning null.
       const slotCols = 'id,num,kind,bill,guest_name,device_id,hold_at,staff_made,created_at'
         + (this.staff ? ',guest_mobile' : '');
-      const [cats, dishes, orders, calls, ratings, fb, svc, room, slots] = await Promise.all([
+      const [cats, dishes, orders, calls, ratings, fb, svc, room, slots, bats, ings, offs] = await Promise.all([
         sb.from('categories').select('id,key,hidden').eq('restaurant_id', rid),
         sb.from('dishes').select('id,slug,price,prep_minutes,available,hidden,hls_url,poster_url').eq('restaurant_id', rid),
         sb.from('orders').select(this.orderCols()).eq('restaurant_id', rid).eq('status', 'open'),
@@ -199,14 +215,35 @@
         sb.from('service_feedback').select(svcCols).eq('restaurant_id', rid).order('created_at', { ascending: false }).limit(300),
         sb.from('restaurants').select(this.roomCols()).eq('id', rid).maybeSingle(),
         sb.from('floor_slots').select(slotCols).eq('restaurant_id', rid).order('created_at'),
+        this.bat$ === false ? { data: [] }
+          : sb.from('batches').select('id,dish_id,qty,used,mins,started_at,ready_at').eq('restaurant_id', rid).order('started_at'),
+        this.ing$ === false ? { data: [] }
+          : sb.from('ingredients').select('name,stock_state,stock_pct,state_at').eq('restaurant_id', rid),
+        /* Why each off dish is off. stock-lite.sql already keeps this \u2014 one open
+           row per dish, cleared when it comes back on \u2014 and the app was writing
+           the reason to localStorage only, so every snapshot from this read
+           replaced it with a bare "unavailable" and the panel went back to
+           saying no reason had been recorded. */
+        (this.off$ === false || !this.staff) ? { data: [], skipped: true }
+          : sb.from('dish_offs').select('dish_id,reason,ing_names,note,opened_at')
+              .eq('restaurant_id', rid).is('cleared_at', null),
       ]);
+      /* Whether this snapshot actually knows why dishes are off. A guest session
+         and a lapsed one both read dish_offs as empty with no error, so "no
+         rows" must not be allowed to mean "no reason" — that read is what was
+         quietly erasing what a cook had entered. */
+      const offsKnown = !offs.skipped && !offs.error;
+      /* Before either reader below. The purge runs off next.dishes, not off the
+         dish rows, so it cannot depend on the dish loop having executed. */
+      if (!this.offPend) this.loadOffPend();
 
-      const next = { dishes: {}, cats: {}, orders: {}, waiter: [], feedback: [], service: [], ratings: {} };
+      const next = { dishes: {}, cats: {}, orders: {}, waiter: [], feedback: [], service: [], ratings: {}, batches: [], ings: {} };
 
       (cats.data || []).forEach(c => {
         this.catId[c.key] = c.id;
         if (c.hidden) next.cats[c.key] = { hidden: true };
       });
+      const localDishes = (this.db && this.db.state && this.db.state.dishes) || {};
       (dishes.data || []).forEach(d => {
         this.dishId[d.slug] = d.id; this.dishSlug[d.id] = d.slug;
         const o = {};
@@ -214,12 +251,69 @@
         if (d.prep_minutes != null) o.mins = d.prep_minutes;
         if (d.available === false) o.avail = false;
         if (d.hidden) o.hidden = true;
+        /* Why it is off comes from dish_offs below. Until that read lands \u2014 or
+           if the migration is not in \u2014 the device that recorded the reason keeps
+           its own copy rather than losing it to this snapshot: a reason on one
+           phone is worth more than a reason nowhere. */
+        /* Carried forward unless this snapshot can speak for the reason. The
+           old condition also required the server to already say unavailable, so
+           a reason entered seconds before the availability write landed was
+           dropped by the very next poll. */
+        const mine = (localDishes[d.slug] || {}).off;
+        /* A reason whose write has not come back yet is also carried, and takes
+           the dish off with it. Without that clause a reason entered while the
+           token was being refreshed was read back as "no reason recorded" the
+           moment the RPC lost the race. */
+        const pending = !!this.offPend[d.slug];
+        if (mine && (!offsKnown || pending || d.available === false)) {
+          o.off = mine;
+          if (!offsKnown || pending) o.avail = false;
+        }
         if (Object.keys(o).length) next.dishes[d.slug] = o;
         if (d.hls_url) {
           this.media = this.media || {};
           this.media[d.slug] = { hls: d.hls_url, poster: d.poster_url || null };
         }
       });
+      /* A dish the server says is off with no open row is a reason cleared
+         elsewhere, or one that never saved. Only a read actually made as staff
+         gets to decide that. */
+      if (offsKnown) {
+        const open = {};
+        (offs.data || []).forEach(r => {
+          const s2 = this.dishSlug[r.dish_id];
+          if (s2) open[s2] = true;
+        });
+        Object.keys(next.dishes).forEach(slug => {
+          /* A dish off with no open row is a reason cleared on another terminal
+             — unless this device is still carrying one the server has not
+             acknowledged. That exception is the whole fix: the reason was
+             written locally, the RPC behind it failed (a lapsed token, the
+             grant, the migration), and this purge then read the absence of a
+             row as proof no reason existed and erased what a cook had entered.
+             A read cannot overrule a write that has not finished. */
+          if (this.offPend[slug]) return;
+          if (next.dishes[slug].off && !open[slug]) delete next.dishes[slug].off;
+        });
+      }
+      /* Anything still unacknowledged gets another attempt now that a read has
+         just proved the connection is up. */
+      this.flushOffs();
+      (offs.data || []).forEach(r => {
+        const slug = this.dishSlug[r.dish_id];
+        if (!slug) return;
+        const o = next.dishes[slug] = next.dishes[slug] || {};
+        /* The server row wins over the local copy carried forward above: it is
+           what every other phone and both terminals are reading. */
+        o.avail = false;
+        o.off = {
+          reason: r.reason,
+          names: Array.isArray(r.ing_names) ? r.ing_names : [],
+          note: r.note || null,
+          at: Date.parse(r.opened_at) || Date.now(),
+        };
+      });
+
       const dupes = [], stuck = [], dupeOf = [];
       // Newest first, so the row kept for a label is the current visit and the
       // stale ones behind it are the ones closed.
@@ -393,6 +487,20 @@
       if (room.data) {
         const house = {};
         if (room.data.table_count != null) house.tables = room.data.table_count;
+        /* Which tables are broken into 7A/7B. It belongs beside the table count
+           for the same reason: it is the shape of the room, and the counter
+           terminal has to lay out the same floor the guest app does or the two
+           screens disagree about which tables exist. */
+        if (this.splits$ !== false && room.data.table_splits != null) {
+          const raw = room.data.table_splits;
+          const obj = typeof raw === 'string' ? (() => { try { return JSON.parse(raw); } catch (e) { return {}; } })() : raw;
+          const clean = {};
+          Object.keys(obj || {}).forEach(k => {
+            const n = Math.round(Number(obj[k]) || 0);
+            if (/^\d+$/.test(k) && n >= 2) clean[k] = Math.min(6, n);
+          });
+          house.splits = clean;
+        }
         if (this.dlvDef$ !== false) {
           house.dlvFeeDef = room.data.dlv_fee_default == null ? null : Number(room.data.dlv_fee_default);
           house.dlvChargeDef = !!room.data.dlv_charge_default;
@@ -435,6 +543,41 @@
         this.stockMode$ = false;
         console.warn('[supabase] restaurants.stock_mode missing — run supabase/stock-lite.sql to share how stock runs');
       }
+      if (room.error && this.splits$ !== false && /table_splits/.test(room.error.message || '')) {
+        this.splits$ = false;
+        console.warn('[supabase] restaurants.table_splits missing \u2014 run supabase/table-splits.sql to share split tables with the counter');
+      }
+      /* Bulk trays, shared. Before the table existed a tray lived on whichever
+         device typed it, so the kitchen tablet and the admin phone disagreed and
+         the counter could not see one at all. */
+      if (bats.error && this.bat$ !== false) {
+        this.bat$ = false;
+        console.warn('[supabase] no batches table \u2014 run supabase/bulk-batches.sql to share trays with the counter');
+        return this.hydrate();
+      }
+      (bats.data || []).forEach(b => {
+        const slug = this.dishSlug[b.dish_id];
+        if (!slug) return;
+        next.batches.push({
+          id: b.id, dish: slug,
+          qty: Number(b.qty || 0), used: Number(b.used || 0), mins: Number(b.mins || 0),
+          at: ms(b.started_at) || Date.now(),
+          ready: ms(b.ready_at) || 0,
+        });
+      });
+      /* Store levels, shared for the same reason: a slider set in the office is
+         of no use to a cook whose tablet never heard about it. */
+      if (ings.error && this.ing$ !== false) {
+        this.ing$ = false;
+        console.warn('[supabase] ingredients.stock_pct missing \u2014 run supabase/bulk-batches.sql to share stock levels');
+        return this.hydrate();
+      }
+      (ings.data || []).forEach(r => {
+        if (!r.name) return;
+        const o = { name: r.name, state: r.stock_state || 'enough', at: ms(r.state_at) || 0 };
+        if (r.stock_pct != null) o.pct = Number(r.stock_pct);
+        next.ings[String(r.name).toLowerCase()] = o;
+      });
       const errs = [cats, dishes, orders, calls, ratings, fb, svc, room, slots].map(r => r.error).filter(Boolean);
       if (errs.length) console.warn('[supabase] partial read:', errs.map(e => e.message).join(' | '));
       // A missing readiness column is a migration that has not been run yet, not
@@ -453,6 +596,11 @@
       if (orders.error && this.flags$ !== false && /rush_at|hold_at/.test(orders.error.message || '')) {
         this.flags$ = false;
         console.warn('[supabase] order_items.rush_at/hold_at missing — run supabase/kitchen-share.sql to share expedite and hold');
+        return this.hydrate();
+      }
+      if (offs.error && this.off$ !== false) {
+        this.off$ = false;
+        console.warn('[supabase] no dish_offs table \u2014 run supabase/stock-lite.sql to share why a dish is off');
         return this.hydrate();
       }
       if (orders.error && this.sent$ !== false && /\bsent\b/.test(orders.error.message || '')) {
@@ -531,7 +679,7 @@
       };
       this.ch = this.sb.channel('sulthans-service');
       ['dishes', 'categories', 'orders', 'order_items', 'waiter_calls', 'dish_feedback', 'service_feedback',
-       'restaurants', 'floor_slots']
+       'restaurants', 'floor_slots', 'dish_offs']
         .forEach(table => this.ch.on('postgres_changes', { event: '*', schema: 'public', table },
           p => bump(table === 'orders' && !!(p && p.new && p.new.ready_at))));
       /* The subscribe status is the connection: SUBSCRIBED means the socket is
@@ -562,12 +710,49 @@
         if (a.avail !== b.avail) p.available = b.avail !== false;
         if (a.hidden !== b.hidden) p.hidden = !!b.hidden;
         if (Object.keys(p).length) jobs.push(() => this.upd('dishes', this.dishId[slug], p));
+        /* The reason, through the functions stock-lite.sql ships: dish_off also
+           takes the dish off the menu and zeroes the named ingredients, dish_on
+           clears every open row for it. Both are idempotent, so a retry cannot
+           stack a second reason on one dish. */
+        if (this.off$ !== false && JSON.stringify(a.off || null) !== JSON.stringify(b.off || null)) {
+          jobs.push(() => this.dishOff(slug, b.off));
+        }
       });
 
       new Set([...keys(before.cats), ...keys(after.cats)]).forEach(key => {
         const a = before.cats[key] || {}, b = after.cats[key] || {};
         if (a.hidden !== b.hidden) jobs.push(() => this.upd('categories', this.catId[key], { hidden: !!b.hidden }));
       });
+
+      /* Trays. The app's own id is the primary key rather than a generated one,
+         so there is no local-to-server map to keep and a retry is an upsert
+         rather than a second tray. */
+      if (this.bat$ !== false) {
+        const byId = list => { const m = {}; (list || []).forEach(b => { m[b.id] = b; }); return m; };
+        const pb = byId(before.batches), nb = byId(after.batches);
+        Object.keys(nb).forEach(id => {
+          const a = pb[id], b = nb[id];
+          if (!a) { jobs.push(() => this.batchPut(b)); return; }
+          if (a.qty !== b.qty || a.used !== b.used || a.mins !== b.mins || a.ready !== b.ready) {
+            jobs.push(() => this.batchPut(b));
+          }
+        });
+        Object.keys(pb).forEach(id => {
+          if (!nb[id]) jobs.push(async () => { await this.sb.from('batches').delete().eq('id', id); });
+        });
+      }
+
+      /* Store levels, keyed by name: the app has store lines that were never
+         rows here (the constant list every kitchen starts with), so the write
+         has to be able to create one. */
+      if (this.ing$ !== false) {
+        const pi = before.ings || {}, ni = after.ings || {};
+        Object.keys(ni).forEach(k => {
+          const a = pi[k] || {}, b = ni[k];
+          if (a.pct === b.pct && a.state === b.state) return;
+          jobs.push(() => this.ingPut(b));
+        });
+      }
 
       const bO = keys(before.orders), aO = keys(after.orders);
       /* The items are copied here, at diff time, not read when the job runs.
@@ -607,6 +792,11 @@
           }
         });
         if (added.length) jobs.push(() => this.addItems(k, added));
+        /* A line that shrank is the Deny press: the unauthorised portions come
+           off the ticket. The trim is done row by row on the server against
+           what each row has released or carried, never below that. */
+        const dropped = Object.keys(was).filter(id => (qtyOf(now)[id] || 0) < was[id]);
+        if (dropped.length) jobs.push(async () => { for (const id of dropped) await this.itemDrop(k, id); });
         /* Portions carried out, per dish. Written as an absolute count rather
            than a delta, so a retry cannot double-serve a line. */
         if (this.flags$ !== false) {
@@ -740,6 +930,15 @@
       if (this.stockMode$ !== false) {
         const mb = (before.floor || {}).stockMode, ma = (after.floor || {}).stockMode;
         if (ma && ma !== mb) jobs.push(() => this.upd('restaurants', this.rid, { stock_mode: ma }));
+      }
+
+      /* Split tables, mirrored the same way and under the same staff-only rule:
+         breaking 7 into 7A and 7B changes which table keys exist for every phone
+         and both terminals, so it cannot stay on the device that pressed it. */
+      if (this.splits$ !== false) {
+        const sb2 = JSON.stringify((before.floor || {}).splits || {});
+        const sa = JSON.stringify((after.floor || {}).splits || {});
+        if (sa !== sb2) jobs.push(() => this.upd('restaurants', this.rid, { table_splits: (after.floor || {}).splits || {} }));
       }
 
       const bSlot = {}, aSlot = {};
@@ -947,7 +1146,7 @@
     }
 
     run(jobs) {
-      this.queue = this.queue.then(async () => {
+      return (this.queue = this.queue.then(async () => {
         /* One verdict per batch, not per job. sync() sends a slot release, a slot
            claim and the order inserts together; clearing the latch after each
            success meant a refusal in job N was erased by job N+1 before any
@@ -1008,7 +1207,7 @@
           }
         }
         if (!failed) this.ok('batch');
-      });
+      }));
     }
 
     /* An UPDATE the policy refuses reports success with zero rows changed — the
@@ -1207,9 +1406,158 @@
       }
     }
 
+    /* One tray, written whole. Upsert rather than insert-or-update: the id is
+       the app's, so the same call covers a new pot and a portion leaving it. */
+    async batchPut(b) {
+      if (this.bat$ === false) return;
+      const dish = this.dishId[b.dish];
+      if (!dish) return;
+      const { error } = await this.sb.from('batches').upsert({
+        id: b.id, restaurant_id: this.rid, dish_id: dish,
+        qty: Math.max(1, Number(b.qty) || 1),
+        used: Math.max(0, Math.min(Number(b.qty) || 1, Number(b.used) || 0)),
+        mins: Math.max(0, Number(b.mins) || 0),
+        started_at: new Date(b.at || Date.now()).toISOString(),
+        ready_at: b.ready ? new Date(b.ready).toISOString() : null,
+      }, { onConflict: 'id' });
+      if (!error) return;
+      if (/batches/.test((error.message || '') + (error.hint || ''))) {
+        this.bat$ = false;
+        console.warn('[supabase] no batches table \u2014 run supabase/bulk-batches.sql to share trays with the counter');
+        return;
+      }
+      console.warn('[supabase] the tray did not save:', error.message);
+    }
+
+    /* Why a dish is off, or that it is back on. Postgres owns the consequences
+       of both \u2014 the availability switch, the zeroed ingredients, clearing the
+       open row \u2014 so this passes the reason and lets the function do the rest. */
+    async dishOff(slug, off, retried) {
+      /* Held until the server says it has it. Every path out of this function
+         that is not a success leaves the slug marked, which does two things: the
+         next hydrate refuses to erase the local reason, and the next one retries
+         the write. */
+      if (!this.offPend) this.loadOffPend();
+      this.offPend[slug] = true;
+      this.offWant[slug] = off || null;
+      this.saveOffPend();
+
+      if (this.off$ === false) return;
+      if (!this.staff && this.reauth) await this.reauth().catch(() => {});
+      if (!this.staff) return;
+      const dish = this.dishId[slug];
+      if (!dish) return;
+      const { error } = off
+        ? await this.sb.rpc('dish_off', {
+            p_dish: dish, p_reason: off.reason || 'skipped',
+            p_names: (off.names || []).filter(Boolean),
+            p_note: off.note || null,
+          })
+        : await this.sb.rpc('dish_on', { p_dish: dish });
+      if (!error) {
+        /* Confirmed. Cleared only if nothing newer was queued while this was in
+           flight — a cook who changed the answer twice in ten seconds must not
+           have the second answer forgotten by the first one landing. */
+        if (JSON.stringify(this.offWant[slug] || null) === JSON.stringify(off || null)) {
+          delete this.offPend[slug];
+          delete this.offWant[slug];
+          this.saveOffPend();
+        }
+        return;
+      }
+      const msg = (error.message || '') + ' ' + (error.hint || '');
+      if (/dish_off|dish_on|dish_offs/.test(msg) && /does not exist|schema cache|PGRST20[024]|could not find/i.test(msg)) {
+        this.off$ = false;
+        console.warn('[supabase] no dish_off function \u2014 run supabase/stock-lite.sql to share why a dish is off');
+        return;
+      }
+      /* An expired token refuses this with an ordinary error. Every other staff
+         write already rebuilds the session and retries; this one did not, so the
+         reason sat in localStorage until a hydrate wrote over it. */
+      if (!retried && this.reauth && await this.reauth().catch(() => false)) {
+        return this.dishOff(slug, off, true);
+      }
+      console.warn('[supabase] the reason did not save:', error.message);
+    }
+
+    /* Reasons the server has not confirmed. Called after every hydrate, so a
+       write lost to a lapsed token or a momentary refusal is retried on the next
+       poll rather than sitting in localStorage until something overwrites it. */
+    /* Pending reasons survive a reload. They are the one piece of write state
+       that cannot be rebuilt from the server (the server is precisely what does
+       not have it yet), so it is kept beside the dish data it protects. */
+    loadOffPend() {
+      this.offPend = {};
+      this.offWant = {};
+      try {
+        const m = JSON.parse(localStorage.getItem(OFFPEND_KEY) || '{}');
+        Object.keys(m).forEach(slug => {
+          this.offPend[slug] = true;
+          this.offWant[slug] = m[slug] || null;
+        });
+      } catch (e) {}
+    }
+    saveOffPend() {
+      try {
+        const keys = Object.keys(this.offPend || {});
+        if (!keys.length) return localStorage.removeItem(OFFPEND_KEY);
+        const m = {};
+        keys.forEach(slug => { m[slug] = this.offWant[slug] || null; });
+        localStorage.setItem(OFFPEND_KEY, JSON.stringify(m));
+      } catch (e) {}
+    }
+
+    flushOffs() {
+      if (!this.offPend) this.loadOffPend();
+      const pend = Object.keys(this.offPend);
+      if (!pend.length || this.off$ === false || !this.staff) return;
+      if (this.offFlushing) return;
+      this.offFlushing = true;
+      const jobs = pend.map(slug => () => this.dishOff(slug, this.offWant[slug]));
+      Promise.resolve(this.run(jobs)).catch(() => {}).then(() => { this.offFlushing = false; });
+    }
+
+    /* One store line. onConflict names the unique index on (restaurant, name),
+       so a line the house has never counted before is created on first drag. */
+    async ingPut(row) {
+      if (this.ing$ === false) return;
+      const patch = {
+        restaurant_id: this.rid, name: row.name,
+        stock_state: row.state || 'enough',
+        state_at: new Date(row.at || Date.now()).toISOString(),
+      };
+      if (row.pct != null) patch.stock_pct = Math.max(0, Math.min(100, Math.round(Number(row.pct))));
+      const { error } = await this.sb.from('ingredients')
+        .upsert(patch, { onConflict: 'restaurant_id,name' });
+      if (!error) return;
+      if (/stock_pct|ingredients_rest_name|no unique/.test((error.message || '') + (error.hint || ''))) {
+        this.ing$ = false;
+        console.warn('[supabase] ingredients.stock_pct missing \u2014 run supabase/bulk-batches.sql to share stock levels');
+        return;
+      }
+      console.warn('[supabase] the stock level did not save:', error.message);
+    }
+
     /* Staff released food to the kitchen. Keyed by dish like the serve count:
        every row for that dish on that ticket carries the same released count,
        and it is written absolutely so a retry cannot release more. */
+    async itemDrop(label, slug) {
+      const dish = this.dishId[slug];
+      if (!dish) return;
+      const orderId = this.orderId[label] || await this.orderFor(label);
+      if (!orderId) return;
+      const cols = 'id,qty' + (this.okq$ === false ? '' : ',ok_qty') + (this.sent$ === false ? '' : ',sent');
+      const { data, error } = await this.sb.from('order_items').select(cols).eq('order_id', orderId).eq('dish_id', dish);
+      if (error) throw error;
+      for (const r of data || []) {
+        const keep = Math.max(Number(r.ok_qty) || 0, Number(r.sent) || 0);
+        if (keep >= r.qty) continue;
+        const q = keep ? this.sb.from('order_items').update({ qty: keep }).eq('id', r.id)
+          : this.sb.from('order_items').delete().eq('id', r.id);
+        const { error: e2 } = await q;
+        if (e2) throw e2;
+      }
+    }
     async itemOk(label, slug, n) {
       if (this.okq$ === false) return;
       const dish = this.dishId[slug];
