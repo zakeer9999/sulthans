@@ -1779,9 +1779,45 @@ function b64(blob) {
   });
 }
 
+/* Gemini does not accept WebM (Android Chrome) or MP4 (iPhone Safari)
+   recordings reliably; it answered 400 and every turn fell to Whisper. The
+   clip is decoded in the browser and sent as 16 kHz mono WAV, which it reads
+   on every model. */
+async function toWav(blob) {
+  const AC = window.AudioContext || window.webkitAudioContext;
+  if (!AC) return blob;
+  const ac = new AC();
+  try {
+    const buf = await new Promise((ok, no) => { blob.arrayBuffer().then(ab => { const p = ac.decodeAudioData(ab, ok, no); if (p && p.then) p.then(ok, no); }, no); });
+    const rate = 16000, len = Math.max(1, Math.round(buf.duration * rate));
+    const OAC = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+    let data;
+    if (OAC) {
+      const off = new OAC(1, len, rate), src = off.createBufferSource();
+      src.buffer = buf; src.connect(off.destination); src.start(0);
+      data = (await off.startRendering()).getChannelData(0);
+    } else data = buf.getChannelData(0);
+    const pcm = new Int16Array(data.length);
+    for (let i = 0; i < data.length; i++) { const v = Math.max(-1, Math.min(1, data[i])); pcm[i] = v < 0 ? v * 0x8000 : v * 0x7fff; }
+    return wavFromPcm(new Uint8Array(pcm.buffer), OAC ? rate : buf.sampleRate);
+  } finally { try { ac.close(); } catch (e) {} }
+}
+
 async function hearGemini(key, blob) {
+  let wav = blob;
+  try { wav = await toWav(blob); } catch (e) { console.info('[assistant] could not convert recording: ' + String((e && e.message) || e).slice(0, 80)); }
+  const data = await b64(wav), mime = (wav.type || 'audio/wav').split(';')[0];
+  let last;
+  for (const model of [GEMINI_CHAT, 'gemini-flash-lite-latest', GEMINI_CHAT]) {
+    try { return await hearGeminiOnce(key, model, mime, data); }
+    catch (e) { last = e; console.info('[assistant] Gemini hearing ' + model + ': ' + ((e && e.status) || '') + ' ' + String((e && e.message) || e).slice(0, 140)); if (e.message === 'nothing heard') throw e; if (e.status && e.status !== 429 && e.status !== 503 && e.status !== 500 && e.status !== 404) throw e; }
+  }
+  throw last;
+}
+
+async function hearGeminiOnce(key, model, mime, data) {
   const res = await fetch(
-    GEMINI_NATIVE + '/models/' + GEMINI_CHAT + ':generateContent?key=' + encodeURIComponent(key),
+    GEMINI_NATIVE + '/models/' + model + ':generateContent?key=' + encodeURIComponent(key),
     {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
@@ -1789,7 +1825,7 @@ async function hearGemini(key, blob) {
         contents: [
           {
             parts: [
-              { inline_data: { mime_type: blob.type || 'audio/webm', data: await b64(blob) } },
+              { inline_data: { mime_type: mime, data } },
               { text: LISTEN },
             ],
           },
@@ -1844,7 +1880,7 @@ export async function hear(key, blob, geminiKey) {
     try {
       return await hearGemini(geminiKey, blob);
     } catch (e) {
-      if (!key) throw e;
+      if (!key || e.message === 'nothing heard') throw e;
     }
   }
   return hearWhisper(key, blob);

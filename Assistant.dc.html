@@ -682,6 +682,11 @@ class Component extends DCLogic {
       }
     } catch (e) {}
     try {
+      if (window.speechSynthesis && !this._ttsUnlocked) {
+        const u = new SpeechSynthesisUtterance(' '); u.volume = 0; window.speechSynthesis.speak(u); this._ttsUnlocked = true;
+      }
+    } catch (e) {}
+    try {
       const AC = window.AudioContext || window.webkitAudioContext;
       if (AC && !this._ac) this._ac = new AC();
       if (this._ac && this._ac.state !== 'running') this._ac.resume().catch(() => {});
@@ -955,6 +960,28 @@ class Component extends DCLogic {
     const live = () => this._mounted && this._sayTok === tok;
     const native = lang === 'ta' || lang === 'te';
     const t0 = Date.now();
+
+    /* Gemini speaks every reply when its key is set, English included; the
+       phone's voice is only the fallback. On iPhone this also matters for
+       sound at all: the reply plays on the audio element the tap unlocked,
+       where speechSynthesis started after a network wait is often muted. */
+    if (!native && this.mode() === 'direct' && this.geminiKey()) {
+      this.setState({ voicing: true });
+      try {
+        const { nativeAudio } = await this.mod();
+        const wav = await nativeAudio(this.geminiKey(), text, 'en', false);
+        if (!live()) return;
+        if (wav) {
+          const url = URL.createObjectURL(wav);
+          this.setState({ voicing: false, talk: true, voice: 'Gemini voice' });
+          console.info('[assistant] voice: Gemini TTS (en), ready in ' + (Date.now() - t0) + ' ms');
+          const ok = await this.playSrc(url, 6000 + text.length * 110);
+          URL.revokeObjectURL(url);
+          if (ok || !live()) return this.doneTalking(tok);
+        }
+      } catch (e) { console.info('[assistant] Gemini voice unavailable: ' + ((e && e.status) || '') + ' ' + String((e && e.message) || e).slice(0, 160)); }
+      if (!live()) return;
+    }
 
     if (native) {
       this.setState({ voicing: true });

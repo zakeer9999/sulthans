@@ -131,7 +131,7 @@
           </nav>
         </div>
 
-        <div style="display:flex;align-items:center;gap:8px;margin-left:auto">
+        <div style="display:flex;align-items:center;gap:8px;margin-left:auto;flex-wrap:wrap;justify-content:flex-end;max-width:100%;min-width:0">
           <button onClick="{{ openStock }}" title="{{ stockBtn }}" style="height:38px;display:flex;align-items:center;gap:8px;padding:0 13px 0 11px;border-radius:11px;border:1px solid {{ stockRing }};background:{{ stockWash }};color:#efe7db;font-size:12.5px;white-space:nowrap" style-active="transform:scale(.97)">
             <span style="width:8px;height:8px;border-radius:50%;background:{{ stockDot }};box-shadow:0 0 10px {{ stockDot }}"></span>
             <span style="display:flex;flex-direction:column;align-items:flex-start;line-height:1.1">
@@ -166,9 +166,9 @@
                   <button onClick="{{ t.onTap }}" style="height:124px;display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;padding:13px 14px;position:relative;overflow:hidden;border:1px solid {{ t.tone }};border-radius:18px;background:radial-gradient(130% 90% at 50% -25%,rgba(255,196,110,.12) 0%,rgba(255,140,40,.035) 45%,rgba(0,0,0,0) 70%),linear-gradient(180deg,rgba(255,236,200,.03),rgba(0,0,0,.18)),{{ t.bg }};box-shadow:inset 0 1.5px 0 rgba(255,222,175,.14),inset 0 -18px 34px -24px rgba(255,150,60,.22),0 16px 34px -14px rgba(0,0,0,.65);text-align:left;transition:transform 160ms cubic-bezier(.23,1,.32,1)" style-active="transform:scale(.97)">
                     <span style="position:absolute;inset:5px;border-radius:14px;border:1px solid rgba(255,214,160,.07);pointer-events:none"></span>
                     <span style="position:relative;display:flex;align-items:baseline;gap:8px;width:100%">
-                      <span style="font-family:'Cormorant Garamond',serif;font-size:31px;line-height:1;font-weight:300;background:linear-gradient(180deg,#fffaf1 0%,#f7ecd8 46%,#e6c795 100%);-webkit-background-clip:text;background-clip:text;color:transparent">{{ t.label }}</span>
+                      <span style="font-family:'Cormorant Garamond',serif;font-size:clamp(22px,7.2vw,31px);line-height:1;font-weight:300;white-space:nowrap;min-width:0;overflow:hidden;text-overflow:ellipsis;background:linear-gradient(180deg,#fffaf1 0%,#f7ecd8 46%,#e6c795 100%);-webkit-background-clip:text;background-clip:text;color:transparent">{{ t.label }}</span>
                       <span style="flex:1"></span>
-                      <span style="font-size:11px;color:{{ t.ageTone }};font-variant-numeric:tabular-nums">{{ t.age }}</span>
+                      <span style="flex:0 0 auto;font-size:11px;white-space:nowrap;color:{{ t.ageTone }};font-variant-numeric:tabular-nums">{{ t.age }}</span>
                     </span>
                     <span style="position:relative;display:flex;flex-direction:column;gap:6px;width:100%">
                       <span style="width:28px;height:1px;background:linear-gradient(90deg,rgba(240,178,100,.55),transparent)"></span>
