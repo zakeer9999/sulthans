@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>body{margin:0;background:#12100c;color:#efe7db;font-family:'Instrument Sans',system-ui,sans-serif}a{color:#e0b066}a:hover{color:#f1c98a}input,select,textarea,button{font-family:inherit}</style>
+</helmet>
+<div style="max-width:880px;margin:0 auto;padding:40px 22px 80px;display:flex;flex-direction:column;gap:28px">
+  <header style="display:flex;flex-direction:column;gap:6px">
+    <div style="font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#8d8272">Provider console</div>
+    <h1 style="margin:0;font-size:28px;font-weight:600;letter-spacing:-0.01em">Expert library for every restaurant</h1>
+    <div style="font-size:14px;color:#a89c8a;line-height:1.55;max-width:640px;text-wrap:pretty">Blogs and instructions saved here go to <span style="font-family:'JetBrains Mono',monospace;font-size:12.5px;color:#d9ccb8">expert.md</span> in your GitHub repo. Every restaurant's assistant reads that file: blogs join its library on the next 3-hourly run, instructions apply within the hour. Each restaurant's own data and settings are untouched.</div>
+  </header>
+
+  <section style="display:flex;flex-direction:column;gap:10px;padding:18px;border:1px solid #2a241c;border-radius:14px;background:#17140f">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+      <div style="font-size:15px;font-weight:600">GitHub access</div>
+      <div style="font-size:12.5px;color:{{ connColor }}">{{ connLine }}</div>
+    </div>
+    <div style="font-size:12.5px;color:#8d8272;line-height:1.5">A fine-grained token with Contents read and write on <span style="font-family:'JetBrains Mono',monospace">{{ repo }}</span>. It stays in this browser only.</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <input type="password" value="{{ token }}" onChange="{{ onToken }}" placeholder="github_pat_…" style="flex:1 1 260px;min-width:0;height:40px;padding:0 12px;border-radius:10px;border:1px solid #332c22;background:#0f0d0a;color:#efe7db;font-size:13px">
+      <button onClick="{{ reload }}" style="height:40px;padding:0 16px;border:1px solid #3a3226;border-radius:10px;background:transparent;color:#ddd2c1;font-size:13px;cursor:pointer">Load file</button>
+    </div>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:12px">
+    <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px">
+      <h2 style="margin:0;font-size:18px;font-weight:600">Blogs</h2>
+      <div style="font-size:12.5px;color:#8d8272">{{ blogCount }}</div>
+    </div>
+    <div style="display:flex;flex-direction:column;border:1px solid #2a241c;border-radius:14px;overflow:hidden">
+      <sc-for list="{{ blogRows }}" as="b" hint-placeholder-count="4">
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:12px;align-items:center;padding:12px 14px;border-top:1px solid #221d16">
+          <div style="display:flex;flex-direction:column;gap:2px;min-width:0">
+            <div style="font-size:14px;color:#efe7db">{{ b.name }}</div>
+            <a href="{{ b.site }}" target="_blank" style="font-size:12px;color:#8d8272;overflow-wrap:anywhere;text-decoration:none">{{ b.site }}</a>
+          </div>
+          <span style="font-size:11.5px;padding:3px 9px;border-radius:999px;border:1px solid #3a3226;color:#cbbfa9">{{ b.topic }}</span>
+          <button onClick="{{ b.onRemove }}" style="height:32px;padding:0 10px;border:0;border-radius:8px;background:transparent;color:#c98a78;font-size:12.5px;cursor:pointer" style-hover="background:#231a15">Remove</button>
+        </div>
+      </sc-for>
+      <sc-if value="{{ noBlogs }}" hint-placeholder-val="{{ false }}">
+        <div style="padding:16px 14px;font-size:13px;color:#8d8272">No shared blogs yet.</div>
+      </sc-if>
+    </div>
+    <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr) 140px auto;gap:8px;align-items:center">
+      <input value="{{ fName }}" onChange="{{ onFName }}" placeholder="Blog name" style="min-width:0;height:40px;padding:0 12px;border-radius:10px;border:1px solid #332c22;background:#0f0d0a;color:#efe7db;font-size:13px">
+      <input value="{{ fSite }}" onChange="{{ onFSite }}" placeholder="https://blog-address.com" style="min-width:0;height:40px;padding:0 12px;border-radius:10px;border:1px solid #332c22;background:#0f0d0a;color:#efe7db;font-size:13px">
+      <select value="{{ fTopic }}" onChange="{{ onFTopic }}" style="height:40px;padding:0 10px;border-radius:10px;border:1px solid #332c22;background:#0f0d0a;color:#efe7db;font-size:13px">
+        <option value="cooking">Cooking</option>
+        <option value="service">Service</option>
+        <option value="operations">Operations</option>
+        <option value="cost">Cost</option>
+        <option value="sales">Sales</option>
+        <option value="staff">Staff</option>
+      </select>
+      <button onClick="{{ addBlog }}" style="height:40px;padding:0 16px;border:0;border-radius:10px;background:#2b241b;color:#efe7db;font-size:13px;cursor:pointer" style-hover="background:#362d21">Add blog</button>
+    </div>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:12px">
+    <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px">
+      <h2 style="margin:0;font-size:18px;font-weight:600">Instructions</h2>
+      <div style="font-size:12.5px;color:#8d8272">{{ insCount }}</div>
+    </div>
+    <div style="font-size:12.5px;color:#8d8272;line-height:1.5;text-wrap:pretty">Standing rules added to every restaurant's assistant. They never outrank that restaurant's own numbers.</div>
+    <div style="display:flex;flex-direction:column;border:1px solid #2a241c;border-radius:14px;overflow:hidden">
+      <sc-for list="{{ insRows }}" as="n" hint-placeholder-count="2">
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:start;padding:12px 14px;border-top:1px solid #221d16">
+          <div style="font-size:13.5px;color:#e5dccd;line-height:1.5;text-wrap:pretty">{{ n.text }}</div>
+          <button onClick="{{ n.onRemove }}" style="height:30px;padding:0 10px;border:0;border-radius:8px;background:transparent;color:#c98a78;font-size:12.5px;cursor:pointer" style-hover="background:#231a15">Remove</button>
+        </div>
+      </sc-for>
+      <sc-if value="{{ noIns }}" hint-placeholder-val="{{ false }}">
+        <div style="padding:16px 14px;font-size:13px;color:#8d8272">No instructions yet.</div>
+      </sc-if>
+    </div>
+    <div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap">
+      <textarea value="{{ fIns }}" onChange="{{ onFIns }}" rows="2" placeholder="e.g. For cost questions, give the saving per plate in grams of the ingredient, not only a percentage." style="flex:1 1 320px;min-width:0;padding:10px 12px;border-radius:10px;border:1px solid #332c22;background:#0f0d0a;color:#efe7db;font-size:13px;line-height:1.5;resize:vertical"></textarea>
+      <button onClick="{{ addIns }}" style="height:40px;padding:0 16px;border:0;border-radius:10px;background:#2b241b;color:#efe7db;font-size:13px;cursor:pointer" style-hover="background:#362d21">Add instruction</button>
+    </div>
+  </section>
+
+  <section style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding-top:18px;border-top:1px solid #2a241c">
+    <div style="font-size:13px;color:{{ msgColor }};flex:1 1 260px;text-wrap:pretty">{{ msg }}</div>
+    <button onClick="{{ save }}" disabled="{{ saveOff }}" style="height:44px;padding:0 22px;border:0;border-radius:11px;background:#e0b066;color:#1a140b;font-size:14px;font-weight:600;cursor:pointer;opacity:{{ saveOpacity }}">{{ saveLabel }}</button>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+const REPO = 'zakeer9999/MarvotechEvery', PATH = 'expert.md', API = 'https://api.github.com/repos/' + REPO + '/contents/' + PATH;
+const TOPICS = ['cooking', 'service', 'operations', 'cost', 'sales', 'staff'];
+const b64d = s => new TextDecoder().decode(Uint8Array.from(atob(s.replace(/\s/g, '')), c => c.charCodeAt(0)));
+const b64e = s => { const b = new TextEncoder().encode(s); let x = ''; b.forEach(c => { x += String.fromCharCode(c); }); return btoa(x); };
+function parse(text) {
+  const out = { blogs: [], ins: [] }; let sec = '';
+  String(text || '').split(/\r?\n/).forEach(l => {
+    const h = l.match(/^##\s+(.+)/);
+    if (h) { sec = /blog/i.test(h[1]) ? 'b' : /instruct/i.test(h[1]) ? 'i' : ''; return; }
+    const m = l.match(/^\s*[-*]\s+(.+)/); if (!m) return;
+    if (sec === 'b') { const [name, site, topic] = m[1].split('|').map(s => s.trim()); if (name && /^https?:\/\//.test(site || '')) out.blogs.push({ name, site, topic: TOPICS.includes((topic || '').toLowerCase()) ? topic.toLowerCase() : 'operations' }); }
+    else if (sec === 'i') out.ins.push(m[1].trim());
+  });
+  return out;
+}
+const build = (blogs, ins) => '# Expert library — shared by every restaurant\n\nEdited from Provider Console. Each restaurant\'s site reads this file; nothing\nhere is specific to one restaurant.\n\n## Blogs\n' + blogs.map(b => '- ' + b.name.replace(/\|/g, '/') + ' | ' + b.site + ' | ' + b.topic).join('\n') + '\n\n## Instructions\n' + ins.map(s => '- ' + s.replace(/\s*\n\s*/g, ' ')).join('\n') + '\n';
+
+class Component extends DCLogic {
+  state = { token: '', blogs: [], ins: [], sha: null, loaded: false, dirty: false, busy: false, msg: 'Loading expert.md…', err: false, fName: '', fSite: '', fTopic: 'cooking', fIns: '' };
+  componentDidMount() {
+    let t = ''; try { t = localStorage.getItem('prov:ghToken') || ''; } catch (e) {}
+    this.setState({ token: t }, () => this.load());
+  }
+  hdr() { const h = { Accept: 'application/vnd.github+json' }; if (this.state.token) h.Authorization = 'Bearer ' + this.state.token; return h; }
+  async load() {
+    this.setState({ busy: true, msg: 'Loading expert.md…', err: false });
+    try {
+      const r = await fetch(API + '?ref=main&t=' + Date.now(), { headers: this.hdr(), cache: 'no-store' });
+      if (r.status === 404) { this.setState({ busy: false, loaded: true, sha: null, blogs: [], ins: [], msg: 'expert.md does not exist yet. Saving creates it.' }); return; }
+      if (!r.ok) throw new Error(r.status === 401 ? 'GitHub rejected the token.' : 'GitHub said ' + r.status + '.');
+      const j = await r.json(), p = parse(b64d(j.content || ''));
+      this.setState({ busy: false, loaded: true, sha: j.sha, blogs: p.blogs, ins: p.ins, dirty: false, msg: 'Loaded. ' + p.blogs.length + ' blogs, ' + p.ins.length + ' instructions live for every restaurant.' });
+    } catch (e) { this.setState({ busy: false, err: true, msg: String(e.message || e) }); }
+  }
+  async save() {
+    const S = this.state;
+    if (!S.token) { this.setState({ err: true, msg: 'Add a GitHub token first.' }); return; }
+    this.setState({ busy: true, err: false, msg: 'Saving to GitHub…' });
+    try {
+      const body = { message: 'Expert library: ' + S.blogs.length + ' blogs, ' + S.ins.length + ' instructions', content: b64e(build(S.blogs, S.ins)), branch: 'main' };
+      if (S.sha) body.sha = S.sha;
+      const r = await fetch(API, { method: 'PUT', headers: { ...this.hdr(), 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      const j = await r.json().catch(() => ({}));
+      if (r.status === 409 || r.status === 422) throw new Error('The file changed on GitHub since it was loaded. Load it again, then redo your edit.');
+      if (!r.ok) throw new Error(r.status === 401 || r.status === 403 ? 'The token cannot write to ' + REPO + '.' : (j.message || 'GitHub said ' + r.status));
+      this.setState({ busy: false, dirty: false, sha: j.content && j.content.sha, msg: 'Saved. Instructions reach every assistant within the hour; blogs join each library on its next run.' });
+    } catch (e) { this.setState({ busy: false, err: true, msg: String(e.message || e) }); }
+  }
+  renderVals() {
+    const S = this.state, edit = (p, m) => this.setState({ ...p, dirty: true, err: false, msg: m || 'Unsaved changes.' });
+    return {
+      repo: REPO, token: S.token,
+      onToken: e => { const v = e.target.value.trim(); try { localStorage.setItem('prov:ghToken', v); } catch (x) {} this.setState({ token: v }); },
+      reload: () => this.load(),
+      connLine: !S.token ? 'No token, read only' : S.loaded && !S.err ? 'Connected' : S.err ? 'Check token' : 'Checking…',
+      connColor: !S.token ? '#8d8272' : S.err ? '#d99a84' : '#9cc49a',
+      blogRows: S.blogs.map((b, i) => ({ ...b, onRemove: () => edit({ blogs: S.blogs.filter((_, j) => j !== i) }) })),
+      blogCount: S.blogs.length + (S.blogs.length === 1 ? ' blog' : ' blogs'), noBlogs: S.loaded && !S.blogs.length,
+      insRows: S.ins.map((t, i) => ({ text: t, onRemove: () => edit({ ins: S.ins.filter((_, j) => j !== i) }) })),
+      insCount: S.ins.length + (S.ins.length === 1 ? ' instruction' : ' instructions'), noIns: S.loaded && !S.ins.length,
+      fName: S.fName, fSite: S.fSite, fTopic: S.fTopic, fIns: S.fIns,
+      onFName: e => this.setState({ fName: e.target.value }), onFSite: e => this.setState({ fSite: e.target.value }),
+      onFTopic: e => this.setState({ fTopic: e.target.value }), onFIns: e => this.setState({ fIns: e.target.value }),
+      addBlog: () => {
+        let site = S.fSite.trim(); if (site && !/^https?:\/\//.test(site)) site = 'https://' + site;
+        site = site.replace(/\/+$/, '');
+        if (!S.fName.trim() || !/^https?:\/\/[^\s.]+\.[^\s]+$/.test(site)) { this.setState({ err: true, msg: 'Give the blog a name and a full web address.' }); return; }
+        if (S.blogs.some(b => b.site.replace(/\/+$/, '') === site)) { this.setState({ err: true, msg: 'That blog is already listed.' }); return; }
+        edit({ blogs: S.blogs.concat({ name: S.fName.trim(), site, topic: S.fTopic }), fName: '', fSite: '' }, 'Blog added. Save to publish it.');
+      },
+      addIns: () => { const t = S.fIns.trim(); if (!t) return; edit({ ins: S.ins.concat(t), fIns: '' }, 'Instruction added. Save to publish it.'); },
+      msg: S.msg, msgColor: S.err ? '#d99a84' : S.dirty ? '#e0b066' : '#a89c8a',
+      save: () => this.save(), saveOff: S.busy || !S.dirty, saveOpacity: S.busy || !S.dirty ? 0.45 : 1,
+      saveLabel: S.busy ? 'Working…' : 'Save for all restaurants',
+    };
+  }
+}
+</script>
+</body>
+</html>

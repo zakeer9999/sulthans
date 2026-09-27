@@ -179,15 +179,18 @@ const TOOLS = [
        the question arrives through. */
     name: 'openOrders',
     local: true,
-    run: (sb, rid, a, ctx) => {
+    run: async (sb, rid, a, ctx) => {
       const snap = ctx && typeof ctx.floor === 'function' ? ctx.floor() : null;
-      if (!snap) return { unavailable: true, hint: 'The live board is not readable from this screen. Say so rather than guessing what is open.' };
-      if (!snap.orders || !snap.orders.length) return { empty: true, hint: 'Nothing open on the board right now — no tables seated and no parcels waiting.' };
-      return snap;
+      if (snap) return floorRead(snap);
+      /* Screens without the board in memory (the counter's AI desks) read the
+         open tickets from the database instead of saying they cannot see any. */
+      const db = await floorFromDb(sb, rid, ctx);
+      if (db) return floorRead(db);
+      return { unavailable: true, hint: 'The live board is not readable from this screen. Say so rather than guessing what is open.' };
     },
     schema: {
       description:
-        'The live board as it stands: every open ticket with its board number, its table or parcel label, the dishes on it with quantities, notes and how many portions have gone out, and how long it has been open. This is the tool for anything about service right now — which tables are seated, what a table ordered, what is still to go out, which ticket has been open longest — and the tool to read before acting on a ticket by number. It is a live read: call it again rather than trusting what the board looked like earlier in the conversation.',
+        'The live board as it stands. Returns seating (tables in the room, how many are occupied and free, and which ones — already counted, read these figures as given and never recount), clearingNext (seated tables ranked by how soon they should free up, with the reason), and every open ticket with its board number, table or parcel label, when it was seated and for how long, each dish with quantity, when it was ordered, how many portions have gone out and when the last one went out, and what is still pending. This is the tool for anything about service right now — how many tables are occupied or free, which table will clear next, what a table ordered, what is still to go out, which ticket has been open longest — and the tool to read before acting on a ticket by number. It is a live read: call it again for every such question rather than trusting an earlier answer.',
       parameters: { type: 'object', properties: {} },
     },
   },
@@ -291,6 +294,52 @@ const TOOLS = [
     },
   },
   {
+    /* The expert library: articles from trusted cooking and restaurant blogs,
+       downloaded twice a day by the kb edge function. One indexed query, so a
+       voice answer does not wait on live browsing. */
+    name: 'expertTips',
+    run: async (sb, rid, a) => {
+      const q = String(a.query || '').trim();
+      if (!q) return { error: 'query required' };
+      const topic = ['cooking', 'service', 'operations', 'cost', 'sales', 'staff'].includes(a.topic) ? a.topic : null;
+      let { data, error } = await sb.rpc('kb_search', { p_q: q, p_topic: topic, p_limit: clamp(a.limit, 1, 8, 5) });
+      if (error) return unreadable(error);
+      if (!(data || []).length && topic) ({ data } = await sb.rpc('kb_search', { p_q: q, p_topic: null, p_limit: clamp(a.limit, 1, 8, 5) }));
+      if (!(data || []).length) return { empty: true, hint: 'Nothing in the saved expert library matches. Say so in one line, then answer only from this restaurant\'s own data; do not fall back on generic advice.' };
+      return { passages: data.map(r => ({ source: r.source, title: r.title, date: r.published, url: r.url, text: r.passage })) };
+    },
+    schema: {
+      description: 'Saved expert library: passages from trusted cooking and restaurant-management blogs (recipes and technique, service, operations, food cost, sales and marketing), refreshed automatically. Use for any request to improve a dish, cook faster, cut cost, raise sales, improve service, or for tips and tricks. Search with the specific dish, ingredient or problem words.',
+      parameters: {
+        type: 'object',
+        properties: {
+          query: { type: 'string', description: 'specific keywords: dish, ingredient, technique or problem, e.g. "biryani rice sticky dum" or "food cost portion waste"' },
+          topic: { type: 'string', enum: ['cooking', 'service', 'operations', 'cost', 'sales', 'staff'], description: 'optional filter' },
+          limit: { type: 'integer', description: 'default 5' },
+        },
+        required: ['query'],
+      },
+    },
+  },
+  {
+    /* AI Engine screens as the counter last computed them. Off the counter the
+       rupee fields go; portions, percentages and festival patterns stay. */
+    name: 'aiEngine',
+    run: async (sb, rid, a, ctx) => {
+      const want = ['menuIntel', 'insights'].includes(a.section) ? [a.section] : ['menuIntel', 'insights'];
+      const { data, error } = await sb.from('ai_engine_snapshot').select('section,body,at').eq('restaurant_id', rid).in('section', want);
+      if (error) return unreadable(error);
+      if (!(data || []).length) return { empty: true, hint: 'The AI Engine has not published yet. It publishes when the counter app is open. Say so.' };
+      const out = {};
+      data.forEach(r => { out[r.section] = { computedAt: r.at, ...(ctx && ctx.scope === 'counter' ? r.body : dropSold(stripMoney(r.body))) }; });
+      return out;
+    },
+    schema: {
+      description: 'The AI Engine sections. menuIntel (shown as AI Insights): prep forecast per dish for the next 7 days with veg/non-veg split and stock shortfalls, festival sales patterns (veg and non-veg lift before, on and after each festival, next dates), dish performance (gaining and dipping dishes with reasons), and logged recipe tweaks, posts, staff pushes, price changes and offers with their measured effect. insights (shown as AI Planner): weather for the week, upcoming events and holidays, the content plan, recent posts and campaigns.',
+      parameters: { type: 'object', properties: { section: { type: 'string', enum: ['menuIntel', 'insights'], description: 'omit for both' } } },
+    },
+  },
+  {
     name: 'dishDetails',
     run: async (sb, rid, a) => {
       const r = await dishDossier(sb, rid, [String(a.dish || '')], true);
@@ -356,7 +405,7 @@ const TOOLS = [
       const days = Math.min(Math.max(Number(a.days) || 7, 1), 60);
       const since = new Date(Date.now() - days * 864e5).toISOString().slice(0, 10);
       const ahead = new Date(Date.now() + 7 * 864e5).toISOString().slice(0, 10);
-      const today = new Date().toISOString().slice(0, 10);
+      const today = localDay();
       const [st, at, sh] = await Promise.all([
         sb.from('staff').select('id,name,role,active').eq('restaurant_id', rid).order('name'),
         sb.from('attendance').select('staff_id,day,in_at,out_at,break_mins,note').eq('restaurant_id', rid).gte('day', since).order('in_at', { ascending: false }).limit(400),
@@ -496,6 +545,308 @@ const TOOLS = [
     },
   },
   {
+    /* Bulk cooking: the trays the kitchen tab starts in the guest app. Read by
+       both screens, but no assistant had a tool pointed at the table, so "how
+       much biryani is left in the pot" had nothing to answer from. */
+    name: 'bulkCooking',
+    run: async (sb, rid, a) => {
+      const days = clamp(a.days, 1, 30, 1);
+      const since = new Date(Date.now() - days * 864e5).toISOString();
+      const { data, error } = await sb.from('batches')
+        .select('id,qty,used,mins,started_at,ready_at,dishes(name_en)')
+        .eq('restaurant_id', rid).gte('started_at', since).order('started_at', { ascending: false }).limit(400);
+      if (error) {
+        if (/does not exist|could not find/i.test(error.message || '')) return { unavailable: true, hint: 'Bulk cooking is not shared with this screen yet (bulk-batches.sql not run). Say so.' };
+        return unreadable(error);
+      }
+      const now = Date.now();
+      const trays = (data || []).map(b => {
+        const start = Date.parse(b.started_at), readyAt = b.ready_at ? Date.parse(b.ready_at) : start + (b.mins || 0) * 6e4;
+        const left = Math.max(0, (b.qty || 0) - (b.used || 0));
+        return {
+          dish: (b.dishes && b.dishes.name_en) || 'Dish no longer on the menu',
+          portions: b.qty, used: b.used || 0, left,
+          state: left === 0 ? 'finished' : readyAt <= now ? 'ready' : 'cooking',
+          started: clock(b.started_at), startedMinsAgo: minsAgo(b.started_at),
+          readyInMins: readyAt > now ? Math.round((readyAt - now) / 6e4) : undefined,
+          cookMins: b.mins || undefined,
+        };
+      });
+      if (!trays.length) return { empty: true, hint: 'No bulk trays were started in the last ' + days + (days === 1 ? ' day' : ' days') + '.' };
+      const byDish = {};
+      trays.forEach(r => {
+        const d = byDish[r.dish] = byDish[r.dish] || { dish: r.dish, trays: 0, portionsCooked: 0, portionsUsed: 0, portionsLeft: 0, readyNow: 0, cookingNow: 0 };
+        d.trays++; d.portionsCooked += r.portions || 0; d.portionsUsed += r.used; d.portionsLeft += r.left;
+        if (r.state === 'ready') d.readyNow += r.left;
+        if (r.state === 'cooking') d.cookingNow += r.left;
+      });
+      return {
+        days,
+        standingReadyNow: Object.values(byDish).filter(d => d.readyNow).map(d => ({ dish: d.dish, portions: d.readyNow })),
+        onTheRangeNow: trays.filter(r => r.state === 'cooking').map(r => ({ dish: r.dish, portions: r.left, readyInMins: r.readyInMins })),
+        byDish: Object.values(byDish).sort((x, y) => y.portionsCooked - x.portionsCooked),
+        trays: trays.slice(0, 60),
+      };
+    },
+    schema: {
+      description: 'Bulk cooking: the trays and pots the kitchen cooks ahead (biryani, gravies). What is standing ready right now and how many portions, what is still on the range and when it will be ready, and per dish how many trays and portions were cooked, used and are left over. Use for anything about bulk orders, bulk cooking, trays, pots, batches, how much of a dish is left or ready, or leftover portions.',
+      parameters: { type: 'object', properties: { days: { type: 'integer', description: 'lookback, default 1 (today)' } } },
+    },
+  },
+  {
+    /* Per station, not per stage. kitchenBottlenecks answers "which stage is
+       slow"; the owner asks "is the tandoor slow", which is the station. */
+    name: 'kitchenStations',
+    run: async (sb, rid, a) => {
+      const days = clamp(a.days, 1, 60, 1);
+      const since = new Date(Date.now() - days * 864e5).toISOString();
+      const [st, kt] = await Promise.all([
+        sb.from('stations').select('id,name,sort').eq('restaurant_id', rid).order('sort'),
+        sb.from('kots').select('id,station_id,state,created_at,prep_at,served_at,kot_items(qty)')
+          .eq('restaurant_id', rid).gte('created_at', since).neq('state', 'void').limit(4000),
+      ]);
+      if (st.error) return unreadable(st.error);
+      if (kt.error) return unreadable(kt.error);
+      const name = Object.fromEntries((st.data || []).map(s => [s.id, s.name]));
+      const per = {};
+      (kt.data || []).forEach(k => {
+        const key = k.station_id || 'none';
+        const p = per[key] = per[key] || { station: name[k.station_id] || 'Unrouted', tickets: 0, plates: 0, served: 0, serve: [], start: [], openNow: 0, oldestOpenMins: 0, over25: 0 };
+        p.tickets++;
+        p.plates += (k.kot_items || []).reduce((n, i) => n + (i.qty || 0), 0);
+        if (k.served_at) { const m = (Date.parse(k.served_at) - Date.parse(k.created_at)) / 6e4; p.served++; p.serve.push(m); if (m > 25) p.over25++; }
+        else { p.openNow++; p.oldestOpenMins = Math.max(p.oldestOpenMins, minsAgo(k.created_at) || 0); }
+        if (k.prep_at) p.start.push((Date.parse(k.prep_at) - Date.parse(k.created_at)) / 6e4);
+      });
+      (st.data || []).forEach(s => { if (!per[s.id]) per[s.id] = { station: s.name, tickets: 0, plates: 0, served: 0, serve: [], start: [], openNow: 0, oldestOpenMins: 0, over25: 0 }; });
+      const rows = Object.values(per).map(p => ({
+        station: p.station, tickets: p.tickets, plates: p.plates, ticketsServed: p.served,
+        avgMinsToServe: avg(p.serve), medianMinsToServe: pctl(p.serve, .5), p90MinsToServe: pctl(p.serve, .9),
+        avgMinsBeforeCookingStarted: avg(p.start), ticketsOver25Mins: p.over25,
+        openNow: p.openNow, oldestOpenMins: p.openNow ? p.oldestOpenMins : undefined,
+      })).sort((x, y) => (y.avgMinsToServe || 0) - (x.avgMinsToServe || 0));
+      if (!rows.some(r => r.tickets)) return { days, stations: rows, empty: true, hint: 'No kitchen tickets in this window. Say so; do not invent timings.' };
+      return { days, window: days === 1 ? 'last 24 hours' : 'last ' + days + ' days', stations: rows, note: 'Ranked slowest first by average minutes from ticket to served.' };
+    },
+    schema: {
+      description: 'Each kitchen station (tandoor, biryani, grill, drinks, etc.) side by side: tickets and plates handled, average, median and 90th-percentile minutes from ticket to served, how long tickets waited before cooking started, tickets over 25 minutes, and what is open on each station right now with the oldest wait. Use for individual kitchen station performance, which station is slow or overloaded, and station comparisons. kitchenBottlenecks is by prep stage; this is by station.',
+      parameters: { type: 'object', properties: { days: { type: 'integer', description: 'default 1 (today)' } } },
+    },
+  },
+  {
+    name: 'staffPerformance',
+    run: async (sb, rid, a, ctx) => {
+      const days = clamp(a.days, 1, 60, 7);
+      const since = new Date(Date.now() - days * 864e5).toISOString();
+      const till = ctx && ctx.scope === 'counter';
+      const [st, kt, ev, bl, at] = await Promise.all([
+        sb.from('staff').select('id,name,role,active').eq('restaurant_id', rid),
+        sb.from('kots').select('staff_id,created_at,served_at,kot_items(qty)').eq('restaurant_id', rid).gte('created_at', since).neq('state', 'void').limit(4000),
+        sb.from('kot_item_events').select('staff_id,mins,at,kot_items!inner(kots!inner(restaurant_id))').eq('kot_items.kots.restaurant_id', rid).gte('at', since).limit(5000),
+        sb.from('bills').select('staff_id,state,total,settled_at').eq('restaurant_id', rid).gte('created_at', since).in('state', ['printed', 'settled']).limit(4000),
+        sb.from('attendance').select('staff_id,day,in_at,out_at,break_mins').eq('restaurant_id', rid).gte('in_at', since).limit(2000),
+      ]);
+      if (st.error) return unreadable(st.error);
+      const p = {};
+      const row = id => p[id] = p[id] || { tickets: 0, plates: 0, serve: [], moves: 0, moveMins: [], bills: 0, billed: 0, hours: 0, days: new Set() };
+      (kt.data || []).forEach(k => { if (!k.staff_id) return; const r = row(k.staff_id); r.tickets++; r.plates += (k.kot_items || []).reduce((n, i) => n + (i.qty || 0), 0); if (k.served_at) r.serve.push((Date.parse(k.served_at) - Date.parse(k.created_at)) / 6e4); });
+      (ev.error ? [] : ev.data || []).forEach(e => { if (!e.staff_id) return; const r = row(e.staff_id); r.moves++; if (e.mins != null) r.moveMins.push(Number(e.mins)); });
+      (bl.error ? [] : bl.data || []).forEach(b => { if (!b.staff_id) return; const r = row(b.staff_id); r.bills++; r.billed += Number(b.total) || 0; });
+      (at.error ? [] : at.data || []).forEach(x => { const r = row(x.staff_id); r.hours += stintHours(x); r.days.add(x.day); });
+      const people = (st.data || []).filter(s => s.active || p[s.id]).map(s => {
+        const r = p[s.id] || row(s.id);
+        const hrs = Math.round(r.hours * 10) / 10;
+        return {
+          name: s.name, role: s.role, active: s.active,
+          daysWorked: r.days.size, hoursWorked: hrs,
+          ticketsPunched: r.tickets, platesPunched: r.plates,
+          avgMinsTheirTicketsTookToServe: avg(r.serve),
+          kitchenStepsHandled: r.moves || undefined, avgMinsPerKitchenStep: avg(r.moveMins),
+          billsHandled: r.bills,
+          platesPerHourWorked: hrs ? Math.round(r.plates / hrs * 10) / 10 : undefined,
+          ...(till ? { billedValue: Math.round(r.billed) } : {}),
+        };
+      }).sort((x, y) => y.platesPunched - x.platesPunched || y.hoursWorked - x.hoursWorked);
+      return {
+        days, staff: people,
+        note: 'Tickets punched are orders a person keyed in; kitchen steps are prep moves a cook pressed on the kitchen screen; bills handled are bills they printed or settled. Guest ratings are per table, not per person, so there is no per-person rating.' + (till ? '' : ' Bill values are only readable at the counter.'),
+      };
+    },
+    schema: {
+      description: 'Individual staff performance for a period: per person days and hours worked, orders (tickets) and plates they punched, how long their tickets took to serve, kitchen prep steps a cook handled and their average minutes, bills they handled, plates per hour worked' + ' (and at the counter, the value they billed). Use for who performed best, who is slow, comparing waiters or cooks, productivity.',
+      parameters: { type: 'object', properties: { days: { type: 'integer', description: 'default 7' } } },
+    },
+  },
+  {
+    /* Attendance against the day that was planned: rostered shift if there
+       is one, the house's overtime threshold if there is not. Wages follow
+       payroll_summary exactly, so this and the wage sheet cannot disagree. */
+    name: 'attendanceHours',
+    run: async (sb, rid, a, ctx) => {
+      const till = ctx && ctx.scope === 'counter';
+      const today = localDay();
+      let from = /^\d{4}-\d{2}-\d{2}$/.test(a.from || '') ? a.from : '';
+      let to = /^\d{4}-\d{2}-\d{2}$/.test(a.to || '') ? a.to : today;
+      if (!from) from = a.days ? localDay(new Date(Date.now() - (clamp(a.days, 1, 92, 7) - 1) * 864e5)) : today.slice(0, 8) + '01';
+      const [house, st, at, sh, pay] = await Promise.all([
+        sb.from('restaurants').select('*').eq('id', rid).maybeSingle(),
+        sb.from('staff').select('id,name,role,active').eq('restaurant_id', rid),
+        sb.from('attendance').select('staff_id,day,in_at,out_at,break_mins,note').eq('restaurant_id', rid).gte('day', from).lte('day', to).order('in_at').limit(3000),
+        sb.from('shifts').select('staff_id,day,starts_at,ends_at').eq('restaurant_id', rid).gte('day', from).lte('day', to).limit(3000),
+        till ? sb.rpc('payroll_summary', { p_rid: rid, p_from: from, p_to: to }) : Promise.resolve({ data: null }),
+      ]);
+      if (st.error) return unreadable(st.error);
+      if (at.error) return unreadable(at.error);
+      const h = house.data || {};
+      const stdDay = Number(h.ot_after_hours) || 9;
+      const brk = houseBreak(ctx);
+      const name = Object.fromEntries((st.data || []).map(s => [s.id, s.name]));
+      const plan = {};
+      (sh.error ? [] : sh.data || []).forEach(s => { const k = s.staff_id + '|' + s.day; (plan[k] = plan[k] || []).push(s); });
+      const worked = {};
+      (at.data || []).forEach(r => { const k = r.staff_id + '|' + r.day; (worked[k] = worked[k] || []).push(r); });
+      const keys = new Set([...Object.keys(plan), ...Object.keys(worked)]);
+      const days = [];
+      keys.forEach(k => {
+        const [sid, day] = k.split('|');
+        const ws = worked[k] || [], ps = plan[k] || [];
+        /* Every shift carries the standard break. A clock-out that recorded no
+           break has the standard one taken off; a longer one is kept and flagged. */
+        const took = ws.reduce((n, r) => n + (r.break_mins || 0), 0);
+        const raw = ws.reduce((n, r) => n + stintHours(r), 0);
+        const assumed = ws.length && !took && raw > 4 ? brk : 0;
+        const hrs = Math.max(0, raw - assumed / 60);
+        const planned = ps.reduce((n, s) => n + (Date.parse(s.ends_at) - Date.parse(s.starts_at)) / 36e5, 0);
+        const expect = Math.max(0, (ps.length ? planned : stdDay) - brk / 60);
+        const still = ws.some(r => !r.out_at);
+        const firstIn = ws.length ? ws[0].in_at : null, lastOut = ws.length && !still ? ws[ws.length - 1].out_at : null;
+        const shiftStart = ps.length ? ps.map(s => s.starts_at).sort()[0] : null, shiftEnd = ps.length ? ps.map(s => s.ends_at).sort().slice(-1)[0] : null;
+        const late = firstIn && shiftStart ? Math.round((Date.parse(firstIn) - Date.parse(shiftStart)) / 6e4) : 0;
+        const early = lastOut && shiftEnd ? Math.round((Date.parse(shiftEnd) - Date.parse(lastOut)) / 6e4) : 0;
+        const r1 = x => Math.round(x * 100) / 100;
+        days.push({
+          staffId: sid, name: name[sid] || 'Unknown', day,
+          clockedIn: clock(firstIn), clockedOut: still ? 'still clocked in' : clock(lastOut),
+          breakMins: took || assumed || undefined,
+          breakNote: assumed ? 'standard ' + brk + '-min break taken off (none recorded)' : took > brk ? 'break ran ' + (took - brk) + ' min over the ' + brk + '-min allowance' : undefined,
+          hoursWorked: r1(hrs), expectedHours: r1(expect), expectedFrom: ps.length ? 'rostered shift' : 'standard ' + stdDay + '-hour day',
+          extraHours: still ? undefined : r1(Math.max(0, hrs - expect)),
+          shortHours: still ? undefined : r1(Math.max(0, expect - hrs)),
+          absent: !ws.length && ps.length ? true : undefined,
+          lateMins: late > 5 ? late : undefined, leftEarlyMins: early > 5 ? early : undefined,
+        });
+      });
+      days.sort((x, y) => x.day.localeCompare(y.day) || x.name.localeCompare(y.name));
+      const payRows = Object.fromEntries(((pay && pay.data && pay.data.rows) || []).map(r => [r.staff_id, r]));
+      const totals = Object.values(days.reduce((m, d) => {
+        const t = m[d.staffId] = m[d.staffId] || { name: d.name, daysWorked: 0, daysAbsent: 0, hoursWorked: 0, expectedHours: 0, extraHours: 0, shortHours: 0, lateDays: 0, clockedInNow: false };
+        if (d.absent) t.daysAbsent++; else t.daysWorked++;
+        t.hoursWorked += d.hoursWorked; t.expectedHours += d.expectedHours;
+        t.extraHours += d.extraHours || 0; t.shortHours += d.shortHours || 0;
+        if (d.lateMins) t.lateDays++;
+        if (d.clockedOut === 'still clocked in') t.clockedInNow = true;
+        t.id = d.staffId;
+        return m;
+      }, {})).map(t => {
+        const r2 = x => Math.round(x * 100) / 100;
+        const out = { name: t.name, daysWorked: t.daysWorked, daysAbsent: t.daysAbsent || undefined, hoursWorked: r2(t.hoursWorked), expectedHours: r2(t.expectedHours), extraHours: r2(t.extraHours), shortHours: r2(t.shortHours), netHours: r2(t.extraHours - t.shortHours), lateDays: t.lateDays || undefined, clockedInNow: t.clockedInNow || undefined };
+        const p = payRows[t.id];
+        if (till && p) {
+          out.payKind = p.pay_kind; out.rate = Number(p.rate);
+          out.overtimeHoursPaid = Number(p.ot_hours);
+          out.wagesDue = p.pay == null ? 'monthly salary ' + Number(p.rate) + ' (not prorated by attendance)' : Number(p.pay);
+          if (p.pay_kind === 'hourly' && t.shortHours) out.valueOfShortHours = Math.round(t.shortHours * Number(p.rate));
+        }
+        return out;
+      }).sort((x, y) => x.name.localeCompare(y.name));
+      return {
+        restaurantHours: houseHours(ctx, h),
+        businessDayStartsAt: (h.day_start_hour ?? 6) + ':00',
+        standardDayHours: stdDay, staffBreakMins: brk,
+        hoursNote: 'Expected hours are the shift (or standard day) minus the ' + brk + '-minute break.', overtimeMultiplier: Number(h.ot_multiplier) || 1.5,
+        window: { from, to },
+        totals,
+        days: days.slice(-150).map(({ staffId, ...d }) => d),
+        ...(till ? { wageNote: pay && pay.error ? 'Wage sheet unreadable: ' + pay.error.message : 'Wages follow the wage sheet: hourly = regular hours x rate + overtime x rate x multiplier; daily = days x rate; monthly salary is not divided by attendance.' } : { wageNote: 'Wages are only readable in the counter app.' }),
+      };
+    },
+    schema: {
+      description: 'Restaurant opening hours and staff attendance for a date range: per person and per day the clock-in and clock-out time, breaks, hours worked, the hours expected (rostered shift, or the standard day), extra (overtime) hours, shortage hours, absences, late arrivals and early leaving, plus totals per person' + ' and, at the counter, pay kind, rate, paid overtime and wages due. Use for restaurant timings, attendance, who came late, overtime, extra hours, short hours, and wages. Defaults to this month.',
+      parameters: {
+        type: 'object',
+        properties: {
+          from: { type: 'string', description: 'YYYY-MM-DD' },
+          to: { type: 'string', description: 'YYYY-MM-DD' },
+          days: { type: 'integer', description: 'rolling window ending today instead of from/to' },
+        },
+      },
+    },
+  },
+  {
+    name: 'restaurantInfo',
+    run: async (sb, rid, a, ctx) => {
+      const { data, error } = await sb.from('restaurants').select('*').eq('id', rid).maybeSingle();
+      if (error) return unreadable(error);
+      const h = data || {};
+      return {
+        name: h.name || PLACE.restaurantName, address: h.address || undefined, phone: h.phone || undefined,
+        openingHours: houseHours(ctx, h), staffBreakMins: houseBreak(ctx),
+        tables: h.table_count || undefined, businessDayStartsAt: (h.day_start_hour ?? 6) + ':00',
+        now: new Date().toLocaleString('en-IN', { weekday: 'long', hour: 'numeric', minute: '2-digit' }),
+      };
+    },
+    schema: {
+      description: 'The restaurant itself: opening and closing hours, address, phone, number of tables, when the business day starts, and the current day and time. Use for timings, when we open or close, and how long until closing.',
+      parameters: { type: 'object', properties: {} },
+    },
+  },
+  {
+    /* What the room still owes. Printed bills carry their real total; a table
+       not yet billed is its lines so far, which is labelled as such rather
+       than passed off as the bill. */
+    name: 'unpaidOrders',
+    counterOnly: true,
+    run: async (sb, rid) => {
+      let r = await sb.from('orders').select('id,table_label,opened_at,stage,paid_amount,dlv,party_name,order_items(qty,unit_price)').eq('restaurant_id', rid).eq('status', 'open');
+      if (r.error) r = await sb.from('orders').select('id,table_label,opened_at,order_items(qty,unit_price)').eq('restaurant_id', rid).eq('status', 'open');
+      if (r.error) return unreadable(r.error);
+      const ords = r.data || [];
+      const ids = ords.map(o => o.id);
+      const bl = ids.length ? await sb.from('bills').select('order_id,no,state,total,paid,printed_at').in('order_id', ids).neq('state', 'void') : { data: [] };
+      const bill = Object.fromEntries(((bl && bl.data) || []).map(b => [b.order_id, b]));
+      const rows = ords.map(o => {
+        const b = bill[o.id];
+        const d = o.dlv || {};
+        const items = (o.order_items || []).reduce((n, i) => n + (i.qty || 0) * (Number(i.unit_price) || 0), 0) + (d.mode === 'door' && d.charge && d.fee != null ? Number(d.fee) : 0);
+        const billed = b && b.state !== 'open';
+        const total = billed ? Number(b.total) : items;
+        const paid = billed ? Math.max(Number(b.paid) || 0, Number(o.paid_amount) || 0) : Number(o.paid_amount) || 0;
+        return {
+          who: (/^U/.test(o.table_label) ? 'Parcel ' + o.table_label.slice(1) : 'Table ' + o.table_label) + (o.party_name ? ' (' + o.party_name + ')' : ''),
+          openedMinsAgo: minsAgo(o.opened_at),
+          status: b && b.state === 'printed' ? 'bill printed, waiting for payment' : 'not billed yet',
+          billNo: b && b.no || undefined,
+          total: Math.round(total), paid: Math.round(paid), due: Math.round(Math.max(0, total - paid)),
+          basis: billed ? 'printed bill total' : 'items ordered so far, before tax, charges or discount',
+        };
+      }).filter(x => x.due > 0).sort((x, y) => y.due - x.due);
+      const sum = f => rows.filter(f).reduce((n, x) => n + x.due, 0);
+      return {
+        ordersAwaitingPayment: rows.length,
+        totalToCollect: sum(() => true),
+        onPrintedBills: sum(x => x.basis === 'printed bill total'),
+        onTablesNotYetBilled: sum(x => x.basis !== 'printed bill total'),
+        orders: rows,
+        note: 'Figures already added up; quote them as given. Not-yet-billed amounts will change once tax, charges or discounts are applied at billing.',
+      };
+    },
+    schema: {
+      description: 'Every open table and parcel that has not paid yet: who, how long open, whether the bill is printed, total, paid so far and amount due, plus the total still to be collected (split into printed bills and tables not billed yet). Use for pending payments, unpaid orders, money still to come in, who has not paid, outstanding amount.',
+      parameters: { type: 'object', properties: {} },
+    },
+  },
+
+  {
     /* The menu itself. Every other tool reads what was sold; none of them
        could answer "what does the chicken dum biryani cost", which is the
        question a counter asks most often. Read straight from the table rather
@@ -506,7 +857,7 @@ const TOOLS = [
       const sel = 'no,name_en,name_ta,price,available,hidden';
       const base = () => sb.from('dishes').select(sel)
         .eq('restaurant_id', rid).eq('hidden', false).order('no');
-      const cap = Math.min(Number(a.limit) || 120, 300);
+      const cap = Math.min(Number(a.limit) || 300, 400);
       const like = String(a.search || '').trim();
 
       let data, error;
@@ -539,10 +890,24 @@ const TOOLS = [
           ? { empty: true, hint: 'Nothing on the menu matches "' + like + '". Try a single distinctive word from the name before concluding it is not sold.' }
           : { empty: true, hint: 'The menu is empty.' };
       }
-      return data.map(d => ({
+      /* "Most expensive" was answered by the model scanning 120 rows and it
+         paired the top price with the wrong neighbour (Juicy Mandi at ₹600 —
+         that is the Turkish Mandi; the Juicy is ₹580). Sorting is code's job:
+         the extremes arrive already picked, name and price on one line. */
+      const rows = data.map(d => ({
         no: d.no, name: d.name_en, tamil: d.name_ta || undefined,
         price: Number(d.price), available: d.available !== false,
       }));
+      const byPrice = rows.slice().sort((x, y) => y.price - x.price);
+      const line = d => d.name + ' \u2014 \u20b9' + d.price;
+      if (a.sort === 'price_desc') rows.sort((x, y) => y.price - x.price);
+      if (a.sort === 'price_asc') rows.sort((x, y) => x.price - y.price);
+      return {
+        mostExpensive: byPrice.slice(0, 5).map(line),
+        cheapest: byPrice.slice(-5).reverse().map(line),
+        note: 'Each price belongs to the name on its own row. For most or least expensive, quote mostExpensive / cheapest exactly.',
+        dishes: rows,
+      };
     },
     schema: {
       description:
@@ -551,12 +916,114 @@ const TOOLS = [
         type: 'object',
         properties: {
           search: { type: 'string', description: 'part of a dish name, e.g. "biryani"' },
+          sort: { type: 'string', enum: ['price_desc', 'price_asc'] },
           limit: { type: 'integer' },
         },
       },
     },
   },
 ];
+
+
+const clamp = (v, lo, hi, dflt) => Math.min(Math.max(Number(v) || dflt, lo), hi);
+const localDay = (d = new Date()) => new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+const minsAgo = t => { const x = t ? (typeof t === 'number' ? t : Date.parse(t)) : 0; return x ? Math.max(0, Math.round((Date.now() - x) / 6e4)) : undefined; };
+const clock = t => { const x = t ? (typeof t === 'number' ? t : Date.parse(t)) : 0; return x ? new Date(x).toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' }) : undefined; };
+const avg = xs => xs.length ? Math.round(xs.reduce((n, x) => n + x, 0) / xs.length * 10) / 10 : undefined;
+const pctl = (xs, p) => { if (!xs.length) return undefined; const s = xs.slice().sort((a, b) => a - b); return Math.round(s[Math.min(s.length - 1, Math.floor(p * s.length))] * 10) / 10; };
+const stintHours = r => Math.max(0, ((r.out_at ? Date.parse(r.out_at) : Date.now()) - Date.parse(r.in_at)) / 36e5 - (r.break_mins || 0) / 60);
+
+/* The board with its arithmetic already done. Asked twice how many tables were
+   taken, the model counted a list of tickets twice and got 10 then 9: parcels,
+   split parts and a seated table with no food yet were each counted or not by
+   chance. Counting is code's job; the model reads the answer. */
+async function floorFromDb(sb, rid, ctx) {
+  if (!sb || !rid) return null;
+  let r = await sb.from('orders').select('id,table_label,opened_at,stage,order_items(dish_id,qty,sent,note)').eq('restaurant_id', rid).eq('status', 'open');
+  if (r.error) r = await sb.from('orders').select('id,table_label,opened_at,order_items(dish_id,qty,note)').eq('restaurant_id', rid).eq('status', 'open');
+  if (r.error) return null;
+  const ids = Array.from(new Set((r.data || []).flatMap(o => (o.order_items || []).map(i => i.dish_id)).filter(Boolean)));
+  const dn = {};
+  if (ids.length) {
+    const d = await sb.from('dishes').select('id,name_en').in('id', ids);
+    (d.data || []).forEach(x => { dn[x.id] = x.name_en; });
+  }
+  const now = Date.now();
+  const ago = t => t ? Math.max(0, Math.round((now - Date.parse(t)) / 6e4)) : undefined;
+  return {
+    tables: (ctx && ctx.tables) || 0,
+    orders: (r.data || []).sort((a, b) => Date.parse(a.opened_at) - Date.parse(b.opened_at)).map((o, n) => {
+      const parcel = /^U/.test(o.table_label || '');
+      return {
+        order: n + 1, table: parcel ? 'Parcel ' + o.table_label.slice(1) : o.table_label, kind: parcel ? 'parcel' : 'table',
+        seatedAt: clock(o.opened_at), seatedMinsAgo: ago(o.opened_at), openedMinsAgo: ago(o.opened_at),
+        billPrinted: o.stage === 'billed' ? true : undefined,
+        items: (o.order_items || []).map(i => {
+          const qty = Number(i.qty) || 0, out = Math.min(qty, Number(i.sent) || 0);
+          return { name: dn[i.dish_id] || 'Dish', qty, servedQty: out, note: i.note || undefined, out: out >= qty ? 'all served' : out ? out + ' of ' + qty + ' served' : 'not served yet' };
+        }),
+      };
+    }),
+  };
+}
+
+/* A ticket open longer than the restaurant is open in a day (11 AM to 11 PM)
+   is a leftover in this device's store, not a table being served. Two phones
+   gave 5 and 11 for the same room because one of them was still carrying
+   yesterday's unclosed tickets. They are reported, not counted. */
+const STALE_MINS = 14 * 60;
+
+function floorRead(snap) {
+  const all = snap.orders || [];
+  const stale = all.filter(o => (o.openedMinsAgo ?? o.seatedMinsAgo ?? 0) > STALE_MINS);
+  const orders = all.filter(o => stale.indexOf(o) < 0);
+  const total = Number(snap.tables) || 0;
+  const seated = orders.filter(o => o.kind !== 'parcel');
+  const base = l => (String(l).match(/\d+/) || [String(l)])[0];
+  const taken = Array.from(new Set(seated.map(o => base(o.table)))).sort((a, b) => a - b);
+  const free = total ? Array.from({ length: total }, (_, i) => String(i + 1)).filter(n => taken.indexOf(n) < 0) : [];
+  const clearing = seated.map(o => {
+    const items = o.items || [];
+    const pending = items.reduce((n, i) => n + Math.max(0, (i.qty || 0) - (i.servedQty || 0)), 0);
+    const plates = items.reduce((n, i) => n + (i.qty || 0), 0);
+    const lastOut = items.map(i => i.lastServedMinsAgo).filter(x => x != null);
+    const sinceFood = lastOut.length ? Math.min(...lastOut) : undefined;
+    const why = o.paymentClaimed || o.billPrinted ? (o.billPrinted ? 'bill printed' : 'guest has paid on the app') + (pending ? ', ' + pending + ' plates still pending' : '')
+      : !plates ? 'seated, nothing ordered yet'
+      : pending ? pending + ' of ' + plates + ' plates still to go out'
+      : 'all food served' + (sinceFood != null ? ' ' + sinceFood + ' min ago' : '');
+    const score = (o.paymentClaimed || o.billPrinted ? 10000 : 0) + (plates && !pending ? 5000 + (sinceFood || 0) * 10 : 0) - pending * 50 + (o.seatedMinsAgo || 0);
+    return { table: o.table, seatedMinsAgo: o.seatedMinsAgo, seatedAt: o.seatedAt, platesPending: pending, lastFoodOutMinsAgo: sinceFood, status: why, score };
+  }).sort((a, b) => b.score - a.score).map(({ score, ...r }, i) => ({ rank: i + 1, ...r }));
+  const pendingOf = o => (o.items || []).reduce((n, i) => n + Math.max(0, (i.qty || 0) - (i.servedQty || 0)), 0);
+  const waiting = orders.filter(o => pendingOf(o) > 0);
+  return {
+    readAt: clock(Date.now()),
+    pending: {
+      pendingOrders: waiting.length,
+      pendingTables: waiting.filter(o => o.kind !== 'parcel').length,
+      pendingParcels: waiting.filter(o => o.kind === 'parcel').length,
+      platesStillToGoOut: waiting.reduce((n, o) => n + pendingOf(o), 0),
+      openOrdersTotal: orders.length,
+      which: waiting.map(o => ({ table: o.table, platesPending: pendingOf(o) })),
+      note: 'Already counted. "Pending orders" means pendingOrders: open tickets with food still to go out. Quote these numbers as given; do not recount.',
+    },
+    ...(stale.length ? { leftoverTickets: { count: stale.length, tables: stale.map(o => o.table), note: 'Open more than 14 hours — old tickets never closed on this device. Not counted above. Mention them once so someone closes them.' } } : {}),
+    seating: {
+      tablesInRoom: total || undefined,
+      occupied: taken.length,
+      free: total ? free.length : undefined,
+      occupiedTables: taken,
+      freeTables: total ? free : undefined,
+      openTableTickets: seated.length,
+      openParcels: orders.length - seated.length,
+      note: 'Already counted. A split table (7A, 7B) is one table. Parcels are not tables. Quote these numbers as given.',
+    },
+    clearingNext: clearing,
+    tickets: orders,
+    ...(orders.length ? {} : { empty: true, hint: 'Nothing open on the board right now — every table is free and no parcels are waiting.' }),
+  };
+}
 
 function unreadable(err) {
   if (/permission|denied|not exist|rls|policy/i.test(err.message || '')) {
@@ -608,7 +1075,45 @@ const TREND_PAGES = [
    sorted newest first, expired ones dropped, empty file = skipped. */
 const PLACE = Object.assign({ restaurantName: "Sulthan's", town: 'Aruppukottai, Virudhunagar district, Tamil Nadu', lat: 9.51, lon: 78.10 },
   typeof window !== 'undefined' && window.SULTHANS_CONFIG || {});
+/* Opening hours and the staff break. A value handed in by the screen (its
+   Tweaks) wins, then config.js, then the restaurant row. */
+const houseHours = (ctx, h) => (ctx && ctx.house && ctx.house.hours) || PLACE.openingHours || (h && h.hours) || '11 AM to 11 PM';
+const houseBreak = ctx => {
+  const v = ctx && ctx.house ? ctx.house.breakMins : null;
+  if (v != null && v !== '' && isFinite(v)) return Math.max(0, Number(v));
+  return PLACE.staffBreakMins != null && PLACE.staffBreakMins !== '' ? Number(PLACE.staffBreakMins) : 30;
+};
 const TREND_NOTES_URL = 'https://raw.githubusercontent.com/zakeer9999/MarvotechEvery/main/trends.md';
+/* Provider's expert file, read by every restaurant's site: "## Blogs" lines
+   "- Name | https://site | topic" feed the expert library (the kb job reads
+   them), "## Instructions" lines are added to every assistant conversation.
+   Nothing per-restaurant lives there; an empty or missing file changes nothing. */
+export const EXPERT_URL = 'https://raw.githubusercontent.com/zakeer9999/MarvotechEvery/main/expert.md';
+export function parseExpert(text) {
+  const out = { blogs: [], instructions: [] };
+  let sec = '';
+  String(text || '').split(/\r?\n/).forEach(l => {
+    const h = l.match(/^##\s+(.+)/);
+    if (h) { sec = /blog/i.test(h[1]) ? 'b' : /instruct/i.test(h[1]) ? 'i' : ''; return; }
+    const m = l.match(/^\s*[-*]\s+(.+)/);
+    if (!m) return;
+    if (sec === 'b') {
+      const [name, site, topic] = m[1].split('|').map(s => s.trim());
+      if (name && /^https?:\/\//.test(site || '')) out.blogs.push({ name, site: site.replace(/\/+$/, ''), topic: ['cooking', 'service', 'operations', 'cost', 'sales', 'staff'].includes((topic || '').toLowerCase()) ? topic.toLowerCase() : 'operations' });
+    } else if (sec === 'i') out.instructions.push(m[1].trim());
+  });
+  return out;
+}
+let _expert = null;
+async function expertInstructions() {
+  if (_expert && Date.now() - _expert.at < 3600e3) return _expert.text;
+  let t = '';
+  try { const r = await fetch(EXPERT_URL, { cache: 'no-store' }); if (r.ok) t = await r.text(); } catch (e) {}
+  const ins = parseExpert(t).instructions;
+  const text = ins.length ? '\n\nStanding instructions from the app provider (apply to every answer, never above this restaurant\'s own data or the rules above):\n' + ins.map(s => '- ' + s).join('\n') : '';
+  _expert = { at: Date.now(), text };
+  return text;
+}
 async function trendNotes() {
   let text = '';
   try { const r = await fetch(TREND_NOTES_URL, { cache: 'no-store' }); if (r.ok) text = await r.text(); } catch (e) {}
@@ -764,6 +1269,14 @@ const COUNTS = /^(bills|bill_count|covers)$/i;
 
 const blockedKey = k => MONEY.test(k) || BARE_TOTAL.test(k) || COUNTS.test(k);
 
+/* Plates sold are takings with one multiplication left; off the counter the
+   AI Engine keeps its percentages and forecasts and loses the sold counts. */
+function dropSold(v) {
+  if (Array.isArray(v)) return v.map(dropSold);
+  if (v && typeof v === 'object') { const o = {}; for (const k in v) if (!/^sold_/.test(k)) o[k] = dropSold(v[k]); return o; }
+  return v;
+}
+
 function stripMoney(v) {
   if (Array.isArray(v)) return v.map(stripMoney);
   if (v && typeof v === 'object') {
@@ -839,10 +1352,17 @@ export function guardReply(text, scope) {
 /* Dictation is offered in both scopes. The admin panel lands a dictated round
    in the same cart behind the same send button the counter uses, so gating the
    instruction on scope only made admin dictation silently impossible. */
-export function systemPrompt({ tables, scope }) {
+export function systemPrompt({ tables, scope, hours, breakMins }) {
+  const hc = { house: { hours, breakMins } };
   return `You are the business manager for ${PLACE.restaurantName}, a restaurant in ${PLACE.town}${
     tables ? ` with ${tables} tables` : ''
-  }. Currency is INR; write amounts as \u20b9714 or \u20b91,240.
+  }. Open ${houseHours(hc)}; every staff shift includes a ${houseBreak(hc)}-minute break. Currency is INR; write amounts as \u20b9714 or \u20b91,240.
+
+Pending orders come from openOrders.pending (pendingOrders, platesStillToGoOut) —
+quote them exactly, the same way every time.
+
+For the most or least expensive dish, call menu and quote mostExpensive or
+cheapest exactly as given: name and price together, never re-paired.
 
 Read the numbers with your tools before answering. Never guess a figure, never
 round one into a better story, and never present your own estimate as a reading.
@@ -855,6 +1375,20 @@ sales question.
 Whether a dish is off comes from the menu tool; WHY it is off comes from
 dishesOff, which words the reason. The menu only knows a dish is unavailable,
 so do not conclude from it that no reason was recorded — read dishesOff first.
+
+Asked how to make a dish better, cook it faster, save time, cut cost, sell
+more, improve service, or for tips and tricks, call expertTips with specific
+words (the dish, ingredient or problem), and read this house's own evidence
+first where it applies: dishDetails and feedbackComments for a dish, aiEngine
+for what moved and what changes worked, stock and expenses for cost,
+serviceRatings and kitchenStations for service. Base every tip on a passage
+or a reading, name the source blog briefly, and tie it to this restaurant's
+dish, complaint or number. Never give filler advice such as greeting with a
+smile, keeping the place clean or training staff well unless a passage and a
+reading both point at it. Three or four concrete steps beat ten general ones.
+
+For prep forecasts, festival sales patterns, which dishes are gaining or
+dipping and why, and whether a logged change worked, call aiEngine.
 
 For trends, marketing ideas, festivals, the local scene or image prompts for
 posts, call webResearch; do not say you cannot browse. Pass along its sources.
@@ -892,6 +1426,29 @@ it before answering anything about service as it stands, and read it again
 rather than trusting a board you saw earlier in the conversation. Tickets are
 numbered the way the board numbers them, so "order three" is the third one it
 lists back to you.
+
+Seat counts come from openOrders.seating and nowhere else: occupied, free and
+the table lists there are already counted. Quote them exactly; never count the
+tickets yourself, and never give a different figure for the same board. Asked
+which table will clear or free up next, answer from clearingNext in its rank
+order and give the reason it lists (bill printed, paid, all food served N
+minutes ago, plates still pending), with how long the table has been seated.
+
+Other things staff ask about, and the tool for each:
+  bulkCooking        bulk orders, bulk cooking, trays, pots, portions ready or left
+  kitchenStations    how each kitchen station is doing, which station is slow
+  staffPerformance   how each staff member performed: orders, plates, speed, hours
+  attendanceHours    attendance, clock-in and out times, late, overtime (extra
+                     hours), shortage hours, absences${counterScope(scope) ? ', and wages' : ''}
+  restaurantInfo     opening and closing time, address, phone, number of tables${counterScope(scope) ? `
+  unpaidOrders       orders not paid yet and the total still to be collected —
+                     quote its totals as given, never add them up yourself` : ''}
+Always read the tool; never say this data is not available without calling it.
+
+You speak to staff and the owner, never to guests. Answer only what was asked.
+No greetings, no welcome lines, nothing like "please be seated" or "your table
+is ready", and never announce anything nobody asked for. If the message is
+unclear, empty or not addressed to you, say you did not catch it and stop.
 ${counterScope(scope) ? '' : `
 Staff close tables through you. Asked to rate a ticket and close it, read the
 board first so the dishes you name are the dishes actually on it, say back in
@@ -919,10 +1476,8 @@ period: say there is no sales data yet, name no dishes, and do not retry the
 tool. Otherwise read the rows you were given and answer from them. Never call
 the same tool twice with identical arguments.
 
-You are running without a server, so you can read this restaurant's own numbers
-and nothing else. You have no access to Instagram, Facebook, Google reviews,
-competitors, weather or search. If asked about any of those, say plainly that it
-needs the server build \u2014 do not improvise an answer.
+Outside webResearch, expertTips and aiEngine you read this restaurant's own
+numbers only; never improvise outside facts.
 
 Answer like a manager briefing the owner between services: the number, what it
 means, and what you would do. Short paragraphs, no headings, no bullet lists
@@ -943,13 +1498,21 @@ spoke. Omit table if they did not say one.
 steps is how far they asked you to take the round, in this order, and you
 include only the ones they actually asked for:
 
-  send       put the round on the ticket \u2014 "send it to the kitchen", "punch it"
+  send       put the round on the ticket \u2014 "send it to the kitchen", "punch it",
+             "send the order", "put it through"
   authorise  the counter's own check on that ticket \u2014 "authorise it", "approve
-             it", "push it to the kitchen". This is the press that puts food on
-             the kitchen screen; send on its own only files it for checking.
+             it", "confirm it", "OK it", "push it to the kitchen". This is the
+             press that puts food on the kitchen screen; send on its own only
+             files it for checking.
   first      mark every dish on it cook first \u2014 "rush it", "priority", "cook
-             it first"
+             it first", "urgent", "quickly"
   hold       park it on the board instead \u2014 "hold it", "wait on it"
+
+Staff often speak Tamil or Telugu and the words arrive translated. Anuppu /
+anuppunga / kitchen-ku anuppu is send; OK pannu, approve pannu, confirm pannu,
+authorise pannu is authorise; first-aa podu, seekiram, urgent is first; wait
+pannu, hold pannu is hold. "Send and confirm" or "send it, OK it" is send plus
+authorise.
 
 Omit steps entirely when they only read out the food. A step nobody asked for is
 food cooked without anyone checking it, so never add one to be helpful.
@@ -1076,8 +1639,9 @@ export async function creativeChat(key, geminiKey, system, prompt) {
  * rid  — restaurant uuid (db.remote.rid)
  * onPhase — called with 'thinking' | a tool name, for the status line
  */
-export async function runDirect({ key, geminiKey, sb, rid, system, messages, onPhase, scope, ctx, maxSteps = 6 }) {
-  const msgs = [{ role: 'system', content: system }, ...messages];
+export async function runDirect({ key, geminiKey, sb, rid, system, messages, onPhase, scope, ctx, house, tables, maxSteps = 6 }) {
+  ctx = { ...(ctx || {}), house: house || {}, tables };
+  const msgs = [{ role: 'system', content: system + await expertInstructions().catch(() => '') }, ...messages];
 
   for (let step = 0; step < maxSteps; step++) {
     onPhase && onPhase(step === 0 ? 'thinking' : 'reading');
@@ -1127,7 +1691,7 @@ export async function runDirect({ key, geminiKey, sb, rid, system, messages, onP
       let payload;
       try {
         const { data, error } = spec.run
-          ? { data: await spec.run(sb, rid, args, { ...ctx, groqKey: key }), error: null }
+          ? { data: await spec.run(sb, rid, args, { ...ctx, groqKey: key, scope }), error: null }
           : await sb.rpc(spec.rpc, { p_rid: rid, ...spec.args(args) });
         /* Handed back rather than thrown: the model can say "that is not
            available" and carry on, where a throw ends the whole answer. */
@@ -1181,8 +1745,24 @@ Tamil, Telugu, or English with an Indian accent. Identify the language actually
 spoken and give the meaning in English.
 
 Dish names stay as spoken — biryani, faluda, porotta, parotta are names, not
-words to translate. Numbers are quantities. If the audio is unclear, return your
-best reading rather than nothing; a human confirms it on screen.`;
+words to translate. Numbers are quantities; a table number is "table 7".
+
+Counter commands are translated to these exact English words, because the
+system acts on them: அனுப்பு / அனுப்புங்க / கிச்சனுக்கு அனுப்பு / pampu (Telugu)
+→ "send it to the kitchen"; ஓகே பண்ணு / அப்ரூவ் பண்ணு / கன்ஃபார்ம் பண்ணு /
+authorise பண்ணு → "authorise it"; ஃபர்ஸ்ட்டா போடு / சீக்கிரம் / அர்ஜென்ட் →
+"cook it first"; ஹோல்ட் பண்ணு / வெயிட் பண்ணு → "hold it". Keep every such
+command in the English, in the order spoken.
+
+Only transcribe a person speaking to the system. If the clip is silence,
+breathing, background chatter, a TV, music, or a speaker playing back an
+announcement, return english as an empty string. Never invent words that were
+not clearly spoken. If the speech is clear but partly unsure, return your best
+reading; a human confirms it on screen.`;
+
+/* What speech models write when they hear silence or noise. Whisper is famous
+   for "thank you for watching"; these are never an order or a question. */
+const GHOST = /^\W*(?:(?:thank you|thanks)(?: (?:so much|very much))?(?: for watching| for listening)?|you|bye|hmm+|um+|uh+|please subscribe|subtitles? by .*|music|\[.*\]|\(.*\))\W*$/i;
 
 const HEARD_SCHEMA = {
   type: 'OBJECT',
@@ -1231,7 +1811,7 @@ async function hearGemini(key, blob) {
   const txt = (((j.candidates || [])[0] || {}).content || {}).parts;
   const out = JSON.parse((txt && txt[0] && txt[0].text) || '{}');
   const english = String(out.english || '').trim();
-  if (!english) throw new Error('nothing heard');
+  if (!english || GHOST.test(english)) throw new Error('nothing heard');
   return { text: english, lang: out.lang || 'und', via: 'gemini' };
 }
 
@@ -1253,7 +1833,9 @@ async function hearWhisper(key, blob) {
   const { text } = await res.json();
   /* Whisper does not report the source language on this endpoint, so 'und'
      sends the caller back to the mic button's own setting. */
-  return { text: String(text || '').trim(), lang: 'und', via: 'whisper' };
+  const said = String(text || '').trim();
+  if (!said || GHOST.test(said)) throw new Error('nothing heard');
+  return { text: said, lang: 'und', via: 'whisper' };
 }
 
 /** Returns { text, lang, via }. Gemini first, Whisper when it cannot answer. */
@@ -1331,6 +1913,7 @@ export async function intoLanguage(key, text, lang, geminiKey) {
  * voice rather than going silent if it 404s.
  */
 const GEMINI_TTS = 'gemini-2.5-flash-preview-tts';
+const GEMINI_TTS_MODELS = [GEMINI_TTS, 'gemini-2.5-pro-preview-tts'];
 /* Kore is the steady, unhurried one. A counter reply is information, not
    performance, and the bright voices oversell a sales figure. */
 const TTS_VOICE = 'Kore';
@@ -1362,32 +1945,44 @@ function unb64(s) {
  * text should already be in the target language: this leg is a voice, not a
  * translator, and asking it to do both makes it paraphrase.
  */
-export async function nativeAudio(geminiKey, text, lang) {
+export async function nativeAudio(geminiKey, text, lang, translate) {
   if (!geminiKey || !text) return null;
   const name = LANG_NAME[lang];
-  const say = name
-    ? `Read this out in ${name}, calmly and at an even pace, the way a counter assistant speaks to the owner:\n\n${text}`
-    : `Read this out calmly and at an even pace:\n\n${text}`;
+  const exact = 'Say exactly these words and nothing else: no greeting, no introduction, no extra sentence before or after.';
+  /* translate: one call instead of two. The reply goes out in English and the
+     voice model says it in the staff member's language itself — the separate
+     translation round was most of the 15-second wait before anything played. */
+  const say = name && translate
+    ? `Say the text below aloud in natural spoken ${name}, the everyday counter register: dish names and words like parcel, bill, table, half, full stay in English, numbers stay numbers. Speak only the ${name} version, calmly and briskly. No greeting, nothing added before or after.\n\nTEXT:\n${text}`
+    : name
+      ? `Read the text below aloud in ${name}, calmly and briskly. ${exact}\n\nTEXT:\n${text}`
+      : `Read the text below aloud calmly and briskly. ${exact}\n\nTEXT:\n${text}`;
 
-  const res = await fetch(
-    GEMINI_NATIVE + '/models/' + GEMINI_TTS + ':generateContent?key=' + encodeURIComponent(geminiKey),
-    {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: say }] }],
-        generationConfig: {
-          responseModalities: ['AUDIO'],
-          speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: TTS_VOICE } } },
-        },
-      }),
-    },
-  );
-  if (!res.ok) {
-    const err = new Error(await res.text().catch(() => 'HTTP ' + res.status));
-    err.status = res.status;
-    throw err;
+  let res, lastErr;
+  /* The free tier gives the TTS model a small daily allowance. When it is
+     spent Google answers 429 and the voice silently dropped to the phone's own
+     — which on an iPhone has no Tamil at all. Try the second model's pool. */
+  for (const model of GEMINI_TTS_MODELS) {
+    res = await fetch(
+      GEMINI_NATIVE + '/models/' + model + ':generateContent?key=' + encodeURIComponent(geminiKey),
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: say }] }],
+          generationConfig: {
+            responseModalities: ['AUDIO'],
+            speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: TTS_VOICE } } },
+          },
+        }),
+      },
+    );
+    if (res.ok) break;
+    lastErr = new Error(await res.text().catch(() => 'HTTP ' + res.status));
+    lastErr.status = res.status;
+    if (res.status !== 429 && res.status !== 404 && res.status !== 503) throw lastErr;
   }
+  if (!res.ok) throw lastErr;
   const j = await res.json();
   const part = ((((j.candidates || [])[0] || {}).content || {}).parts || [])
     .find(p => p.inlineData || p.inline_data);
@@ -1400,4 +1995,21 @@ export async function nativeAudio(geminiKey, text, lang) {
   const mime = inline.mimeType || inline.mime_type || '';
   const rate = Number((mime.match(/rate=(\d+)/) || [])[1]) || 24000;
   return wavFromPcm(unb64(inline.data), rate);
+}
+
+/* Second rung for Tamil and Telugu when Gemini's voice is out of quota: Google
+   Translate's public speech endpoint. No key, plays as an ordinary audio URL,
+   and speaks both languages properly — unlike the iPhone's built-in voice,
+   which has neither. Unofficial and capped at ~200 characters a request, so
+   the text is cut at sentence breaks. */
+export function speechUrls(text, lang) {
+  const tl = { ta: 'ta', te: 'te', en: 'en-IN' }[lang] || 'en-IN';
+  const parts = [];
+  String(text || '').replace(/\s+/g, ' ').split(/(?<=[.!?\u0964])\s+/).forEach(s => {
+    while (s.length > 190) { const cut = s.lastIndexOf(' ', 190) > 60 ? s.lastIndexOf(' ', 190) : 190; parts.push(s.slice(0, cut)); s = s.slice(cut).trim(); }
+    const last = parts[parts.length - 1];
+    if (last && last.length + s.length < 180) parts[parts.length - 1] = last + ' ' + s; else if (s) parts.push(s);
+  });
+  return parts.map((q, i) => 'https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=' + tl
+    + '&total=' + parts.length + '&idx=' + i + '&textlen=' + q.length + '&q=' + encodeURIComponent(q));
 }

@@ -2990,7 +2990,7 @@
   </sc-if>
 
   <sc-if value="{{ assistAdmin }}" hint-placeholder-val="{{ false }}">
-    <dc-import name="Assistant" scope="admin" sb="{{ assistSb }}" rid="{{ assistRid }}" tables="{{ assistTables }}" floor="{{ assistFloor }}" on-kot="{{ takeDictated }}" on-rate="{{ takeRating }}" hint-size="0px,0px"></dc-import>
+    <dc-import name="Assistant" scope="admin" opening-hours="{{ assistHours }}" break-mins="{{ assistBreak }}" voice-mode="{{ assistVoiceMode }}" silence-secs="{{ assistSilence }}" sb="{{ assistSb }}" rid="{{ assistRid }}" tables="{{ assistTables }}" floor="{{ assistFloor }}" on-kot="{{ takeDictated }}" on-rate="{{ takeRating }}" hint-size="0px,0px"></dc-import>
   </sc-if>
 
   <sc-if value="{{ isTv }}" hint-placeholder-val="{{ false }}">
@@ -3466,7 +3466,7 @@
     </div>
   </div>
 </sc-if></x-dc>
-<script type="text/x-dc" data-dc-script data-props="{&quot;bareReel&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Reel&quot;},&quot;reelGlass&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;full&quot;,&quot;light&quot;,&quot;flat&quot;],&quot;default&quot;:&quot;light&quot;,&quot;tsType&quot;:&quot;'full' | 'light' | 'flat'&quot;,&quot;section&quot;:&quot;Glass&quot;},&quot;heroTextOpacity&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:2.45,&quot;min&quot;:0.3,&quot;max&quot;:3,&quot;step&quot;:0.05,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Hero copy&quot;},&quot;heroTextBright&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:1.3,&quot;min&quot;:0.6,&quot;max&quot;:2,&quot;step&quot;:0.05,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Hero copy&quot;},&quot;heroTextSaturate&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:2.5,&quot;min&quot;:0,&quot;max&quot;:2.5,&quot;step&quot;:0.05,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Hero copy&quot;},&quot;heroTextHold&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:3,&quot;min&quot;:0,&quot;max&quot;:3,&quot;step&quot;:0.05,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Hero copy&quot;},&quot;heroTextWipe&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Hero copy&quot;},&quot;heroStillMode&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Hero copy&quot;}}">
+<script type="text/x-dc" data-dc-script data-props="{&quot;openingHours&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;11 AM to 11 PM&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;House&quot;},&quot;staffBreakMins&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:30,&quot;min&quot;:0,&quot;max&quot;:120,&quot;unit&quot;:&quot;min&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;House&quot;},&quot;voiceMode&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;auto&quot;,&quot;tap&quot;],&quot;default&quot;:&quot;auto&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Voice assistant&quot;},&quot;voiceSilenceSecs&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:2,&quot;min&quot;:1,&quot;max&quot;:5,&quot;step&quot;:0.5,&quot;unit&quot;:&quot;s&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Voice assistant&quot;},&quot;bareReel&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Reel&quot;},&quot;reelGlass&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;full&quot;,&quot;light&quot;,&quot;flat&quot;],&quot;default&quot;:&quot;light&quot;,&quot;tsType&quot;:&quot;'full' | 'light' | 'flat'&quot;,&quot;section&quot;:&quot;Glass&quot;},&quot;heroTextOpacity&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:2.45,&quot;min&quot;:0.3,&quot;max&quot;:3,&quot;step&quot;:0.05,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Hero copy&quot;},&quot;heroTextBright&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:1.3,&quot;min&quot;:0.6,&quot;max&quot;:2,&quot;step&quot;:0.05,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Hero copy&quot;},&quot;heroTextSaturate&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:2.5,&quot;min&quot;:0,&quot;max&quot;:2.5,&quot;step&quot;:0.05,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Hero copy&quot;},&quot;heroTextHold&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:3,&quot;min&quot;:0,&quot;max&quot;:3,&quot;step&quot;:0.05,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Hero copy&quot;},&quot;heroTextWipe&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Hero copy&quot;},&quot;heroStillMode&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Hero copy&quot;}}">
 /* ============================================================
    TWEAKABLE — swap per client. Nothing below the CONFIG block
    needs editing to re-skin this template for another restaurant.
@@ -8511,19 +8511,29 @@ class Component extends DCLogic {
       orders: this.boardKeys().map((k, n) => {
         const o = db.state.orders[k] || {};
         const parcel = /^U/.test(String(k));
+        const ago = t => t ? Math.max(0, Math.round((Date.now() - t) / 60000)) : undefined;
+        const clk = t => t ? new Date(t).toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' }) : undefined;
         return {
           order: n + 1,
           table: parcel ? 'Parcel ' + String(k).slice(1) : String(k),
           kind: parcel ? 'parcel' : 'table',
-          openedMinsAgo: Math.max(0, Math.round((Date.now() - (o.at || Date.now())) / 60000)),
+          seatedAt: clk(o.at), seatedMinsAgo: ago(o.at || Date.now()),
+          openedMinsAgo: ago(o.at || Date.now()),
+          lastRoundMinsAgo: o.roundAt && o.roundAt !== o.at ? ago(o.roundAt) : undefined,
+          allServedMinsAgo: o.served ? ago(o.served) : undefined,
+          paymentClaimed: o.claimAt ? true : undefined,
+          onHold: o.holdAt ? true : undefined,
           items: (o.items || []).map(i => {
             const d = DISHES.find(x => x.id === i.id);
             const qty = Math.max(1, Number(i.qty) || 1);
             const out = Math.min(qty, Number(i.sent) || 0);
+            const log = Array.isArray(i.sentLog) ? i.sentLog : [];
             return {
               name: d ? d.base.n : 'Dish no longer on the card',
-              qty,
+              qty, servedQty: out,
               note: i.note || undefined,
+              orderedAt: clk(i.addedAt), orderedMinsAgo: ago(i.addedAt),
+              lastServedAt: clk(log[log.length - 1]), lastServedMinsAgo: ago(log[log.length - 1]),
               out: out >= qty ? 'all served' : out ? out + ' of ' + qty + ' served' : 'not served yet',
             };
           }),
@@ -12658,6 +12668,8 @@ class Component extends DCLogic {
       assistSb: db.remote ? db.remote.sb : null,
       assistRid: db.remote ? db.remote.rid : '',
       assistTables: IDENTITY.tables,
+      assistHours: this.props.openingHours || '', assistBreak: this.props.staffBreakMins ?? '',
+      assistVoiceMode: this.props.voiceMode || '', assistSilence: this.props.voiceSilenceSecs ?? '',
       takeDictated: t => this.takeDictated(t),
       assistFloor: () => this.floorSnapshot(),
       takeRating: t => this.takeRating(t),

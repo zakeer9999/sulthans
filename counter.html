@@ -79,7 +79,7 @@
         <span style="width:6px;height:6px;border-radius:50%;background:{{ liveTone }};box-shadow:0 0 7px {{ liveTone }}"></span>
         <span style="font-size:8.5px;letter-spacing:.22em;text-transform:uppercase;color:{{ liveTone }}">{{ liveLabel }}</span>
       </div>
-      <dc-import name="Assistant" scope="counter" hide-orb="{{ aiDeskOpen }}" staff="{{ assistStaff }}" sb="{{ assistSb }}" rid="{{ assistRid }}" on-kot="{{ takeDictated }}" hint-size="0px,0px"></dc-import>
+      <dc-import name="Assistant" scope="counter" hide-orb="{{ aiDeskOpen }}" opening-hours="{{ assistHours }}" break-mins="{{ assistBreak }}" voice-mode="{{ assistVoiceMode }}" silence-secs="{{ assistSilence }}" tables="{{ assistTables }}" floor="{{ assistFloor }}" staff="{{ assistStaff }}" sb="{{ assistSb }}" rid="{{ assistRid }}" on-kot="{{ takeDictated }}" hint-size="0px,0px"></dc-import>
 
       <div style="position:sticky;top:0;z-index:60;flex:0 0 auto;display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 14px;background:linear-gradient(180deg,rgba(20,17,13,.94),rgba(12,10,8,.9));backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid rgba(240,160,60,.18);box-shadow:0 10px 30px rgba(0,0,0,.35),0 1px 0 rgba(255,196,110,.06)">
         <div style="display:flex;align-items:center;gap:8px 11px;flex-wrap:wrap;min-width:0;max-width:100%">
@@ -122,8 +122,8 @@
                 <div style="position:absolute;top:calc(100% + 8px);right:0;z-index:62;min-width:min(210px,calc(100vw - 24px));max-width:calc(100vw - 24px);box-sizing:border-box;display:flex;flex-direction:column;gap:2px;padding:6px;border-radius:14px;background:linear-gradient(180deg,#1f1a14,#14110d);border:1px solid rgba(200,162,74,.24);box-shadow:0 22px 48px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,236,200,.06)">
                   <button onClick="{{ openPush }}" style="display:flex;align-items:center;gap:11px;width:100%;box-sizing:border-box;min-height:44px;padding:0 12px;border:0;border-radius:10px;background:transparent;color:#efe7db;font-size:13.5px;text-align:left;text-decoration:none" style-hover="background:rgba(200,162,74,.09)"><span style="flex:0 0 auto;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:8px;background:radial-gradient(circle at 50% 40%,rgba(255,214,120,.35),rgba(200,162,74,.12) 70%);color:#ffd678;box-shadow:0 0 12px -2px rgba(255,200,90,.55)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="filter:drop-shadow(0 0 3px rgba(255,210,110,.7))"><path d="M3.5 20.5l1.3-4.3A8.5 8.5 0 1 1 8 19.3z" fill="rgba(255,214,120,.3)"></path><path d="M9 8.6c.2-.4.5-.5.8-.5h.5l.9 2.1-.7.9c.5 1 1.3 1.8 2.3 2.3l.9-.7 2.1.9v.5c0 .4-.2.7-.5.9-.6.4-1.4.5-2.1.2A8 8 0 0 1 9 10.7c-.3-.7-.2-1.5 0-2.1z" stroke="#fff4d6"></path></svg></span>Smart campaign</button>
                   <div style="height:1px;margin:4px 8px;background:rgba(200,162,74,.14)"></div>
-                  <button onClick="{{ openStudio }}" style="display:flex;align-items:center;gap:11px;width:100%;box-sizing:border-box;min-height:44px;padding:0 12px;border:0;border-radius:10px;background:transparent;color:#efe7db;font-size:13.5px;text-align:left;text-decoration:none" style-hover="background:rgba(200,162,74,.09)"><span style="flex:0 0 auto;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:8px;background:radial-gradient(circle at 50% 40%,rgba(255,214,120,.35),rgba(200,162,74,.12) 70%);color:#ffd678;box-shadow:0 0 12px -2px rgba(255,200,90,.55)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="filter:drop-shadow(0 0 3px rgba(255,210,110,.7))"><rect x="3" y="3" width="18" height="18" rx="3" fill="rgba(255,214,120,.3)"></rect><circle cx="9" cy="9" r="1.8" stroke="#fff4d6"></circle><path d="M21 15l-5-5L5 21"></path></svg></span>Content Studio</button>
-                  <button onClick="{{ openIns }}" style="display:flex;align-items:center;gap:11px;width:100%;box-sizing:border-box;min-height:44px;padding:0 12px;border:0;border-radius:10px;background:transparent;color:#efe7db;font-size:13.5px;text-align:left;text-decoration:none" style-hover="background:rgba(200,162,74,.09)"><span style="flex:0 0 auto;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:8px;background:radial-gradient(circle at 50% 40%,rgba(255,214,120,.35),rgba(200,162,74,.12) 70%);color:#ffd678;box-shadow:0 0 12px -2px rgba(255,200,90,.55)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="filter:drop-shadow(0 0 3px rgba(255,210,110,.7))"><path d="M12 2.5a6.5 6.5 0 0 0-3.8 11.8c.5.4.8 1 .8 1.6V16h6v-.1c0-.6.3-1.2.8-1.6A6.5 6.5 0 0 0 12 2.5z" fill="rgba(255,214,120,.35)"></path><path d="M9 18h6"></path><path d="M10 21.5h4"></path><path d="M12 6.5a3 3 0 0 0-3 3" stroke="#fff4d6"></path></svg></span>AI Insights</button>
+                  <button onClick="{{ openStudio }}" style="display:flex;align-items:center;gap:11px;width:100%;box-sizing:border-box;min-height:44px;padding:0 12px;border:0;border-radius:10px;background:transparent;color:#efe7db;font-size:13.5px;text-align:left;text-decoration:none" style-hover="background:rgba(200,162,74,.09)"><span style="flex:0 0 auto;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:8px;background:radial-gradient(circle at 50% 40%,rgba(255,214,120,.35),rgba(200,162,74,.12) 70%);color:#ffd678;box-shadow:0 0 12px -2px rgba(255,200,90,.55)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="filter:drop-shadow(0 0 3px rgba(255,210,110,.7))"><path d="M3 20h18"></path><rect x="5" y="12" width="3" height="6" rx=".6" fill="rgba(255,214,120,.3)"></rect><rect x="10.5" y="8" width="3" height="10" rx=".6" fill="rgba(255,214,120,.3)"></rect><rect x="16" y="10" width="3" height="8" rx=".6" fill="rgba(255,214,120,.3)"></rect><path d="M17.5 2.5l.7 1.6 1.6.7-1.6.7-.7 1.6-.7-1.6-1.6-.7 1.6-.7z" stroke="#fff4d6" stroke-width="1.2"></path></svg></span>AI Insights</button>
+                  <button onClick="{{ openIns }}" style="display:flex;align-items:center;gap:11px;width:100%;box-sizing:border-box;min-height:44px;padding:0 12px;border:0;border-radius:10px;background:transparent;color:#efe7db;font-size:13.5px;text-align:left;text-decoration:none" style-hover="background:rgba(200,162,74,.09)"><span style="flex:0 0 auto;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:8px;background:radial-gradient(circle at 50% 40%,rgba(255,214,120,.35),rgba(200,162,74,.12) 70%);color:#ffd678;box-shadow:0 0 12px -2px rgba(255,200,90,.55)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="filter:drop-shadow(0 0 3px rgba(255,210,110,.7))"><path d="M12 2.5a6.5 6.5 0 0 0-3.8 11.8c.5.4.8 1 .8 1.6V16h6v-.1c0-.6.3-1.2.8-1.6A6.5 6.5 0 0 0 12 2.5z" fill="rgba(255,214,120,.35)"></path><path d="M9 18h6"></path><path d="M10 21.5h4"></path><path d="M12 6.5a3 3 0 0 0-3 3" stroke="#fff4d6"></path></svg></span>AI Planner</button>
                   <button onClick="{{ openHub }}" style="display:flex;align-items:center;gap:11px;width:100%;box-sizing:border-box;min-height:44px;padding:0 12px;border:0;border-radius:10px;background:transparent;color:#efe7db;font-size:13.5px;text-align:left;text-decoration:none" style-hover="background:rgba(200,162,74,.09)"><span style="flex:0 0 auto;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:8px;background:radial-gradient(circle at 50% 40%,rgba(255,214,120,.35),rgba(200,162,74,.12) 70%);color:#ffd678;box-shadow:0 0 12px -2px rgba(255,200,90,.55)"><svg width="16" height="16" viewBox="2 2 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="filter:drop-shadow(0 0 3px rgba(255,210,110,.7))"><path d="M4.5 8L12 5M4.5 8L12 12M4.5 8L12 19M4.5 16L12 5M4.5 16L12 12M4.5 16L12 19M12 5L19.5 8M12 5L19.5 16M12 12L19.5 8M12 12L19.5 16M12 19L19.5 8M12 19L19.5 16" stroke-width="1" opacity=".6"></path><circle cx="4.5" cy="8" r="1.9" fill="rgba(255,214,120,.45)" stroke-width="1.3"></circle><circle cx="4.5" cy="16" r="1.9" fill="rgba(255,214,120,.45)" stroke-width="1.3"></circle><circle cx="12" cy="5" r="1.9" fill="rgba(255,214,120,.45)" stroke-width="1.3"></circle><circle cx="12" cy="19" r="1.9" fill="rgba(255,214,120,.45)" stroke-width="1.3"></circle><circle cx="19.5" cy="8" r="1.9" fill="rgba(255,214,120,.45)" stroke-width="1.3"></circle><circle cx="19.5" cy="16" r="1.9" fill="rgba(255,214,120,.45)" stroke-width="1.3"></circle><circle cx="12" cy="12" r="2.4" fill="#ffd678" stroke="#fff4d6" stroke-width="1.2"></circle></svg></span>Neural Hub</button>
                 </div>
               </sc-if>
@@ -518,148 +518,505 @@
 
   <sc-if value="{{ ovStudio }}" hint-placeholder-val="{{ false }}">
     <div style="position:fixed;inset:0;z-index:70;display:flex;align-items:flex-end;justify-content:center;background:rgba(6,5,4,.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)">
-      <div style="box-sizing:border-box;width:100%;max-width:1120px;max-height:94vh;overflow-y:auto;overflow-x:hidden;background:linear-gradient(180deg,#1d1914,#13100c);border:1px solid #2e271d;border-top-color:rgba(200,162,74,.35);border-radius:20px 20px 0 0;box-shadow:0 -24px 60px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,236,200,.06);padding:18px">
+      <div style="box-sizing:border-box;width:100%;max-width:1180px;max-height:94vh;overflow-y:auto;overflow-x:hidden;background:linear-gradient(180deg,#1d1914,#13100c);border:1px solid #2e271d;border-top-color:rgba(200,162,74,.35);border-radius:20px 20px 0 0;box-shadow:0 -24px 60px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,236,200,.06);padding:18px">
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:5px">
-          <span style="flex:0 0 auto;width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:10px;background:radial-gradient(circle at 50% 40%,rgba(255,214,120,.35),rgba(200,162,74,.12) 70%);color:#ffd678;box-shadow:0 0 16px -2px rgba(255,200,90,.55)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="filter:drop-shadow(0 0 4px rgba(255,210,110,.75))"><rect x="3" y="3" width="18" height="18" rx="3" fill="rgba(255,214,120,.3)"></rect><circle cx="9" cy="9" r="1.8" stroke="#fff4d6"></circle><path d="M21 15l-5-5L5 21"></path></svg></span>
-          <span style="flex:1;font-family:'Cormorant Garamond',serif;font-size:22px">Content Studio</span>
+          <span style="flex:0 0 auto;width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:10px;background:radial-gradient(circle at 50% 40%,rgba(255,214,120,.35),rgba(200,162,74,.12) 70%);color:#ffd678;box-shadow:0 0 16px -2px rgba(255,200,90,.55)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="filter:drop-shadow(0 0 4px rgba(255,210,110,.75))"><path d="M3 20h18"></path><rect x="5" y="12" width="3" height="6" rx=".6" fill="rgba(255,214,120,.3)"></rect><rect x="10.5" y="8" width="3" height="10" rx=".6" fill="rgba(255,214,120,.3)"></rect><rect x="16" y="10" width="3" height="8" rx=".6" fill="rgba(255,214,120,.3)"></rect><path d="M17.5 2.5l.7 1.6 1.6.7-1.6.7-.7 1.6-.7-1.6-1.6-.7 1.6-.7z" stroke="#fff4d6" stroke-width="1.2"></path></svg></span>
+          <span style="flex:1;font-family:'Cormorant Garamond',serif;font-size:22px">AI Insights</span>
           <button onClick="{{ closeOv }}" style="height:34px;padding:0 12px;border:1px solid #2a231b;border-radius:8px;background:#0f0d0a;color:#9a8f7f;font-size:12.5px">Close</button>
         </div>
-        <div style="font-size:12px;color:#8d8272;line-height:1.55;margin-bottom:16px;text-wrap:pretty">Image and video prompts that pair an event from the calendar with a dish from the plan. Each comes with a caption written for that post type. Films, teams and brands stay out of the image and appear only in the caption.</div>
+        <div style="font-size:12px;color:#8d8272;line-height:1.55;margin-bottom:14px;text-wrap:pretty">Forecasts what to prep each day, learns how festivals shift veg and non-veg sales across the days around them, and tracks every dish over time against the changes you log.</div>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px">
+          <div style="display:flex;gap:6px;flex-wrap:wrap;flex:1 1 auto">
+            <sc-for list="{{ miTabs }}" as="c" hint-placeholder-count="4"><button onClick="{{ c.onTap }}" style="min-height:40px;padding:0 14px;border:1px solid {{ c.line }};border-radius:10px;background:{{ c.bg }};color:{{ c.fg }};font-size:13px;transition:background-color 160ms ease,color 160ms ease" style-active="transform:scale(.97)">{{ c.label }}</button></sc-for>
+          </div>
+          <span style="font-size:11.5px;color:{{ miSrcC }};line-height:1.45;text-wrap:pretty">{{ miSrc }}</span>
+          <button onClick="{{ miReload }}" style="flex:0 0 auto;height:34px;padding:0 12px;border:1px solid #2a231b;border-radius:8px;background:#16130f;color:#9a8f7f;font-size:12px" style-active="transform:scale(.97)">Refresh</button>
+        </div>
         <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start">
-          <div style="flex:999 1 480px;min-width:0;display:flex;flex-direction:column;gap:16px">
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px">
-              <sc-for list="{{ studioKpis }}" as="k" hint-placeholder-count="4">
-                <div style="min-width:0;padding:12px 13px;border:1px solid #221d16;border-radius:11px;background:#12100c">
-                  <div style="font-size:11px;color:#8d8272;margin-bottom:5px">{{ k.label }}</div>
-                  <div style="display:flex;align-items:center;gap:7px"><sc-if value="{{ k.hasIco }}" hint-placeholder-val="{{ false }}"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:0 0 auto"><path d="{{ k.ico }}" stroke="{{ k.icoC }}"></path></svg></sc-if><div style="font-family:'Cormorant Garamond',serif;font-size:21px;line-height:1.15;color:#efe7db;overflow-wrap:anywhere">{{ k.value }}</div></div>
-                  <div style="font-size:11.5px;color:#9a8f7f;margin-top:4px;line-height:1.45;text-wrap:pretty">{{ k.sub }}</div>
+          <div style="flex:999 1 520px;min-width:0;display:flex;flex-direction:column;gap:14px">
+            <sc-if value="{{ miWait }}" hint-placeholder-val="{{ false }}">
+              <div style="padding:40px 14px;border:1px solid #221d16;border-radius:12px;background:#12100c;font-size:13px;color:#8d8272;text-align:center">Reading your sales history…</div>
+            </sc-if>
+            <sc-if value="{{ miT1 }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;flex-direction:column;gap:14px">
+                <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:2px">
+                  <sc-for list="{{ miDays }}" as="d" hint-placeholder-count="7">
+                    <button onClick="{{ d.onTap }}" style="flex:0 0 auto;min-width:78px;max-width:132px;min-height:54px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:4px 10px;border:1px solid {{ d.line }};border-radius:10px;background:{{ d.bg }};color:{{ d.fg }}" style-active="transform:scale(.97)">
+                      <span style="font-size:12.5px">{{ d.top }}</span>
+                      <span style="max-width:100%;font-size:10.5px;color:{{ d.subC }};overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ d.sub }}</span>
+                    </button>
+                  </sc-for>
                 </div>
-              </sc-for>
-            </div>
-            <div style="padding:13px;border:1px solid #221d16;border-radius:12px;background:#12100c">
-              <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:4px">
-                <span style="flex:1;font-size:15px;color:#efe7db">Suggested trend of the week</span>
-                <span style="font-size:11px;color:#8d8272">{{ notesCount }}</span>
-              </div>
-              <div style="font-size:11.5px;color:#8d8272;line-height:1.5;margin-bottom:10px">Your own trend notes, newest first. The prompts below lean on these before anything else.</div>
-              <div style="display:flex;flex-direction:column;gap:8px">
-                <sc-for list="{{ notesRows }}" as="n" hint-placeholder-count="3">
-                  <div style="padding:10px 11px;border:1px solid #1d1914;border-radius:9px;background:#0b0a09">
-                    <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:5px">
-                      <span style="font-size:11px;color:#c8a24a">{{ n.when }}</span>
-                      <span style="flex:1;min-width:140px;font-size:13.5px;color:#efe7db">{{ n.title }}</span>
-                      <button onClick="{{ n.onCopy }}" style="flex:0 0 auto;height:32px;padding:0 11px;border:1px solid #2a231b;border-radius:8px;background:#16130f;color:#c8a24a;font-size:11.5px">Copy</button>
-                    </div>
-                    <div style="font-size:12.5px;color:#b3a896;line-height:1.6;white-space:pre-wrap;text-wrap:pretty">{{ n.body }}</div>
+                <sc-if value="{{ miDayHasNote }}" hint-placeholder-val="{{ false }}">
+                  <div style="display:flex;gap:10px;align-items:flex-start;padding:11px 13px;border:1px solid rgba(200,162,74,.3);border-radius:11px;background:rgba(200,162,74,.07)">
+                    <span style="flex:0 0 auto;width:8px;height:8px;margin-top:6px;border-radius:50%;background:{{ miDayTone }}"></span>
+                    <span style="font-size:12.5px;color:#e8dcc4;line-height:1.55;text-wrap:pretty">{{ miDayNote }}</span>
                   </div>
-                </sc-for>
-                <sc-if value="{{ notesEmpty }}" hint-placeholder-val="{{ false }}">
-                  <div style="font-size:12.5px;color:#8d8272;line-height:1.6">{{ notesEmptyLine }}</div>
                 </sc-if>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px">
+                  <sc-for list="{{ miFcKpis }}" as="k" hint-placeholder-count="4">
+                    <div style="min-width:0;padding:12px 13px;border:1px solid #221d16;border-radius:11px;background:#12100c">
+                      <div style="font-size:11px;color:#8d8272;margin-bottom:5px">{{ k.label }}</div>
+                      <div style="font-family:'Cormorant Garamond',serif;font-size:22px;line-height:1.15;color:#efe7db;overflow-wrap:anywhere">{{ k.value }}</div>
+                      <div style="font-size:11.5px;color:{{ k.subC }};margin-top:4px;line-height:1.45;text-wrap:pretty">{{ k.sub }}</div>
+                    </div>
+                  </sc-for>
+                </div>
+                <div style="padding:14px;border:1px solid #221d16;border-radius:12px;background:#12100c">
+                  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px">
+                    <span style="flex:1 1 200px;font-size:15px;color:#efe7db">What to prep · {{ miDayTitle }}</span>
+                    <div style="display:flex;gap:5px"><sc-for list="{{ miFcF }}" as="c" hint-placeholder-count="3"><button onClick="{{ c.onTap }}" style="min-height:32px;padding:0 11px;border:1px solid {{ c.line }};border-radius:999px;background:{{ c.bg }};color:{{ c.fg }};font-size:12px">{{ c.label }}</button></sc-for></div>
+                  </div>
+                  <div style="font-size:11.5px;color:#8d8272;line-height:1.5;margin-bottom:6px;text-wrap:pretty">Portions from the same weekday over the last four normal weeks, weighted toward the most recent, then adjusted for any festival window. The small range is how much those weeks varied.</div>
+                  <sc-for list="{{ miFcRows }}" as="r" hint-placeholder-count="6">
+                    <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(36px,150px) auto;gap:10px;align-items:center;padding:9px 2px;border-top:1px solid #1d1914">
+                      <div style="min-width:0;display:flex;flex-direction:column;gap:3px">
+                        <div style="display:flex;flex-wrap:wrap;align-items:center;gap:5px 7px;min-width:0">
+                          <span style="flex:0 0 auto;width:11px;height:11px;box-sizing:border-box;border:1.5px solid {{ r.vc }};border-radius:2px;display:flex;align-items:center;justify-content:center"><span style="width:5px;height:5px;border-radius:50%;background:{{ r.vc }}"></span></span>
+                          <span style="flex:1 1 120px;min-width:0;font-size:13.5px;color:#efe7db;line-height:1.3;text-wrap:pretty">{{ r.name }}</span>
+                          <sc-if value="{{ r.hasAdj }}" hint-placeholder-val="{{ false }}"><span style="flex:0 0 auto;min-height:20px;display:inline-flex;align-items:center;padding:0 7px;border-radius:999px;border:1px solid {{ r.adjC }};color:{{ r.adjC }};font-size:10.5px">{{ r.adj }}</span></sc-if>
+                        </div>
+                        <div style="font-size:11px;color:#8d8272">{{ r.basis }}</div>
+                      </div>
+                      <div style="height:6px;border-radius:3px;background:#1d1914;overflow:hidden"><div style="height:100%;width:{{ r.w }}%;background:{{ r.vc }};opacity:.8;border-radius:3px"></div></div>
+                      <div style="text-align:right"><div style="font-family:'Cormorant Garamond',serif;font-size:23px;color:#efe7db;line-height:1">{{ r.q }}</div><div style="font-size:10.5px;color:#8d8272;margin-top:2px">{{ r.range }}</div></div>
+                    </div>
+                  </sc-for>
+                  <sc-if value="{{ miFcEmpty }}" hint-placeholder-val="{{ false }}"><div style="padding:14px 2px;font-size:12.5px;color:#8d8272">No sales on this weekday yet to forecast from.</div></sc-if>
+                </div>
+                <div style="padding:14px;border:1px solid #221d16;border-radius:12px;background:#12100c">
+                  <div style="font-size:15px;color:#efe7db;margin-bottom:4px">Stock check</div>
+                  <div style="font-size:11.5px;color:#8d8272;line-height:1.5;margin-bottom:6px;text-wrap:pretty">{{ miStkNote }}</div>
+                  <sc-for list="{{ miStk }}" as="s" hint-placeholder-count="0">
+                    <div style="display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:14px;align-items:center;padding:8px 2px;border-top:1px solid #1d1914;font-size:13px">
+                      <span style="min-width:0;color:#efe7db;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ s.name }}</span>
+                      <span style="color:#9a8f7f;font-size:12px;white-space:nowrap">Need {{ s.need }} · Have {{ s.have }}</span>
+                      <span style="min-height:22px;display:inline-flex;align-items:center;padding:0 9px;border-radius:999px;background:{{ s.bg }};color:{{ s.fg }};font-size:11.5px;white-space:nowrap">{{ s.st }}</span>
+                    </div>
+                  </sc-for>
+                </div>
               </div>
-            </div>
-            <div style="padding:12px 13px;border:1px solid #221d16;border-radius:12px;background:#12100c;display:flex;flex-direction:column;gap:10px">
-              <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-                <div style="position:relative;flex:1 1 240px;min-width:0">
-                  <div style="font-size:11px;color:#8d8272;margin-bottom:5px">Generate for</div>
-                  <button onClick="{{ stuEvToggle }}" style="width:100%;min-height:44px;display:flex;align-items:center;gap:10px;padding:0 12px;border:1px solid {{ stuEvLine }};border-radius:10px;background:#0b0a09;color:#efe7db;font-size:13px;text-align:left" style-active="transform:scale(.99)">
-                    <span style="flex:0 0 auto;width:8px;height:8px;border-radius:50%;background:{{ stuEvTone }}"></span>
-                    <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ stuEvLbl }}</span>
-                    <span style="flex:0 0 auto;font-size:11px;color:#8d8272">{{ stuEvWhen }}</span>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#c8a24a" stroke-width="2" stroke-linecap="round" aria-hidden="true" style="flex:0 0 auto;transform:{{ stuEvArrow }};transition:transform 180ms ease"><path d="M6 9l6 6 6-6"></path></svg>
+            </sc-if>
+
+            <sc-if value="{{ miT2 }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;flex-direction:column;gap:14px">
+                <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:2px">
+                  <sc-for list="{{ miFxList }}" as="f" hint-placeholder-count="6">
+                    <button onClick="{{ f.onTap }}" style="flex:0 0 auto;min-height:54px;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:3px;padding:4px 12px;border:1px solid {{ f.line }};border-radius:10px;background:{{ f.bg }};color:#efe7db;text-align:left" style-active="transform:scale(.97)">
+                      <span style="display:flex;align-items:center;gap:6px;font-size:12.5px;white-space:nowrap"><span style="width:7px;height:7px;border-radius:50%;background:{{ f.tone }}"></span>{{ f.name }}</span>
+                      <span style="font-size:10.5px;color:#8d8272;white-space:nowrap">{{ f.sub }}</span>
+                    </button>
+                  </sc-for>
+                </div>
+                <div style="padding:14px;border:1px solid #221d16;border-radius:12px;background:#12100c;display:flex;flex-direction:column;gap:12px">
+                  <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap">
+                    <span style="font-family:'Cormorant Garamond',serif;font-size:24px;color:#efe7db">{{ miFxName }}</span>
+                    <span style="min-height:22px;display:inline-flex;align-items:center;padding:0 9px;border-radius:999px;border:1px solid {{ miFxTone }};color:{{ miFxTone }};font-size:11px">{{ miFxType }}</span>
+                    <span style="flex:1;min-width:120px;font-size:12px;color:#9a8f7f;text-align:right">{{ miFxNext }}</span>
+                  </div>
+                  <div style="font-size:12.5px;color:#b3a896;line-height:1.55;text-wrap:pretty">{{ miFxRule }}</div>
+                  <sc-if value="{{ miFxHas }}" hint-placeholder-val="{{ false }}">
+                    <div style="display:flex;flex-direction:column;gap:12px">
+                      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                        <span style="font-size:11px;color:#8d8272">Showing</span>
+                        <sc-for list="{{ miFxOccs }}" as="c" hint-placeholder-count="1"><button onClick="{{ c.onTap }}" style="min-height:32px;padding:0 11px;border:1px solid {{ c.line }};border-radius:999px;background:{{ c.bg }};color:{{ c.fg }};font-size:12px">{{ c.label }}</button></sc-for>
+                        <span style="flex:1"></span>
+                        <span style="display:flex;align-items:center;gap:12px;font-size:11px;color:#9a8f7f"><span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:#9fc79a"></span>Veg</span><span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:#e08b73"></span>Non-veg</span><span style="display:flex;align-items:center;gap:5px"><span style="width:12px;border-top:2px dashed #cfc6b8"></span>Normal</span></span>
+                      </div>
+                      <div style="display:flex;gap:6px">
+                        <sc-for list="{{ miFxCols }}" as="c" hint-placeholder-count="7">
+                          <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:5px">
+                            <div style="display:flex;justify-content:center;gap:4px;font-size:10.5px;line-height:1.2;flex-wrap:wrap;min-height:26px;align-content:flex-end"><span style="color:{{ c.vLc }}">{{ c.vL }}</span><span style="color:{{ c.nLc }}">{{ c.nL }}</span></div>
+                            <div style="position:relative;height:170px;display:flex;align-items:flex-end;justify-content:center;gap:4px;padding:0 6%;border-radius:8px;background:{{ c.bg }};border:1px solid {{ c.line }}">
+                              <div style="position:relative;width:40%;height:100%;display:flex;align-items:flex-end"><div style="width:100%;height:{{ c.vh }}%;min-height:2px;background:#9fc79a;border-radius:3px 3px 0 0;opacity:.85"></div><div style="position:absolute;left:-3px;right:-3px;bottom:{{ c.vb }}%;border-top:2px dashed #efe7db;opacity:.7"></div></div>
+                              <div style="position:relative;width:40%;height:100%;display:flex;align-items:flex-end"><div style="width:100%;height:{{ c.nh }}%;min-height:2px;background:#e08b73;border-radius:3px 3px 0 0;opacity:.85"></div><div style="position:absolute;left:-3px;right:-3px;bottom:{{ c.nb }}%;border-top:2px dashed #efe7db;opacity:.7"></div></div>
+                            </div>
+                            <div style="text-align:center;font-size:12px;color:{{ c.lc }}">{{ c.lbl }}</div>
+                            <div style="text-align:center;font-size:10.5px;color:#8d8272;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.sub }}</div>
+                          </div>
+                        </sc-for>
+                      </div>
+                      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px">
+                        <sc-for list="{{ miFxTiles }}" as="t" hint-placeholder-count="4">
+                          <div style="min-width:0;padding:11px 12px;border:1px solid #1d1914;border-radius:10px;background:#0b0a09;display:flex;flex-direction:column;gap:5px">
+                            <div style="font-size:11px;color:#8d8272">{{ t.title }}</div>
+                            <div style="display:flex;align-items:baseline;gap:6px;flex-wrap:wrap"><span style="font-size:11px;color:#9a8f7f">{{ t.aL }}</span><span style="font-family:'Cormorant Garamond',serif;font-size:21px;color:{{ t.aC }}">{{ t.a }}</span></div>
+                            <div style="display:flex;align-items:baseline;gap:6px;flex-wrap:wrap"><span style="font-size:11px;color:#9a8f7f">{{ t.bL }}</span><span style="font-family:'Cormorant Garamond',serif;font-size:21px;color:{{ t.bC }}">{{ t.b }}</span></div>
+                          </div>
+                        </sc-for>
+                      </div>
+                      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:10px">
+                        <div style="min-width:0;padding:11px 12px;border:1px solid #1d1914;border-radius:10px;background:#0b0a09">
+                          <div style="font-size:12.5px;color:#efe7db;margin-bottom:6px">Dishes that moved in this window</div>
+                          <sc-for list="{{ miFxMovers }}" as="m" hint-placeholder-count="5">
+                            <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-top:1px solid #1a1612;font-size:12.5px">
+                              <span style="flex:0 0 auto;width:10px;height:10px;box-sizing:border-box;border:1.5px solid {{ m.vc }};border-radius:2px;display:flex;align-items:center;justify-content:center"><span style="width:4px;height:4px;border-radius:50%;background:{{ m.vc }}"></span></span>
+                              <span style="flex:1;min-width:0;color:#cfc6b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ m.name }}</span>
+                              <span style="font-size:11px;color:#8d8272;white-space:nowrap">{{ m.qty }}</span>
+                              <span style="flex:0 0 52px;text-align:right;color:{{ m.pc }}">{{ m.pct }}</span>
+                            </div>
+                          </sc-for>
+                        </div>
+                        <div style="min-width:0;padding:11px 12px;border:1px solid #1d1914;border-radius:10px;background:#0b0a09">
+                          <div style="font-size:12.5px;color:#efe7db;margin-bottom:6px">Year on year</div>
+                          <sc-for list="{{ miFxYears }}" as="y" hint-placeholder-count="2">
+                            <div style="display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:10px;align-items:baseline;padding:6px 0;border-top:1px solid #1a1612;font-size:12.5px">
+                              <span style="color:#cfc6b8">{{ y.when }}</span>
+                              <span style="color:#efe7db">{{ y.sales }}</span>
+                              <span style="color:{{ y.pc }};min-width:48px;text-align:right">{{ y.pct }}</span>
+                            </div>
+                          </sc-for>
+                          <div style="font-size:11px;color:#8d8272;line-height:1.5;margin-top:6px">Window sales, and the change against a normal week at the time.</div>
+                        </div>
+                      </div>
+                    </div>
+                  </sc-if>
+                  <sc-if value="{{ miFxNone }}" hint-placeholder-val="{{ false }}">
+                    <div style="padding:12px;border:1px dashed #2a231b;border-radius:10px;font-size:12.5px;color:#9a8f7f;line-height:1.55;text-wrap:pretty">{{ miFxNoneLine }}</div>
+                  </sc-if>
+                </div>
+                <sc-if value="{{ miFnHas }}" hint-placeholder-val="{{ false }}">
+                  <div style="padding:14px;border:1px solid #221d16;border-radius:12px;background:#12100c">
+                    <div style="font-size:15px;color:#efe7db;margin-bottom:4px">{{ miFnTitle }}</div>
+                    <div style="font-size:11.5px;color:#8d8272;line-height:1.5;margin-bottom:10px;text-wrap:pretty">{{ miFnNote }}</div>
+                    <div style="overflow-x:auto">
+                      <div style="min-width:600px;display:flex;flex-direction:column">
+                        <div style="display:grid;grid-template-columns:minmax(150px,1.6fr) repeat(7,minmax(46px,1fr));gap:4px;padding-bottom:6px">
+                          <span></span>
+                          <sc-for list="{{ miFnHead }}" as="h" hint-placeholder-count="7"><div style="text-align:center;display:flex;flex-direction:column;gap:1px;padding:4px 0;border-radius:7px;background:{{ h.bg }}"><span style="font-size:11.5px;color:{{ h.c }}">{{ h.l }}</span><span style="font-size:10px;color:#8d8272">{{ h.s }}</span></div></sc-for>
+                        </div>
+                        <sc-for list="{{ miFnRows }}" as="r" hint-placeholder-count="6">
+                          <div style="display:grid;grid-template-columns:minmax(150px,1.6fr) repeat(7,minmax(46px,1fr));gap:4px;align-items:center;padding:6px 0;border-top:1px solid {{ r.line }}">
+                            <span style="display:flex;align-items:center;gap:7px;min-width:0;font-size:12.5px;color:{{ r.fg }}"><span style="flex:0 0 auto;width:8px;height:8px;border-radius:2px;background:{{ r.vc }}"></span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ r.name }}</span></span>
+                            <sc-for list="{{ r.cells }}" as="x" hint-placeholder-count="7"><span style="text-align:center;font-size:13px;color:{{ x.c }};font-variant-numeric:tabular-nums">{{ x.v }}</span></sc-for>
+                          </div>
+                        </sc-for>
+                      </div>
+                    </div>
+                  </div>
+                </sc-if>
+                <div style="padding:12px 14px;border:1px solid #221d16;border-radius:12px;background:#12100c">
+                  <button onClick="{{ miFxEditTap }}" style="width:100%;min-height:36px;display:flex;align-items:center;gap:10px;padding:0;border:0;background:transparent;color:#efe7db;font-size:14px;text-align:left">
+                    <span style="flex:1">Festival dates</span>
+                    <span style="font-size:11.5px;color:#8d8272">{{ miFxEditLbl }}</span>
                   </button>
-                  <sc-if value="{{ stuEvOpen }}" hint-placeholder-val="{{ false }}">
-                    <div style="position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:30;max-height:340px;overflow-y:auto;padding:6px;border:1px solid #3a2f1c;border-radius:12px;background:#15120e;box-shadow:0 18px 40px rgba(0,0,0,.6)">
-                      <div style="padding:6px 8px 8px;font-size:11px;color:#8d8272">From the events calendar</div>
-                      <sc-for list="{{ stuEvList }}" as="o" hint-placeholder-count="4">
-                        <button onClick="{{ o.onPick }}" style="width:100%;min-height:44px;display:flex;align-items:center;gap:10px;padding:6px 10px;border:0;border-radius:8px;background:{{ o.bg }};color:#efe7db;font-size:13px;text-align:left" style-hover="background:#1d1914">
-                          <span style="flex:0 0 auto;width:8px;height:8px;border-radius:50%;background:{{ o.tone }}"></span>
-                          <span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px"><span style="text-wrap:pretty">{{ o.title }}</span><span style="font-size:11px;color:#8d8272">{{ o.sub }}</span></span>
-                          <span style="flex:0 0 auto;font-size:12px;color:#e2c06a">{{ o.mark }}</span>
-                        </button>
+                  <sc-if value="{{ miFxEdit }}" hint-placeholder-val="{{ false }}">
+                    <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">
+                      <div style="font-size:11.5px;color:#8d8272;line-height:1.5;text-wrap:pretty">Lunar festivals move every year. Check each date against your local calendar and add next year’s once it is announced. Past dates are what the history is read from.</div>
+                      <sc-for list="{{ miFxEd }}" as="f" hint-placeholder-count="4">
+                        <div style="display:flex;flex-direction:column;gap:7px;padding:10px 11px;border:1px solid #1d1914;border-radius:10px;background:#0b0a09">
+                          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                            <span style="flex:1 1 140px;font-size:13.5px;color:#efe7db">{{ f.name }}</span>
+                            <div style="display:flex;gap:4px"><sc-for list="{{ f.types }}" as="c" hint-placeholder-count="3"><button onClick="{{ c.onTap }}" style="min-height:30px;padding:0 9px;border:1px solid {{ c.line }};border-radius:999px;background:{{ c.bg }};color:{{ c.fg }};font-size:11px">{{ c.label }}</button></sc-for></div>
+                            <button onClick="{{ f.onDel }}" style="min-height:30px;padding:0 9px;border:1px solid #2a231b;border-radius:8px;background:transparent;color:#8d8272;font-size:11px">Remove</button>
+                          </div>
+                          <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+                            <sc-for list="{{ f.dates }}" as="d" hint-placeholder-count="3"><span style="display:inline-flex;align-items:center;gap:6px;min-height:30px;padding:0 4px 0 10px;border:1px solid #2a231b;border-radius:999px;font-size:12px;color:#cfc6b8">{{ d.lbl }}<button onClick="{{ d.onDel }}" aria-label="Remove date" style="width:24px;height:24px;border:0;border-radius:50%;background:transparent;color:#8d8272;font-size:14px;line-height:1">×</button></span></sc-for>
+                            <input type="date" onChange="{{ f.onAdd }}" aria-label="Add a date" style="min-height:30px;padding:0 8px;border:1px dashed #3a2f1c;border-radius:999px;background:transparent;color:#c8a24a;font-size:12px;color-scheme:dark">
+                          </div>
+                        </div>
+                      </sc-for>
+                      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:10px 11px;border:1px dashed #2a231b;border-radius:10px">
+                        <input value="{{ miNfName }}" onChange="{{ onMiNfName }}" placeholder="Add a festival" style="flex:1 1 160px;min-width:0;min-height:38px;padding:0 11px;border:1px solid #2a231b;border-radius:9px;background:#0b0a09;color:#efe7db;font-size:13px">
+                        <div style="display:flex;gap:4px"><sc-for list="{{ miNfTypes }}" as="c" hint-placeholder-count="3"><button onClick="{{ c.onTap }}" style="min-height:34px;padding:0 10px;border:1px solid {{ c.line }};border-radius:999px;background:{{ c.bg }};color:{{ c.fg }};font-size:11.5px">{{ c.label }}</button></sc-for></div>
+                        <input type="date" value="{{ miNfDate }}" onChange="{{ onMiNfDate }}" style="min-height:38px;padding:0 9px;border:1px solid #2a231b;border-radius:9px;background:#0b0a09;color:#efe7db;font-size:13px;color-scheme:dark">
+                        <button onClick="{{ miNfAdd }}" style="min-height:38px;padding:0 14px;border:1px solid rgba(200,162,74,.45);border-radius:9px;background:rgba(200,162,74,.12);color:#e2c06a;font-size:12.5px">Add</button>
+                      </div>
+                      <button onClick="{{ miFxReset }}" style="align-self:flex-start;min-height:32px;padding:0 11px;border:1px solid #2a231b;border-radius:8px;background:transparent;color:#8d8272;font-size:11.5px">Reset to the built-in list</button>
+                    </div>
+                  </sc-if>
+                </div>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ miT3 }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;flex-direction:column;gap:14px">
+                <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
+                  <div style="flex:1 1 240px;min-width:0;display:flex;flex-direction:column;gap:5px">
+                    <span style="font-size:11px;color:#8d8272">Dish</span>
+                    <select value="{{ miSel }}" onChange="{{ onMiSel }}" style="min-height:44px;padding:0 12px;border:1px solid #2a231b;border-radius:10px;background:#0b0a09;color:#efe7db;font-size:13.5px">
+                      <sc-for list="{{ miDishOpts }}" as="o" hint-placeholder-count="0"><option value="{{ o.v }}">{{ o.label }}</option></sc-for>
+                    </select>
+                  </div>
+                  <div style="display:flex;gap:5px;flex-wrap:wrap"><sc-for list="{{ miRanges }}" as="c" hint-placeholder-count="4"><button onClick="{{ c.onTap }}" style="min-height:44px;padding:0 13px;border:1px solid {{ c.line }};border-radius:10px;background:{{ c.bg }};color:{{ c.fg }};font-size:12.5px">{{ c.label }}</button></sc-for></div>
+                  <button onClick="{{ miEnhance }}" style="min-height:44px;display:flex;align-items:center;gap:7px;padding:0 15px;border:1px solid rgba(200,162,74,.5);border-radius:10px;background:rgba(200,162,74,.14);color:#f0d089;font-size:13px" style-active="transform:scale(.97)"><span aria-hidden="true" style="font-size:14px">✦</span>Enhance with AI experts</button>
+                </div>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px">
+                  <sc-for list="{{ miPKpis }}" as="k" hint-placeholder-count="4">
+                    <div onClick="{{ k.onTap }}" style="min-width:0;padding:12px 13px;border:1px solid {{ k.line }};border-radius:11px;background:#12100c;cursor:pointer">
+                      <div style="font-size:11px;color:#8d8272;margin-bottom:5px">{{ k.label }}</div>
+                      <div style="font-family:'Cormorant Garamond',serif;font-size:22px;line-height:1.15;color:#efe7db;overflow-wrap:anywhere">{{ k.value }}</div>
+                      <div style="font-size:11.5px;color:{{ k.subC }};margin-top:4px;line-height:1.45;text-wrap:pretty">{{ k.sub }}</div>
+                    </div>
+                  </sc-for>
+                </div>
+                <div style="padding:14px;border:1px solid #221d16;border-radius:12px;background:#12100c">
+                  <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:4px">
+                    <span style="flex:1;font-size:15px;color:#efe7db">{{ miChartTitle }}</span>
+                    <span style="font-size:11px;color:#8d8272">{{ miChartSub }}</span>
+                  </div>
+                  <div style="position:relative;padding-top:26px">
+                    <div style="position:relative;height:190px;display:flex;align-items:flex-end;gap:2px;border-bottom:1px solid #2a231b">
+                      <sc-for list="{{ miBars }}" as="b" hint-placeholder-count="30"><div title="{{ b.tip }}" style="flex:1;min-width:0;height:{{ b.h }}%;background:{{ b.c }};border-radius:2px 2px 0 0"></div></sc-for>
+                      <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible"><path d="{{ miMa }}" fill="none" stroke="#ffd678" stroke-width="2" stroke-linejoin="round" vector-effect="non-scaling-stroke"></path></svg>
+                      <sc-for list="{{ miMarks }}" as="m" hint-placeholder-count="0">
+                        <div title="{{ m.tip }}" style="position:absolute;left:{{ m.x }}%;top:-24px;bottom:0;width:0;border-left:1px dashed {{ m.c }}"><span style="position:absolute;top:0;left:-10px;width:20px;height:20px;border-radius:50%;background:{{ m.c }};color:#0b0a09;font-size:10.5px;font-weight:600;display:flex;align-items:center;justify-content:center">{{ m.l }}</span></div>
                       </sc-for>
                     </div>
-                  </sc-if>
-                </div>
-                <div style="display:flex;flex-direction:column;gap:5px;flex:0 0 auto">
-                  <div style="font-size:11px;color:#8d8272">Ratio</div>
-                  <select value="{{ stuRatio }}" onChange="{{ onStuRatio }}" style="min-height:44px;padding:0 12px;border:1px solid #2a231b;border-radius:10px;background:#0b0a09;color:#efe7db;font-size:13px">
-                    <sc-for list="{{ stuRatios }}" as="o" hint-placeholder-count="0"><option value="{{ o.v }}">{{ o.label }}</option></sc-for>
-                  </select>
-                </div>
-                <div style="display:flex;flex-direction:column;gap:5px;flex:0 0 auto">
-                  <div style="font-size:11px;color:#8d8272">Content type</div>
-                  <div style="display:flex;gap:6px">
-                    <sc-for list="{{ studioTabs }}" as="c" hint-placeholder-count="3"><button onClick="{{ c.onTap }}" style="min-height:44px;padding:0 13px;border:1px solid {{ c.line }};border-radius:10px;background:{{ c.bg }};color:{{ c.fg }};font-size:12.5px;transition:background-color 160ms ease,color 160ms ease" style-active="transform:scale(.97)">{{ c.label }}</button></sc-for>
+                    <div style="display:flex;justify-content:space-between;margin-top:5px;font-size:10.5px;color:#8d8272"><span>{{ miAxisA }}</span><span>{{ miAxisB }}</span></div>
+                  </div>
+                  <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:10px;font-size:11px;color:#9a8f7f">
+                    <span style="display:flex;align-items:center;gap:5px"><span style="width:14px;border-top:2px solid #ffd678"></span>{{ miMaLbl }}</span>
+                    <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:rgba(159,199,154,.6)"></span>Festival window</span>
+                    <sc-for list="{{ miLegend }}" as="l" hint-placeholder-count="5"><span style="display:flex;align-items:center;gap:5px"><span style="width:16px;height:16px;border-radius:50%;background:{{ l.c }};color:#0b0a09;font-size:9.5px;font-weight:600;display:flex;align-items:center;justify-content:center">{{ l.l }}</span>{{ l.label }}</span></sc-for>
                   </div>
                 </div>
-              </div>
-              <div style="display:flex;align-items:center;gap:10px">
-                <span style="flex:1;min-width:0;font-size:11.5px;color:#c8a24a;line-height:1.5;text-wrap:pretty">{{ studioNote }}</span>
-                <button onClick="{{ studioReload }}" style="flex:0 0 auto;height:34px;padding:0 12px;border:1px solid #2a231b;border-radius:8px;background:#16130f;color:#9a8f7f;font-size:12px" style-active="transform:scale(.97)">Regenerate</button>
-              </div>
-            </div>
-            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:10px">
-              <sc-for list="{{ studioRows }}" as="p" hint-placeholder-count="4">
-                <div style="min-width:0;display:flex;flex-direction:column;gap:10px;padding:13px;border:1px solid #221d16;border-radius:12px;background:linear-gradient(180deg,#15120e,#100e0b)">
-                  <div style="display:flex;gap:12px;align-items:flex-start">
-                    <div style="flex:0 0 52px;height:64px;display:flex;align-items:center;justify-content:center">
-                      <div style="width:{{ p.fw }}px;height:{{ p.fh }}px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border:1px solid {{ p.kc }};border-radius:6px;background:{{ p.kbg }};color:{{ p.kc }}">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{ p.kIco }}"></path></svg>
-                        <span style="font-size:9.5px;letter-spacing:.04em">{{ p.ratio }}</span>
-                      </div>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:12px;align-items:start">
+                  <div style="min-width:0;padding:14px;border:1px solid #221d16;border-radius:12px;background:#12100c;display:flex;flex-direction:column;gap:10px">
+                    <div style="display:flex;align-items:center;gap:8px">
+                      <span style="flex:1;font-size:15px;color:#efe7db">Why it moved</span>
+                      <button onClick="{{ miAskWhy }}" style="min-height:32px;padding:0 11px;border:1px solid rgba(200,162,74,.4);border-radius:8px;background:rgba(200,162,74,.1);color:#e2c06a;font-size:11.5px" style-active="transform:scale(.97)">{{ miAskLbl }}</button>
                     </div>
-                    <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px">
-                      <div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap">
-                        <span style="flex:1;min-width:120px;font-size:14.5px;color:#efe7db;text-wrap:pretty">{{ p.title }}</span>
-                        <span style="font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:{{ p.kc }}">{{ p.kLbl }}</span>
+                    <sc-for list="{{ miWhy }}" as="w" hint-placeholder-count="3">
+                      <div style="display:flex;gap:9px;align-items:flex-start">
+                        <span style="flex:0 0 auto;width:20px;height:20px;border-radius:6px;background:{{ w.bg }};color:{{ w.c }};font-size:12px;display:flex;align-items:center;justify-content:center">{{ w.i }}</span>
+                        <span style="font-size:12.5px;color:#cfc6b8;line-height:1.55;text-wrap:pretty">{{ w.text }}</span>
                       </div>
-                      <div style="display:flex;gap:5px;flex-wrap:wrap">
-                        <span style="display:inline-flex;align-items:center;gap:5px;min-height:22px;padding:0 8px;border:1px solid #2a231b;border-radius:999px;font-size:11px;color:#cfc6b8"><span style="width:6px;height:6px;border-radius:50%;background:{{ p.evTone }}"></span>{{ p.evShort }}</span>
-                        <span style="display:inline-flex;align-items:center;min-height:22px;padding:0 8px;border:1px solid #2a231b;border-radius:999px;font-size:11px;color:#e2c06a">{{ p.dish }}</span>
-                        <span style="display:inline-flex;align-items:center;min-height:22px;padding:0 8px;border:1px solid #2a231b;border-radius:999px;font-size:11px;color:#9a8f7f">{{ p.trend }}</span>
+                    </sc-for>
+                    <sc-if value="{{ miAiHas }}" hint-placeholder-val="{{ false }}">
+                      <div style="padding:10px 11px;border-radius:9px;background:rgba(200,162,74,.06);border:1px solid #2a2419;font-size:12.5px;color:#e8dcc4;line-height:1.6;white-space:pre-wrap;text-wrap:pretty">{{ miAiText }}</div>
+                    </sc-if>
+                  </div>
+                  <div style="min-width:0;padding:14px;border:1px solid #221d16;border-radius:12px;background:#12100c;display:flex;flex-direction:column;gap:10px">
+                    <span style="font-size:15px;color:#efe7db">What guests keep saying</span>
+                    <div style="display:flex;gap:6px;flex-wrap:wrap">
+                      <sc-for list="{{ miThemes }}" as="t" hint-placeholder-count="4"><span style="display:inline-flex;align-items:center;gap:6px;min-height:28px;padding:0 10px;border:1px solid {{ t.line }};border-radius:999px;font-size:12px;color:{{ t.c }}">{{ t.label }}<span style="font-variant-numeric:tabular-nums;color:#efe7db">×{{ t.n }}</span><span style="font-size:10.5px;color:{{ t.dc }}">{{ t.d }}</span></span></sc-for>
+                    </div>
+                    <sc-if value="{{ miThemesNone }}" hint-placeholder-val="{{ false }}"><span style="font-size:12.5px;color:#8d8272">No written feedback for this dish in this range.</span></sc-if>
+                    <sc-for list="{{ miQuotes }}" as="q" hint-placeholder-count="0">
+                      <div style="padding:9px 11px;border:1px solid #1d1914;border-radius:9px;background:#0b0a09">
+                        <div style="font-size:12.5px;color:#cfc6b8;line-height:1.5;text-wrap:pretty">“{{ q.text }}”</div>
+                        <div style="font-size:10.5px;color:#8d8272;margin-top:4px">{{ q.meta }}</div>
                       </div>
-                      <div style="font-size:11px;color:#8d8272">{{ p.spec }} · {{ p.postBy }}</div>
-                      <sc-if value="{{ p.hasConcept }}" hint-placeholder-val="{{ false }}">
-                        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:11.5px;color:#cfc6b8">
-                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#e2c06a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"></path></svg>
-                          <span>{{ p.concept }}</span>
-                          <span style="color:#6f6558">·</span>
-                          <sc-if value="{{ p.hasRef }}" hint-placeholder-val="{{ false }}"><a href="{{ p.refUrl }}" target="_blank" rel="noopener" style="color:#c8a24a;text-decoration:none;border-bottom:1px solid rgba(200,162,74,.35)">adapted from {{ p.refLbl }} ↗</a></sc-if>
-                          <sc-if value="{{ p.ownIdea }}" hint-placeholder-val="{{ false }}"><span style="color:#9fc79a">Own idea</span></sc-if>
+                    </sc-for>
+                  </div>
+                </div>
+                <div style="padding:14px;border:1px solid #221d16;border-radius:12px;background:#12100c">
+                  <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:4px">
+                    <span style="flex:1;font-size:15px;color:#efe7db">Did the change work?</span>
+                    <button onClick="{{ miGoLog }}" style="min-height:32px;padding:0 11px;border:1px solid #2a231b;border-radius:8px;background:#16130f;color:#c8a24a;font-size:11.5px">Log a change</button>
+                  </div>
+                  <div style="font-size:11.5px;color:#8d8272;line-height:1.5;margin-bottom:10px">Average portions a day in the week before each change against the days after it.</div>
+                  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,240px),1fr));gap:8px">
+                    <sc-for list="{{ miImp }}" as="p" hint-placeholder-count="2">
+                      <div style="min-width:0;padding:11px 12px;border:1px solid #1d1914;border-radius:10px;background:#0b0a09;display:flex;flex-direction:column;gap:8px">
+                        <div style="display:flex;align-items:center;gap:8px">
+                          <span style="flex:0 0 auto;width:22px;height:22px;border-radius:50%;background:{{ p.kc }};color:#0b0a09;font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center">{{ p.kl }}</span>
+                          <span style="flex:1;min-width:0;font-size:12px;color:{{ p.kc }}">{{ p.kLbl }}</span>
+                          <span style="font-size:11px;color:#8d8272">{{ p.when }}</span>
                         </div>
-                      </sc-if>
-                    </div>
+                        <div style="font-size:12.5px;color:#efe7db;line-height:1.45;text-wrap:pretty">{{ p.what }}</div>
+                        <div style="display:flex;align-items:flex-end;gap:10px">
+                          <div style="flex:1;display:flex;align-items:flex-end;gap:5px;height:44px">
+                            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;height:100%;justify-content:flex-end"><div style="width:100%;height:{{ p.bh }}%;min-height:2px;border-radius:3px 3px 0 0;background:#3a3226"></div></div>
+                            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;height:100%;justify-content:flex-end"><div style="width:100%;height:{{ p.ah }}%;min-height:2px;border-radius:3px 3px 0 0;background:{{ p.lc }}"></div></div>
+                          </div>
+                          <div style="text-align:right"><div style="font-family:'Cormorant Garamond',serif;font-size:22px;line-height:1;color:{{ p.lc }}">{{ p.lift }}</div><div style="font-size:10.5px;color:#8d8272;margin-top:3px;white-space:nowrap">{{ p.ba }}</div></div>
+                        </div>
+                        <sc-for list="{{ p.extra }}" as="x" hint-placeholder-count="0"><div style="font-size:11.5px;color:{{ x.c }};line-height:1.45">{{ x.t }}</div></sc-for>
+                        <sc-if value="{{ p.partial }}" hint-placeholder-val="{{ false }}"><div style="font-size:11px;color:#c8a24a">{{ p.partialLbl }}</div></sc-if>
+                      </div>
+                    </sc-for>
                   </div>
-                  <sc-if value="{{ p.ip }}" hint-placeholder-val="{{ false }}">
-                    <div style="font-size:11.5px;color:#d98ab4;line-height:1.5;text-wrap:pretty">{{ p.ipNote }}</div>
+                  <sc-if value="{{ miImpNone }}" hint-placeholder-val="{{ false }}"><div style="font-size:12.5px;color:#8d8272;line-height:1.55">Nothing logged for this dish yet. Log a recipe tweak, a post or a staff push and its effect shows here.</div></sc-if>
+                </div>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:12px;align-items:start">
+                  <sc-for list="{{ miBoards }}" as="bd" hint-placeholder-count="2">
+                    <div style="min-width:0;padding:14px;border:1px solid #221d16;border-radius:12px;background:#12100c">
+                      <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:6px"><span style="flex:1;font-size:15px;color:#efe7db">{{ bd.title }}</span><span style="font-size:11px;color:#8d8272">{{ bd.sub }}</span></div>
+                      <sc-for list="{{ bd.rows }}" as="r" hint-placeholder-count="5">
+                        <button onClick="{{ r.onTap }}" style="width:100%;display:grid;grid-template-columns:minmax(0,1fr) 64px 54px;gap:10px;align-items:center;padding:8px 2px;border:0;border-top:1px solid #1d1914;background:transparent;color:#efe7db;text-align:left" style-hover="background:rgba(200,162,74,.05)">
+                          <span style="min-width:0;display:flex;flex-direction:column;gap:2px"><span style="font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ r.name }}</span><span style="font-size:11px;color:#8d8272;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ r.why }}</span></span>
+                          <span style="height:24px;display:flex;align-items:flex-end;gap:1px"><sc-for list="{{ r.spark }}" as="s" hint-placeholder-count="14"><span style="flex:1;height:{{ s.h }}%;min-height:1px;background:{{ r.pc }};opacity:.7;border-radius:1px"></span></sc-for></span>
+                          <span style="text-align:right;font-size:13px;color:{{ r.pc }}">{{ r.pct }}</span>
+                        </button>
+                      </sc-for>
+                      <sc-if value="{{ bd.none }}" hint-placeholder-val="{{ false }}"><div style="font-size:12px;color:#8d8272;padding:6px 0">Nothing moved more than 5% in this range.</div></sc-if>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ miT4 }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;flex-direction:column;gap:14px">
+                <div style="padding:14px;border:1px solid #221d16;border-radius:12px;background:#12100c;display:flex;flex-direction:column;gap:14px">
+                  <div style="font-size:15px;color:#efe7db">Log a change</div>
+                  <div style="display:flex;flex-direction:column;gap:6px">
+                    <span style="font-size:11px;color:#8d8272">What happened</span>
+                    <div style="display:flex;gap:6px;flex-wrap:wrap"><sc-for list="{{ miKinds }}" as="c" hint-placeholder-count="5"><button onClick="{{ c.onTap }}" style="min-height:44px;display:flex;align-items:center;gap:8px;padding:0 13px;border:1px solid {{ c.line }};border-radius:10px;background:{{ c.bg }};color:{{ c.fg }};font-size:12.5px"><span style="width:18px;height:18px;border-radius:50%;background:{{ c.kc }};color:#0b0a09;font-size:10px;font-weight:600;display:flex;align-items:center;justify-content:center">{{ c.kl }}</span>{{ c.label }}</button></sc-for></div>
+                  </div>
+                  <div style="display:flex;gap:10px;flex-wrap:wrap">
+                    <div style="flex:2 1 220px;min-width:0;display:flex;flex-direction:column;gap:5px">
+                      <span style="font-size:11px;color:#8d8272">Dish</span>
+                      <select value="{{ miFDish }}" onChange="{{ onMiFDish }}" style="min-height:44px;padding:0 12px;border:1px solid #2a231b;border-radius:10px;background:#0b0a09;color:#efe7db;font-size:13.5px">
+                        <sc-for list="{{ miDishOpts }}" as="o" hint-placeholder-count="0"><option value="{{ o.v }}">{{ o.label }}</option></sc-for>
+                      </select>
+                    </div>
+                    <div style="flex:1 1 150px;min-width:0;display:flex;flex-direction:column;gap:5px">
+                      <span style="font-size:11px;color:#8d8272">{{ miFDayLbl }}</span>
+                      <input type="date" value="{{ miFDay }}" onChange="{{ onMiFDay }}" style="min-height:44px;padding:0 11px;border:1px solid #2a231b;border-radius:10px;background:#0b0a09;color:#efe7db;font-size:13.5px;color-scheme:dark">
+                    </div>
+                    <sc-if value="{{ miFHasUntil }}" hint-placeholder-val="{{ false }}">
+                      <div style="flex:1 1 150px;min-width:0;display:flex;flex-direction:column;gap:5px">
+                        <span style="font-size:11px;color:#8d8272">Until</span>
+                        <input type="date" value="{{ miFUntil }}" onChange="{{ onMiFUntil }}" style="min-height:44px;padding:0 11px;border:1px solid #2a231b;border-radius:10px;background:#0b0a09;color:#efe7db;font-size:13.5px;color-scheme:dark">
+                      </div>
+                    </sc-if>
+                  </div>
+                  <sc-if value="{{ miFTweak }}" hint-placeholder-val="{{ false }}">
+                    <div style="display:flex;flex-direction:column;gap:6px">
+                      <span style="font-size:11px;color:#8d8272">What changed in the recipe (pick any)</span>
+                      <div style="display:flex;gap:6px;flex-wrap:wrap"><sc-for list="{{ miFWhat }}" as="c" hint-placeholder-count="8"><button onClick="{{ c.onTap }}" style="min-height:38px;padding:0 12px;border:1px solid {{ c.line }};border-radius:999px;background:{{ c.bg }};color:{{ c.fg }};font-size:12.5px">{{ c.label }}</button></sc-for></div>
+                      <button onClick="{{ miFFbTap }}" style="align-self:flex-start;min-height:38px;display:flex;align-items:center;gap:8px;padding:0 12px;border:1px solid {{ miFFbLine }};border-radius:10px;background:{{ miFFbBg }};color:{{ miFFbFg }};font-size:12.5px">{{ miFFbLbl }}</button>
+                    </div>
+                  </sc-if>
+                  <sc-if value="{{ miFSocial }}" hint-placeholder-val="{{ false }}">
+                    <div style="display:flex;flex-direction:column;gap:10px">
+                      <div style="display:flex;flex-direction:column;gap:6px"><span style="font-size:11px;color:#8d8272">Where</span><div style="display:flex;gap:6px;flex-wrap:wrap"><sc-for list="{{ miFPlat }}" as="c" hint-placeholder-count="5"><button onClick="{{ c.onTap }}" style="min-height:38px;padding:0 12px;border:1px solid {{ c.line }};border-radius:999px;background:{{ c.bg }};color:{{ c.fg }};font-size:12.5px">{{ c.label }}</button></sc-for></div></div>
+                      <div style="display:flex;flex-direction:column;gap:6px"><span style="font-size:11px;color:#8d8272">Format</span><div style="display:flex;gap:6px;flex-wrap:wrap"><sc-for list="{{ miFFmt }}" as="c" hint-placeholder-count="4"><button onClick="{{ c.onTap }}" style="min-height:38px;padding:0 12px;border:1px solid {{ c.line }};border-radius:999px;background:{{ c.bg }};color:{{ c.fg }};font-size:12.5px">{{ c.label }}</button></sc-for></div></div>
+                      <div style="display:flex;gap:10px;flex-wrap:wrap">
+                        <div style="flex:1 1 130px;display:flex;flex-direction:column;gap:5px"><span style="font-size:11px;color:#8d8272">Views or reach (optional)</span><input type="number" inputmode="numeric" value="{{ miFViews }}" onChange="{{ onMiFViews }}" style="min-height:44px;padding:0 11px;border:1px solid #2a231b;border-radius:10px;background:#0b0a09;color:#efe7db;font-size:13.5px"></div>
+                        <div style="flex:1 1 130px;display:flex;flex-direction:column;gap:5px"><span style="font-size:11px;color:#8d8272">Paid boost ₹ (optional)</span><input type="number" inputmode="numeric" value="{{ miFSpend }}" onChange="{{ onMiFSpend }}" style="min-height:44px;padding:0 11px;border:1px solid #2a231b;border-radius:10px;background:#0b0a09;color:#efe7db;font-size:13.5px"></div>
+                        <div style="flex:2 1 200px;display:flex;flex-direction:column;gap:5px"><span style="font-size:11px;color:#8d8272">Link (optional)</span><input value="{{ miFLink }}" onChange="{{ onMiFLink }}" placeholder="https://instagram.com/…" style="min-height:44px;padding:0 11px;border:1px solid #2a231b;border-radius:10px;background:#0b0a09;color:#efe7db;font-size:13.5px"></div>
+                      </div>
+                    </div>
+                  </sc-if>
+                  <sc-if value="{{ miFStaff }}" hint-placeholder-val="{{ false }}">
+                    <div style="display:flex;flex-direction:column;gap:10px">
+                      <div style="display:flex;flex-direction:column;gap:6px"><span style="font-size:11px;color:#8d8272">Who recommended it</span><div style="display:flex;gap:6px;flex-wrap:wrap"><sc-for list="{{ miFWho }}" as="c" hint-placeholder-count="4"><button onClick="{{ c.onTap }}" style="min-height:38px;padding:0 12px;border:1px solid {{ c.line }};border-radius:999px;background:{{ c.bg }};color:{{ c.fg }};font-size:12.5px">{{ c.label }}</button></sc-for></div></div>
+                      <div style="display:flex;flex-direction:column;gap:6px"><span style="font-size:11px;color:#8d8272">How</span><div style="display:flex;gap:6px;flex-wrap:wrap"><sc-for list="{{ miFHow }}" as="c" hint-placeholder-count="4"><button onClick="{{ c.onTap }}" style="min-height:38px;padding:0 12px;border:1px solid {{ c.line }};border-radius:999px;background:{{ c.bg }};color:{{ c.fg }};font-size:12.5px">{{ c.label }}</button></sc-for></div></div>
+                      <div style="display:flex;flex-direction:column;gap:6px"><span style="font-size:11px;color:#8d8272">Shift</span><div style="display:flex;gap:6px;flex-wrap:wrap"><sc-for list="{{ miFShift }}" as="c" hint-placeholder-count="3"><button onClick="{{ c.onTap }}" style="min-height:38px;padding:0 12px;border:1px solid {{ c.line }};border-radius:999px;background:{{ c.bg }};color:{{ c.fg }};font-size:12.5px">{{ c.label }}</button></sc-for></div></div>
+                    </div>
+                  </sc-if>
+                  <sc-if value="{{ miFPrice }}" hint-placeholder-val="{{ false }}">
+                    <div style="display:flex;gap:10px;flex-wrap:wrap">
+                      <div style="flex:1 1 130px;display:flex;flex-direction:column;gap:5px"><span style="font-size:11px;color:#8d8272">Old price ₹</span><input type="number" inputmode="numeric" value="{{ miFOld }}" onChange="{{ onMiFOld }}" style="min-height:44px;padding:0 11px;border:1px solid #2a231b;border-radius:10px;background:#0b0a09;color:#efe7db;font-size:13.5px"></div>
+                      <div style="flex:1 1 130px;display:flex;flex-direction:column;gap:5px"><span style="font-size:11px;color:#8d8272">New price ₹</span><input type="number" inputmode="numeric" value="{{ miFNew }}" onChange="{{ onMiFNew }}" style="min-height:44px;padding:0 11px;border:1px solid #2a231b;border-radius:10px;background:#0b0a09;color:#efe7db;font-size:13.5px"></div>
+                    </div>
                   </sc-if>
                   <div style="display:flex;flex-direction:column;gap:5px">
-                    <div style="font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:#8d8272">{{ p.promptLbl }}</div>
-                    <div style="padding:10px 11px;border-radius:9px;background:#0b0a09;border:1px solid #1d1914;font-size:12.5px;color:#b3a896;line-height:1.6;white-space:pre-wrap;text-wrap:pretty">{{ p.prompt }}</div>
+                    <span style="font-size:11px;color:#8d8272">{{ miFNoteLbl }}</span>
+                    <textarea value="{{ miFNote }}" onChange="{{ onMiFNote }}" rows="2" placeholder="{{ miFNotePh }}" style="padding:10px 11px;border:1px solid #2a231b;border-radius:10px;background:#0b0a09;color:#efe7db;font-size:13.5px;font-family:inherit;resize:vertical"></textarea>
                   </div>
-                  <div style="display:flex;flex-direction:column;gap:5px">
-                    <div style="font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:#8d8272">{{ p.capLbl }}</div>
-                    <div style="display:flex;flex-direction:column;gap:8px;padding:10px 11px;border-radius:9px;background:rgba(200,162,74,.05);border:1px solid #2a2419">
-                      <div style="font-size:13px;color:#efe7db;line-height:1.55;white-space:pre-wrap;text-wrap:pretty">{{ p.capBody }}</div>
-                      <sc-if value="{{ p.hasTags }}" hint-placeholder-val="{{ false }}">
-                        <div style="display:flex;gap:5px;flex-wrap:wrap"><sc-for list="{{ p.tags }}" as="t" hint-placeholder-count="0"><span style="font-size:11.5px;color:#c8a24a">{{ t }}</span></sc-for></div>
-                      </sc-if>
-                    </div>
-                  </div>
-                  <div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:auto">
-                    <button onClick="{{ p.onCopyP }}" style="flex:1 1 auto;height:36px;padding:0 12px;border:1px solid rgba(200,162,74,.4);border-radius:8px;background:rgba(200,162,74,.1);color:#e2c06a;font-size:12px" style-active="transform:scale(.97)">Copy prompt</button>
-                    <button onClick="{{ p.onCopyC }}" style="flex:1 1 auto;height:36px;padding:0 12px;border:1px solid #2a231b;border-radius:8px;background:#16130f;color:#cfc6b8;font-size:12px" style-active="transform:scale(.97)">Copy caption</button>
-                    <button onClick="{{ p.onCopyB }}" style="flex:1 1 auto;height:36px;padding:0 12px;border:1px solid #2a231b;border-radius:8px;background:#16130f;color:#9a8f7f;font-size:12px" style-active="transform:scale(.97)">Copy both</button>
+                  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+                    <button onClick="{{ miFSave }}" style="min-height:44px;padding:0 20px;border:1px solid rgba(200,162,74,.5);border-radius:10px;background:rgba(200,162,74,.16);color:#ffd678;font-size:13.5px" style-active="transform:scale(.97)">Save to dish history</button>
+                    <span style="font-size:11.5px;color:#8d8272;line-height:1.5">The effect is measured from the sales on either side of this date.</span>
                   </div>
                 </div>
-              </sc-for>
-            </div>
+                <div style="padding:14px;border:1px solid #221d16;border-radius:12px;background:#12100c">
+                  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">
+                    <span style="flex:1 1 160px;font-size:15px;color:#efe7db">Dish history</span>
+                    <div style="display:flex;gap:5px;flex-wrap:wrap"><sc-for list="{{ miHistF }}" as="c" hint-placeholder-count="3"><button onClick="{{ c.onTap }}" style="min-height:32px;padding:0 11px;border:1px solid {{ c.line }};border-radius:999px;background:{{ c.bg }};color:{{ c.fg }};font-size:12px">{{ c.label }}</button></sc-for></div>
+                  </div>
+                  <div style="display:flex;flex-direction:column">
+                    <sc-for list="{{ miHist }}" as="h" hint-placeholder-count="3">
+                      <div style="display:grid;grid-template-columns:24px minmax(0,1fr) auto;gap:11px;align-items:start;padding:10px 0;border-top:1px solid #1d1914">
+                        <span style="width:24px;height:24px;border-radius:50%;background:{{ h.kc }};color:#0b0a09;font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center">{{ h.kl }}</span>
+                        <div style="min-width:0;display:flex;flex-direction:column;gap:3px">
+                          <div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap"><span style="font-size:13.5px;color:#efe7db">{{ h.dish }}</span><span style="font-size:11px;color:{{ h.kc }}">{{ h.kLbl }}</span><span style="font-size:11px;color:#8d8272">{{ h.when }}</span><sc-if value="{{ h.sample }}" hint-placeholder-val="{{ false }}"><span style="font-size:10.5px;color:#8d8272;border:1px solid #2a231b;border-radius:999px;padding:0 6px">sample</span></sc-if></div>
+                          <div style="font-size:12.5px;color:#b3a896;line-height:1.5;text-wrap:pretty">{{ h.what }}</div>
+                        </div>
+                        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px">
+                          <span style="font-size:13px;color:{{ h.ec }};white-space:nowrap">{{ h.eff }}</span>
+                          <sc-if value="{{ h.canDel }}" hint-placeholder-val="{{ false }}"><button onClick="{{ h.onDel }}" style="min-height:28px;padding:0 9px;border:1px solid #2a231b;border-radius:7px;background:transparent;color:#8d8272;font-size:11px">Delete</button></sc-if>
+                        </div>
+                      </div>
+                    </sc-for>
+                    <sc-if value="{{ miHistNone }}" hint-placeholder-val="{{ false }}"><div style="font-size:12.5px;color:#8d8272;padding:6px 0">Nothing logged yet.</div></sc-if>
+                  </div>
+                </div>
+              </div>
+            </sc-if>
           </div>
           <div style="flex:1 1 340px;min-width:0;position:sticky;top:0">
-            <dc-import name="Assistant" scope="counter" desk="studio" title="Studio assistant" label="Content Studio" intro="Ask for a post idea, a prompt for a dish, a caption for an event, or what to post this week. Hold the mic to speak." seeds="{{ studioSeeds }}" brief="{{ studioBrief }}" staff="{{ assistStaff }}" sb="{{ assistSb }}" rid="{{ assistRid }}" height="580px" hint-size="100%,580px"></dc-import>
+            <dc-import name="Assistant" scope="counter" desk="studio" tables="{{ assistTables }}" floor="{{ assistFloor }}" opening-hours="{{ assistHours }}" break-mins="{{ assistBreak }}" voice-mode="{{ assistVoiceMode }}" silence-secs="{{ assistSilence }}" title="Menu assistant" label="AI Insights" intro="Ask what to prep tomorrow, how a festival changed sales, or why a dish is dipping. Tap the mic to speak." seeds="{{ miSeeds }}" brief="{{ miBrief }}" staff="{{ assistStaff }}" sb="{{ assistSb }}" rid="{{ assistRid }}" height="580px" hint-size="100%,580px"></dc-import>
           </div>
         </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ miFbOpenV }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed;inset:0;z-index:85;display:flex;align-items:flex-end;justify-content:center;background:rgba(6,5,4,.7)">
+      <div style="box-sizing:border-box;width:100%;max-width:640px;max-height:90vh;overflow-y:auto;background:linear-gradient(180deg,#1d1914,#13100c);border:1px solid #2e271d;border-radius:18px 18px 0 0;padding:18px 18px 72px;display:flex;flex-direction:column;gap:14px">
+        <div style="display:flex;align-items:flex-start;gap:10px">
+          <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px">
+            <span style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#8d8272">Guest feedback summary</span>
+            <span style="font-family:'Cormorant Garamond',serif;font-size:24px;line-height:1.15;color:#efe7db">{{ miFbName }}</span>
+            <span style="font-size:11.5px;color:#8d8272">{{ miFbSub }}</span>
+          </div>
+          <button onClick="{{ closeFb }}" style="height:34px;padding:0 12px;border:1px solid #2a231b;border-radius:8px;background:#0f0d0a;color:#9a8f7f;font-size:12.5px">Close</button>
+        </div>
+        <sc-if value="{{ miFbBusy }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;align-items:center;gap:10px;padding:11px 13px;border:1px solid #2a2419;border-radius:10px;background:rgba(200,162,74,.06);font-size:13px;color:#e8dcc4"><span style="width:8px;height:8px;border-radius:50%;background:#e2c06a;box-shadow:0 0 8px #e2c06a"></span>{{ miFbPhase }}</div>
+        </sc-if>
+        <sc-if value="{{ miFbHasSummary }}" hint-placeholder-val="{{ false }}">
+          <div style="padding:11px 12px;border-radius:10px;background:rgba(200,162,74,.07);border:1px solid #2a2419;font-size:13.5px;color:#e8dcc4;line-height:1.6;text-wrap:pretty">{{ miFbSummary }}</div>
+        </sc-if>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <sc-for list="{{ miFbRows }}" as="r" hint-placeholder-count="3">
+            <div style="display:flex;flex-direction:column;gap:6px;padding:11px 12px;border:1px solid #221d16;border-radius:10px;background:#12100c">
+              <div style="display:flex;align-items:baseline;gap:10px">
+                <span style="flex:1;font-size:14px;color:#efe7db">{{ r.label }}</span>
+                <span style="font-family:'Cormorant Garamond',serif;font-size:20px;color:#efe7db">{{ r.count }}</span><span style="font-size:11px;color:#8d8272">plates</span>
+              </div>
+              <div style="height:4px;border-radius:2px;background:#221d16;overflow:hidden"><div style="height:100%;width:{{ r.w }}%;background:{{ r.bar }}"></div></div>
+              <sc-if value="{{ r.hasFix }}" hint-placeholder-val="{{ false }}"><span style="font-size:12.5px;color:#cfc6b8;line-height:1.5;text-wrap:pretty">AI suggestion: {{ r.fix }}</span></sc-if>
+            </div>
+          </sc-for>
+        </div>
+        <sc-if value="{{ miFbEmpty }}" hint-placeholder-val="{{ false }}"><span style="font-size:13px;color:#9a8f7f">No written feedback for this dish in the selected range.</span></sc-if>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ miEnhOpen }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed;inset:0;z-index:85;display:flex;align-items:flex-end;justify-content:center;background:rgba(6,5,4,.7)">
+      <div style="box-sizing:border-box;width:100%;max-width:760px;max-height:92vh;overflow-y:auto;background:linear-gradient(180deg,#1d1914,#13100c);border:1px solid #2e271d;border-radius:18px 18px 0 0;padding:18px 18px 26px;display:flex;flex-direction:column;gap:14px">
+        <div style="display:flex;align-items:flex-start;gap:10px">
+          <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px">
+            <span style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#8d8272">AI chef's notes</span>
+            <span style="font-family:'Cormorant Garamond',serif;font-size:24px;line-height:1.15;color:#efe7db">{{ miEnhName }}</span>
+          </div>
+          <button onClick="{{ miEnhRetry }}" style="height:34px;padding:0 12px;border:1px solid #2a231b;border-radius:8px;background:#0f0d0a;color:#c8a24a;font-size:12.5px">Refresh</button>
+          <button onClick="{{ closeEnh }}" style="height:34px;padding:0 12px;border:1px solid #2a231b;border-radius:8px;background:#0f0d0a;color:#9a8f7f;font-size:12.5px">Close</button>
+        </div>
+        <sc-if value="{{ miEnhBusy }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;align-items:center;gap:10px;padding:12px 13px;border:1px solid #2a2419;border-radius:10px;background:rgba(200,162,74,.06);font-size:13px;color:#e8dcc4">
+            <span style="width:8px;height:8px;border-radius:50%;background:#e2c06a;box-shadow:0 0 8px #e2c06a"></span>{{ miEnhPhase }}
+          </div>
+        </sc-if>
+        <sc-if value="{{ miEnhHasNote }}" hint-placeholder-val="{{ false }}">
+          <div style="padding:11px 12px;border:1px solid #2a231b;border-radius:10px;font-size:13px;color:{{ miEnhNoteC }};line-height:1.55;text-wrap:pretty">{{ miEnhNote }}</div>
+        </sc-if>
+        <sc-if value="{{ miEnhHasCompare }}" hint-placeholder-val="{{ false }}">
+          <div style="padding:11px 12px;border-radius:10px;background:rgba(200,162,74,.07);border:1px solid #2a2419;font-size:13px;color:#e8dcc4;line-height:1.6;text-wrap:pretty">{{ miEnhCompare }}</div>
+        </sc-if>
+        <sc-if value="{{ miEnhHasSections }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <sc-for list="{{ miEnhSections }}" as="sec" hint-placeholder-count="0">
+              <div style="display:flex;flex-direction:column;gap:7px">
+                <span style="font-size:14px;color:#efe7db">{{ sec.title }}</span>
+                <sc-for list="{{ sec.tips }}" as="t" hint-placeholder-count="0">
+                  <div style="display:flex;flex-direction:column;gap:5px;padding:10px 12px;border:1px solid #221d16;border-radius:10px;background:#12100c">
+                    <span style="font-size:13px;color:#e5dccd;line-height:1.55;text-wrap:pretty">{{ t.tip }}</span>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
       </div>
     </div>
   </sc-if>
@@ -669,7 +1026,7 @@
       <div style="box-sizing:border-box;width:100%;max-width:1120px;max-height:94vh;overflow-y:auto;overflow-x:hidden;background:linear-gradient(180deg,#1d1914,#13100c);border:1px solid #2e271d;border-top-color:rgba(200,162,74,.35);border-radius:20px 20px 0 0;box-shadow:0 -24px 60px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,236,200,.06);padding:18px">
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:5px">
           <span style="flex:0 0 auto;width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:10px;background:radial-gradient(circle at 50% 40%,rgba(255,214,120,.38),rgba(200,162,74,.12) 70%);color:#ffd678;box-shadow:0 0 16px -2px rgba(255,200,90,.6)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="filter:drop-shadow(0 0 4px rgba(255,210,110,.75))"><path d="M12 2.5a6.5 6.5 0 0 0-3.8 11.8c.5.4.8 1 .8 1.6V16h6v-.1c0-.6.3-1.2.8-1.6A6.5 6.5 0 0 0 12 2.5z" fill="rgba(255,214,120,.35)"></path><path d="M9 18h6"></path><path d="M10 21.5h4"></path><path d="M12 6.5a3 3 0 0 0-3 3" stroke="#fff4d6"></path></svg></span>
-          <span style="flex:1;font-family:'Cormorant Garamond',serif;font-size:22px">AI Insights</span>
+          <span style="flex:1;font-family:'Cormorant Garamond',serif;font-size:22px">AI Planner</span>
           <button onClick="{{ closeOv }}" style="height:34px;padding:0 12px;border:1px solid #2a231b;border-radius:8px;background:#0f0d0a;color:#9a8f7f;font-size:12.5px">Close</button>
         </div>
         <div style="font-size:12px;color:#8d8272;line-height:1.55;margin-bottom:16px;text-wrap:pretty">The week ahead: weather, events worth a campaign, and which dish to push each day. Dishes rotate by sales, ratings, recent pace and when each was last posted.</div>
@@ -907,7 +1264,7 @@
             <div style="font-size:11.5px;color:#8d8272;line-height:1.55;text-wrap:pretty">{{ insNote }}</div>
           </div>
           <div style="flex:1 1 340px;min-width:0;position:sticky;top:0">
-            <dc-import name="Assistant" scope="counter" desk="insights" title="Insights assistant" label="AI Insights" intro="Ask what to push tonight, what the rain means for dinner, which event to plan for, or why a dish was picked. Hold the mic to speak." seeds="{{ insSeeds }}" brief="{{ insBrief }}" staff="{{ assistStaff }}" sb="{{ assistSb }}" rid="{{ assistRid }}" height="580px" hint-size="100%,580px"></dc-import>
+            <dc-import name="Assistant" scope="counter" desk="insights" tables="{{ assistTables }}" floor="{{ assistFloor }}" opening-hours="{{ assistHours }}" break-mins="{{ assistBreak }}" voice-mode="{{ assistVoiceMode }}" silence-secs="{{ assistSilence }}" title="Insights assistant" label="AI Planner" intro="Ask what to push tonight, what the rain means for dinner, which event to plan for, or why a dish was picked. Tap the mic to speak." seeds="{{ insSeeds }}" brief="{{ insBrief }}" staff="{{ assistStaff }}" sb="{{ assistSb }}" rid="{{ assistRid }}" height="580px" hint-size="100%,580px"></dc-import>
           </div>
         </div>
       </div>
@@ -1098,7 +1455,7 @@
             </div>
           </div>
           <div style="flex:1 1 340px;min-width:0;position:sticky;top:0">
-            <dc-import name="Assistant" scope="counter" desk="hub" title="Hub assistant" label="Neural Hub" intro="Ask what guests are saying, which complaints repeat, or for a reply to a tricky review. Hold the mic to speak." seeds="{{ hubSeeds }}" brief="{{ hubBrief }}" staff="{{ assistStaff }}" sb="{{ assistSb }}" rid="{{ assistRid }}" height="580px" hint-size="100%,580px"></dc-import>
+            <dc-import name="Assistant" scope="counter" desk="hub" tables="{{ assistTables }}" floor="{{ assistFloor }}" opening-hours="{{ assistHours }}" break-mins="{{ assistBreak }}" voice-mode="{{ assistVoiceMode }}" silence-secs="{{ assistSilence }}" title="Hub assistant" label="Neural Hub" intro="Ask what guests are saying, which complaints repeat, or for a reply to a tricky review. Tap the mic to speak." seeds="{{ hubSeeds }}" brief="{{ hubBrief }}" staff="{{ assistStaff }}" sb="{{ assistSb }}" rid="{{ assistRid }}" height="580px" hint-size="100%,580px"></dc-import>
           </div>
         </div>
       </div>
@@ -2657,7 +3014,7 @@
 
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1180,&quot;height&quot;:840},&quot;startTab&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;clock&quot;,&quot;today&quot;,&quot;roster&quot;,&quot;pay&quot;,&quot;people&quot;],&quot;default&quot;:&quot;today&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Screen&quot;}}">
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1180,&quot;height&quot;:840},&quot;openingHours&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;11 AM to 11 PM&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;House&quot;},&quot;staffBreakMins&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:30,&quot;min&quot;:0,&quot;max&quot;:120,&quot;unit&quot;:&quot;min&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;House&quot;},&quot;voiceMode&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;auto&quot;,&quot;tap&quot;],&quot;default&quot;:&quot;auto&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Voice assistant&quot;},&quot;voiceSilenceSecs&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:2,&quot;min&quot;:1,&quot;max&quot;:5,&quot;step&quot;:0.5,&quot;unit&quot;:&quot;s&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Voice assistant&quot;},&quot;startTab&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;clock&quot;,&quot;today&quot;,&quot;roster&quot;,&quot;pay&quot;,&quot;people&quot;],&quot;default&quot;:&quot;today&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Screen&quot;}}">
 /* Sulthan's — the billing counter.
    A separate page from the guest menu on purpose: it shares one Supabase
    project (so nothing has to be "synced"), and nothing else. The guest app is
@@ -2690,6 +3047,41 @@ function dlvQuote(pin) {
   };
 }
 
+
+const MI_SYN = [[/ biriyani | briyani | biriani /g, ' biryani '], [/ kebab | kabob | kebap /g, ' kabab '], [/ barbecue | bbq | barbeque /g, ' barbeque '], [/ chilly | chili /g, ' chilli '], [/ panner /g, ' paneer '], [/ prawns /g, ' prawn '], [/ eggs /g, ' egg '], [/ baby corn /g, ' babycorn '], [/ mushrooms /g, ' mushroom '], [/ vegetable | vegetables /g, ' veg '], [/ milk shake /g, ' milkshake '], [/ ice cream | icecream /g, ' icecream '], [/ tikkas /g, ' tikka '], [/ manchoorian /g, ' manchurian ']];
+const MI_SPELL = { biryani: ['biryani', 'biriyani', 'briyani'], kabab: ['kabab', 'kebab'], barbeque: ['barbeque', 'barbecue', 'bbq'], chilli: ['chilli', 'chilly', 'chili'], paneer: ['paneer', 'panner'], babycorn: ['baby corn', 'babycorn'], icecream: ['ice cream', 'icecream'], milkshake: ['milkshake', 'milk shake'] };
+const MI_PROT = ['chicken', 'mutton', 'lamb', 'goat', 'fish', 'prawn', 'egg', 'paneer', 'mushroom', 'babycorn', 'gobi', 'beef', 'crab', 'squid', 'veg'];
+const MI_MEAT = ['chicken', 'mutton', 'lamb', 'goat', 'fish', 'prawn', 'egg', 'beef', 'crab', 'squid'];
+const MI_FILLER = ['spl', 'special', 'recipe', 'style', 'hotel', 'restaurant', 'dhaba', 'homemade', 'easy', 'best', 'large', 'small', 'regular', 'full', 'half', 'the', 'and', 'with', 'of', 'by', 'in', 'a', 'how', 'to', 'make'];
+// AI Insights festival dates. Only confirmed dates:
+// TN G.O.(Ms) public-holiday orders for 2025 and 2026 (No.708, 11 Nov 2025);
+// Shivaratri, Karthigai Deepam, Purattasi from the Tamil panchangam.
+// 2027 lunar dates are left out until the 2027 G.O. is issued (usually Nov-Dec); add them in the panel.
+const MI_FEST = [
+  { k: 'pongal', name: 'Pongal', type: 'veg', dates: ['2025-01-14', '2026-01-15'] },
+  { k: 'shivaratri', name: 'Maha Shivaratri', type: 'veg', dates: ['2025-02-26', '2026-02-15'] },
+  { k: 'ramzan', name: 'Ramzan', type: 'feast', dates: ['2025-03-31', '2026-03-21'] },
+  { k: 'puthandu', name: 'Tamil New Year', type: 'veg', dates: ['2025-04-14', '2026-04-14'] },
+  { k: 'bakrid', name: 'Bakrid', type: 'feast', dates: ['2025-06-07', '2026-05-28'] },
+  { k: 'vinayaka', name: 'Vinayaka Chaturthi', type: 'veg', dates: ['2025-08-27', '2026-09-14'] },
+  { k: 'ayudha', name: 'Ayudha Puja', type: 'veg', dates: ['2025-10-01', '2026-10-19'] },
+  { k: 'deepavali', name: 'Deepavali', type: 'veg', dates: ['2025-10-20', '2026-11-08'] },
+  { k: 'karthigai', name: 'Karthigai Deepam', type: 'veg', dates: ['2025-12-03', '2026-11-24'] },
+  { k: 'christmas', name: 'Christmas', type: 'feast', dates: ['2025-12-25', '2026-12-25', '2027-12-25'] },
+  { k: 'nye', name: 'New Year\u2019s Eve', type: 'feast', dates: ['2025-12-31', '2026-12-31', '2027-12-31'] },
+  { k: 'purattasi', name: 'Purattasi', type: 'month', len: 31, dates: ['2025-09-17', '2026-09-17'] },
+];
+// Starting shape per window column (-3..+3 days, or weeks for a month) until the restaurant's own history replaces it.
+const MI_PRIOR = {
+  veg: { v: [0, 0, 0.05, 0.3, 0, 0, 0], n: [0.05, 0.12, 0.15, -0.4, 0.25, 0.15, 0.05] },
+  feast: { v: [0, 0, 0, 0.05, 0, 0, 0], n: [0, 0.05, 0.15, 0.4, 0.1, 0, 0] },
+  month: { v: [0, 0, 0.15, 0.15, 0.15, 0.15, 0], n: [0, 0, -0.25, -0.25, -0.25, -0.25, 0.1] },
+};
+const MI_KIND = { tweak: ['Recipe tweak', 'T', '#e2c06a'], social: ['Social post', 'S', '#d98ab4'], staff: ['Staff push', 'R', '#7fb4d9'], price: ['Price change', '\u20b9', '#9fc79a'], offer: ['Offer / combo', 'O', '#d9a46a'] };
+const MI_THEMES = [['Too salty', /salt/], ['Too spicy', /spic|too hot|chill?i|kaaram|karam/], ['Bland', /bland|tasteless|no taste|no flavou?r/], ['Oily', /oil|greasy/],
+  ['Cold when served', /cold|not hot|lukewarm/], ['Small portion', /portion|quantity|small|less qty/], ['Dry or hard', /dry|hard|chewy|rubber|tough/], ['Undercooked', /raw|undercook|not cooked/],
+  ['Slow to arrive', /late|slow|waited|delay/], ['Too sweet', /sweet|sugary/], ['Too sour', /sour|tangy|too much lemon|acidic/], ['Burnt', /burn|burnt|charred|smok/], ['Stale or bad smell', /stale|smell|stink|spoil|old food|not fresh/], ['Soggy or mushy', /soggy|mushy|sticky|lumpy/], ['Hair or foreign object', /hair|insect|stone|plastic|fly /], ['Too pricey', /price|expensive|costly|overpriced/], ['Loved it', /love|great|excellent|awesome|super|tasty|delicious|best|perfect/]];
+const MI_DEMO = [['Mutton Juicy Mandi', 580], ['Chicken Mandi', 420], ['Chicken 65', 240], ['Mutton Biryani', 360], ['Chicken Biryani', 280], ['Fish Fry', 320], ['Paneer Butter Masala', 260], ['Veg Biryani', 220], ['Gobi 65', 180], ['Parotta', 40], ['Veg Meals', 160], ['Lime Juice', 60]];
 
 const AI_STUDIO = [
   { kind: 'Image', title: 'Steam over the handi', trend: 'Dark, moody food', spec: '4:5 feed', event: '', dish: 'Mutton biryani', prompt: 'Close-up of a copper biryani handi with the lid just lifted, thick steam rising into a dark background, single warm side light, saffron rice and mutton pieces glistening, shallow depth of field, editorial food photography, no text.', caption: 'Lid off, steam up. Mutton biryani, fresh from the handi.\n#biryani #aruppukottai #tamilnadufood' },
@@ -2916,8 +3308,35 @@ class Component extends DCLogic {
     this.setState({ phase: 'pin', me: null, approver: null, bill: null, sel: null, ov: '' });
   }
 
+  /* Keeps the assistant's copy of the AI Engine fresh without opening it:
+     every 3 hours the counter reads sales, computes, and publishes. */
+  miAutoPub() {
+    if (!this.sb) return;
+    this.miTagFeedback(false);
+    const last = +(localStorage.getItem('ai:miPubAt') || 0);
+    if (Date.now() - last > 3 * 3600e3) { this._miPubDue = true; this.loadIntel(); }
+    this.insPub();
+  }
+  insPub() {
+    if (!this.sb || Date.now() - (this._insPubAt || 0) < 3 * 3600e3) return;
+    this._insPubAt = Date.now();
+    const go = () => { try {
+      const wx = this.state.aiWx || {}, plan = this.aiPlan(), today = this.today(), lim = this.aiDayKey(60);
+      const body = {
+        weather: (wx.days || []).map(d => ({ date: d.date, sky: WX_LABEL(d.code), max_c: d.max, min_c: d.min, rain_chance: d.p + '%' })),
+        events: this.aiEvs().filter(e => e.date >= today && e.date <= lim).slice(0, 60).map(e => ({ date: e.date, title: e.title, category: e.cat, impact: e.impact || null, holiday: !!(e.hol || e.cat === 'Holiday') })),
+        content_plan: (plan.picks || []).slice(0, 14).map(p => ({ date: p.date, dish: p.dish, for: p.event || p.title || '', skipped: !!p.skipped })),
+        recent_posts: this.aiLog().slice(0, 30),
+        campaigns: Object.entries(this.aiGet('camps', {})).filter(([k]) => k >= this.aiDayKey(-30)).map(([date, cs]) => ({ date, items: (cs || []).map(c => ({ dish: c.dish || '', event: c.event || '' })) })),
+      };
+      this.sb.from('ai_engine_snapshot').upsert({ restaurant_id: this.rid, section: 'insights', body, at: new Date().toISOString() }).then(() => {}, () => {});
+    } catch (e) {} };
+    if ((this.state.aiWx || {}).days) go(); else this.loadWx().then(go, go);
+  }
   async componentDidMount() {
     setTimeout(() => this.aiRemindCheck(), 5000);
+    setTimeout(() => this.miAutoPub(), 15000);
+    this._miPubTimer = setInterval(() => this.miAutoPub(), 30 * 60e3);
     /* Ages are drawn from Date.now() at render, so without a heartbeat a table
        sits green past the hour until something unrelated forces a render. Half
        a minute is finer than any threshold on the screen and cheap — it is a
@@ -3137,7 +3556,7 @@ class Component extends DCLogic {
     const [orders, kots, exp, day, calls, bats, slots] = await Promise.all([
       sb.from('orders').select(this.ordSel())
         .eq('restaurant_id', rid).eq('status', 'open'),
-      sb.from('kots').select('id,order_id,station_id,no,state,created_at,note,kot_items(id,dish_id,qty,note,done_qty)')
+      sb.from('kots').select('id,order_id,station_id,no,state,created_at,prep_at,served_at,note,kot_items(id,dish_id,qty,note,done_qty)')
         .eq('restaurant_id', rid).gte('created_at', new Date(Date.now() - 18 * 3600e3).toISOString())
         .order('created_at', { ascending: false }),
       sb.from('expenses').select('*').eq('restaurant_id', rid).order('created_at', { ascending: false }).limit(60),
@@ -4159,6 +4578,60 @@ class Component extends DCLogic {
      it costs. Anything unmatched is named back to the waiter instead of being
      dropped — a round that silently arrives one dish short is worse than one
      that arrives with a question. */
+  /* What the assistant reads of the room. Same shape the guest app hands it, so
+     the seat count and the "which table clears next" ranking are worked out
+     by one piece of code for both screens. Timings per dish come from the
+     station tickets: when it was punched and when its ticket was served. */
+  floorSnapshot() {
+    const S = this.state, now = Date.now();
+    const at = t => (t ? Date.parse(t) : 0) || 0;
+    const ago = t => t ? Math.max(0, Math.round((now - t) / 60000)) : undefined;
+    const clk = t => t ? new Date(t).toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' }) : undefined;
+    const hasSent = /\bsent\b/.test(this.oiSel || '');
+    const orders = (S.orders || []).slice().sort((a, b) => at(a.opened_at) - at(b.opened_at));
+    return {
+      tables: this.tableCount(),
+      orders: orders.map((o, n) => {
+        const parcel = /^U/.test(o.table_label);
+        const ks = (S.kots || []).filter(k => k.order_id === o.id && k.state !== 'void');
+        const per = {};
+        (o.order_items || []).forEach(i => {
+          const d = this.dish(i.dish_id);
+          const r = per[i.dish_id] = per[i.dish_id] || { name: d ? d.name_en : 'Dish no longer on the menu', qty: 0, sent: 0, notes: [] };
+          r.qty += Number(i.qty) || 0;
+          r.sent += Math.min(Number(i.qty) || 0, Number(i.sent) || 0);
+          if (i.note) r.notes.push(i.note);
+        });
+        const items = Object.keys(per).map(id => {
+          const r = per[id];
+          const mine = ks.filter(k => (k.kot_items || []).some(x => x.dish_id === id));
+          const first = mine.map(k => at(k.created_at)).filter(Boolean).sort()[0];
+          const served = mine.map(k => at(k.served_at)).filter(Boolean).sort().slice(-1)[0];
+          const doneK = mine.filter(k => k.state === 'served').reduce((n, k) => n + (k.kot_items || []).filter(x => x.dish_id === id).reduce((m, x) => m + (x.qty || 0), 0), 0);
+          const out = Math.min(r.qty, hasSent ? r.sent : doneK);
+          const cooking = mine.some(k => k.state === 'preparing');
+          return {
+            name: r.name, qty: r.qty, servedQty: out, note: r.notes.join('; ') || undefined,
+            orderedAt: clk(first), orderedMinsAgo: ago(first),
+            lastServedAt: clk(served), lastServedMinsAgo: ago(served),
+            out: out >= r.qty ? 'all served' : (out ? out + ' of ' + r.qty + ' served' : 'not served yet') + (cooking ? ', cooking' : mine.length ? ', waiting at the station' : ', not punched'),
+          };
+        });
+        return {
+          order: n + 1,
+          table: parcel ? 'Parcel ' + o.table_label.slice(1) : o.table_label,
+          kind: parcel ? 'parcel' : 'table',
+          party: o.party_name || undefined, guests: o.party_size || undefined,
+          seatedAt: clk(at(o.opened_at)), seatedMinsAgo: ago(at(o.opened_at)), openedMinsAgo: ago(at(o.opened_at)),
+          stage: o.stage || undefined,
+          billPrinted: o.stage === 'billed' ? true : undefined,
+          ready: o.ready_at ? true : undefined,
+          items,
+        };
+      }),
+    };
+  }
+
   takeDictated(t) {
     const norm = s => String(s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
     const pool = this.state.dishes;
@@ -4215,15 +4688,30 @@ class Component extends DCLogic {
       /* Two network writes stand between this and a kitchen, so the report waits
          for them. Claiming the punch on the way in read as food on the line
          whenever the insert or the routing RPC failed. */
+      /* On this terminal a punch is already the authorised send — it routes
+         straight into station tickets with nobody else to check it — so
+         "authorise" is done by the punch itself and said so. Cook first and
+         hold are written onto the lines this punch just added, where the
+         schema has the columns; the kitchen screen reads both. */
       return new Promise(resolve => {
         this.setState({}, async () => {
+          const since = new Date(Date.now() - 5000).toISOString();
+          const ids = cart.map(l => l.dishId);
           const ok = await this.punch();
           if (!ok) return resolve('Not punched — the round did not reach the kitchen. Try it on the punch screen.');
-          if (rest.length) {
-            this.say('Punched. Cook first and hold are pressed on the floor app.');
-            return resolve('Punched to ' + where + '. Cook first and hold are pressed on the floor app.');
-          }
-          resolve('Punched to ' + where + '.');
+          const done = ['punched to ' + where + ' and authorised to the kitchen'];
+          const mark = async (col, words) => {
+            if (!new RegExp('\\b' + col + '\\b').test(this.oiSel || '')) { done.push(words + ' is not set up on this database'); return; }
+            const { error } = await this.sb.from('order_items').update({ [col]: new Date().toISOString() })
+              .eq('order_id', ord.id).in('dish_id', ids).gte('added_at', since).is(col, null);
+            done.push(error ? words + ' did not save (' + (error.message || 'error') + ')' : words);
+          };
+          if (rest.indexOf('first') >= 0) await mark('rush_at', 'marked cook first');
+          if (rest.indexOf('hold') >= 0) await mark('hold_at', 'put on hold');
+          if (rest.length) await this.refresh();
+          const line = done.join(', ');
+          this.say(line.charAt(0).toUpperCase() + line.slice(1) + '.');
+          resolve(line.charAt(0).toUpperCase() + line.slice(1) + '.');
         });
       });
     }
@@ -5467,7 +5955,7 @@ class Component extends DCLogic {
     this.askManager(title, body, () => run());
   }
 
-  /* ---- AI Engine: Content Studio, AI Insights, Neural Hub ----------------
+  /* ---- AI Engine: Content Studio, AI Planner, Neural Hub ----------------
      All three ride the assistant's own tool loop (ai-direct.js): webResearch
      for trends and events, the menu for dish names, ai_* rpcs for sales.
      AI_STUDIO and the sample insight cards are the fallback when it is down.
@@ -5910,6 +6398,703 @@ class Component extends DCLogic {
       fg: o === cur ? '#e2c06a' : '#9a8f7f',
     }));
   }
+  /* ---- AI Insights ---------------------------------------------------
+     Daily dish sales (ai_dish_daily in supabase/menu-intel.sql, or order_items
+     paged when that is not installed), dish feedback, recipes and the change
+     log. The rest is arithmetic here. A festival is read as a -3..+3 day window
+     (weeks for a month-long one) against the same weekdays in the four weeks
+     before it, split veg / non-veg, because Hindu festival non-veg sales move
+     to the days around the festival rather than vanish. */
+  miFests() { return this.aiGet('miFest2', null) || MI_FEST; }
+  miAdd(k, n) { const d = new Date(k + 'T00:00:00'); d.setDate(d.getDate() + n); return d.toLocaleDateString('en-CA'); }
+  miDiff(a, b) { return Math.round((new Date(a + 'T00:00:00') - new Date(b + 'T00:00:00')) / 864e5); }
+  miDishes() {
+    const d = (this.state.dishes || []).filter(x => !x.hidden && x.name_en);
+    return d.length ? d : MI_DEMO.map((n, i) => ({ id: 'demo' + i, name_en: n[0], price: n[1], category_id: '' }));
+  }
+  miVegOf(d) {
+    const v = (this.state.miVeg || {})[d.category_id];
+    if (v != null) return v;
+    return !/chicken|mutton|fish|prawn|egg|beef|lamb|crab|kebab|kabab|mandi|shawarma|tandoori|meat|keema|liver|nethili|vanjaram|seer|squid|kaadai|quail/i.test(String(d.name_en || ''));
+  }
+  miWin(k, fx) {
+    for (const f of fx) for (const D of f.dates || []) {
+      const t = this.miDiff(k, D);
+      if (f.type === 'month') {
+        const L = f.len || 30;
+        if (t >= -14 && t < 0) return { f, D, i: t < -7 ? 0 : 1 };
+        if (t >= 0 && t < L) return { f, D, i: 2 + Math.min(3, Math.floor(t / Math.ceil(L / 4))) };
+        if (t >= L && t < L + 7) return { f, D, i: 6 };
+      } else if (t >= -3 && t <= 3) return { f, D, i: t + 3 };
+    }
+    return null;
+  }
+  async loadIntel() {
+    if (this.state.miBusy) return;
+    this.setState({ miBusy: true });
+    const sb = this.sb, rid = this.rid, from = this.aiDayKey(-430);
+    let rows = [], veg = {}, fb = [], rec = [], ing = [], acts = [], err = '';
+    if (sb) {
+      const safe = p => Promise.resolve(p).then(r => r, () => ({ data: null, error: 1 }));
+      const [d, c, f, g, a] = await Promise.all([
+        safe(sb.rpc('ai_dish_daily', { p_rid: rid, p_from: from })),
+        safe(sb.from('categories').select('id,veg').eq('restaurant_id', rid)),
+        safe(sb.from('dish_feedback').select('id,dish_id,stars,comment,created_at,ai_gist,ai_tags,dishes!inner(restaurant_id)').eq('dishes.restaurant_id', rid).gte('created_at', from).order('created_at', { ascending: false }).limit(3000)),
+        safe(sb.from('ingredients').select('id,name,unit,stock,reorder_level').eq('restaurant_id', rid).eq('active', true)),
+        safe(sb.from('dish_actions').select('*').eq('restaurant_id', rid).order('day', { ascending: false }).limit(1000))]);
+      if (!d.error && Array.isArray(d.data)) rows = d.data.map(r => ({ day: String(r.day).slice(0, 10), id: r.dish_id, q: +r.qty || 0, a: +r.amount || 0 }));
+      else rows = await this.miPage(from).catch(e => { err = String((e && e.message) || e); return []; });
+      (c.data || []).forEach(x => { veg[x.id] = !!x.veg; });
+      fb = f.data || []; ing = g.data || [];
+      acts = (a.data || []).map(x => ({ ...(x.data || {}), id: x.id, kind: x.kind, dish: x.dish_id, day: String(x.day).slice(0, 10), until: x.until ? String(x.until).slice(0, 10) : '' }));
+      const ids = (this.state.dishes || []).map(x => x.id);
+      if (ids.length) { const r = await safe(sb.from('recipes').select('dish_id,ingredient_id,qty').in('dish_id', ids)); rec = r.data || []; }
+    }
+    const live = rows.length >= 30, by = {};
+    rows.forEach(r => { const o = by[r.day] = by[r.day] || {}; const v = o[r.id] = o[r.id] || [0, 0]; v[0] += r.q; v[1] += r.a; });
+    this.setState({ miVeg: veg }, () => {
+      const s = live ? null : this.miSample();
+      this.setState({ miBusy: false, miData: live ? { by, live: true, n: rows.reduce((t, r) => t + r.q, 0) } : s.data,
+        miFb: live ? fb : s.fb, miIng: ing, miRec: rec, miActsDb: live ? acts : [], miSampleActs: live ? null : s.acts, miErr: err, miAt: Date.now() });
+    });
+  }
+  async miPage(from) {
+    const out = [];
+    for (let p = 0; p < 40; p++) {
+      const { data, error } = await this.sb.from('order_items').select('dish_id,qty,unit_price,added_at,orders!inner(restaurant_id)')
+        .eq('orders.restaurant_id', this.rid).gte('added_at', from).order('added_at').range(p * 1000, p * 1000 + 999);
+      if (error) throw error;
+      (data || []).forEach(r => r.dish_id && out.push({ day: new Date(r.added_at).toLocaleDateString('en-CA'), id: r.dish_id, q: +r.qty || 0, a: (+r.qty || 0) * (+r.unit_price || 0) }));
+      if (!data || data.length < 1000) break;
+    }
+    return out;
+  }
+  miSample() {
+    const ds = this.miDishes().slice(0, 40), by = {}, fx = this.miFests();
+    let seed = 11; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    const base = ds.map((d, i) => 3 + Math.round(rnd() * (i < 8 ? 24 : 11)));
+    const hero = ds.findIndex(d => !this.miVegOf(d)), reel = ds.findIndex((d, i) => i !== hero && !this.miVegOf(d)), push = ds.findIndex(d => this.miVegOf(d));
+    for (let n = 430; n >= 1; n--) {
+      const k = this.aiDayKey(-n), wd = new Date(k + 'T00:00:00').getDay(), o = by[k] = {}, w = this.miWin(k, fx);
+      const wk = wd === 5 || wd === 6 || wd === 0 ? 1.35 : 1;
+      ds.forEach((d, i) => {
+        const v = this.miVegOf(d);
+        let f = wk * (0.85 + rnd() * 0.3) * (1 + (430 - n) / 430 * 0.12);
+        if (w) f *= 1 + (MI_PRIOR[w.f.type] || MI_PRIOR.veg)[v ? 'v' : 'n'][w.i] * (0.8 + rnd() * 0.4);
+        if (i === hero && n <= 60 && n > 30) f *= 0.72;
+        if (i === hero && n <= 30) f *= 1.08;
+        if (i === reel && n <= 20 && n >= 16) f *= 1.55;
+        if (i === push && n <= 14 && n >= 8) f *= 1.3;
+        const q = Math.max(0, Math.round(base[i] * f)); if (q) o[d.id] = [q, q * (+d.price || 200)];
+      });
+    }
+    const id = i => (ds[i] || {}).id, fb = [];
+    if (hero >= 0) {
+      ['Too salty today', 'Salt is too much', 'Very salty, could not finish', 'A bit too salty', 'Too salty again', 'Salt is high', 'Too salty', 'Too salty and dry', 'Salty'].forEach((c, j) => fb.push({ dish_id: id(hero), stars: 2 + (j % 2), comment: c, created_at: this.aiDayKey(-58 + j * 3) }));
+      ['Perfect taste now', 'Loved it', 'Great, tasty', 'Tasty, well cooked', 'Loved it, will order again'].forEach((c, j) => fb.push({ dish_id: id(hero), stars: 4 + (j % 2), comment: c, created_at: this.aiDayKey(-26 + j * 5) }));
+    }
+    const acts = [
+      hero >= 0 && { id: 's1', kind: 'tweak', dish: id(hero), day: this.aiDayKey(-30), what: ['Less salt'], note: 'Salt cut by a third in the marinade', fromFb: true, sample: true },
+      reel >= 0 && { id: 's2', kind: 'social', dish: id(reel), day: this.aiDayKey(-20), platform: 'Instagram', format: 'Reel', views: 18400, sample: true },
+      push >= 0 && { id: 's3', kind: 'staff', dish: id(push), day: this.aiDayKey(-14), until: this.aiDayKey(-8), who: 'Floor team', shift: 'Dinner', how: 'Suggested at table', sample: true }].filter(Boolean);
+    return { data: { by, live: false, n: 0 }, fb, acts };
+  }
+  miActs() {
+    const S = this.state, ds = this.miDishes(), byName = {};
+    ds.forEach(d => { byName[String(d.name_en).trim().toLowerCase()] = d.id; });
+    const m = {};
+    [...(S.miSampleActs || []), ...(S.miActsDb || []), ...this.aiGet('miActs', [])].forEach(a => { m[a.id] = a; });
+    const out = Object.values(m);
+    this.aiLog().forEach(p => {
+      const id = byName[String(p.dish || '').trim().toLowerCase()];
+      if (id && !out.some(a => a.kind === 'social' && a.dish === id && a.day === p.at))
+        out.push({ id: 'p' + p.at + id, kind: 'social', dish: id, day: p.at, platform: 'Posted', format: (p.kinds || []).join(' + '), note: p.event || '', fromLog: true });
+    });
+    return out.sort((a, b) => (a.day < b.day ? 1 : -1));
+  }
+  async miSave() {
+    const S = this.state, F = S.miF || {}, ds = this.miDishes();
+    const kind = F.kind || 'tweak', dish = F.dish || S.miDish || (ds[0] || {}).id, day = F.day || this.today();
+    if (!dish) return this.say('Pick the dish first');
+    if (kind === 'tweak' && !(F.what || []).length && !F.note) return this.say('Pick what changed');
+    if (kind === 'price' && !F.newP) return this.say('Enter the new price');
+    const pick = { tweak: ['what', 'note', 'fromFb'], social: ['platform', 'format', 'views', 'spend', 'link', 'note'], staff: ['who', 'how', 'shift', 'note'], price: ['oldP', 'newP', 'note'], offer: ['note'] }[kind];
+    const data = {}; pick.forEach(k => { if (F[k] !== undefined && F[k] !== '') data[k] = F[k]; });
+    const until = (kind === 'staff' || kind === 'offer') ? (F.until || '') : '';
+    const a = { id: 'a' + Date.now().toString(36), kind, dish, day, until, ...data };
+    this.aiPut('miActs', [a, ...this.aiGet('miActs', [])].slice(0, 600));
+    if (kind === 'social') this.aiPut('posts', [{ at: day, dish: (ds.find(d => d.id === dish) || {}).name_en || '', kinds: [F.format || 'Post'], event: '' }, ...this.aiLog()].slice(0, 400));
+    this.setState({ miF: { kind, dish, day: this.today() } });
+    this.say('Saved to dish history');
+    if (this.sb && !/^demo/.test(dish)) this.sb.from('dish_actions').insert({ id: a.id, restaurant_id: this.rid, dish_id: dish, kind, day, until: until || null, data }).then(() => {}, () => {});
+  }
+  miDel(id) {
+    this.aiPut('miActs', this.aiGet('miActs', []).filter(a => a.id !== id));
+    this.setState(s => ({ miActsDb: (s.miActsDb || []).filter(a => a.id !== id) }));
+    if (this.sb) this.sb.from('dish_actions').delete().eq('id', id).then(() => {}, () => {});
+  }
+  /* ---- Enhance with AI experts ----------------------------------------------
+     A blog recipe reaches the AI only after it is checked to be the same dish:
+     its title carries every distinctive word of our dish name (spellings
+     normalised), it is for the same main ingredient and no other, and when our
+     recipe is on file at least 40% of our ingredients appear in it. Every tip
+     must quote its source word for word; tips whose quote is not found are
+     dropped. */
+  miNorm(t) { return MI_SYN.reduce((x, [r, v]) => x.replace(r, v), ' ' + String(t || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ') + ' ').replace(/\s+/g, ' '); }
+  miIdent(name) {
+    const raw = String(name || ''), alt = (raw.match(/\(([^)]+)\)/) || [])[1], main = raw.replace(/\([^)]*\)/g, ' ');
+    return [main, alt].filter(Boolean).map(v => { const w = this.miNorm(v).trim().split(' ').filter(x => x && !MI_FILLER.includes(x));
+      return { prot: w.filter(x => MI_PROT.includes(x)), dist: w.filter(x => !MI_PROT.includes(x)) }; }).filter(v => v.prot.length || v.dist.length);
+  }
+  miCheck(a, vars, ours) {
+    const T = this.miNorm(a.title), B = this.miNorm(a.body), has = (X, w) => X.includes(' ' + w);
+    let near = false, rel = false;
+    for (const v of vars) {
+      const key = v.dist.length ? v.dist : v.prot, nearV = key.some(w => has(T, w));
+      if (nearV) near = true;
+      const other = MI_PROT.filter(p => p !== 'veg' && !v.prot.includes(p) && has(T, p));
+      const conflict = other.length ? 'Different main ingredient.' : v.prot.includes('veg') && MI_MEAT.some(p => has(T, p)) ? 'Their recipe has meat.' : v.prot.some(p => MI_MEAT.includes(p)) && / (veg|vegetarian|vegan|soya) /.test(T) ? 'Their recipe is veg.' : '';
+      if (!key.every(w => has(T, w))) { if (nearV && !conflict) rel = true; continue; }
+      if (conflict) return { ok: false, near, rel: false, why: conflict };
+      const miss = v.prot.filter(p => p !== 'veg' && !has(T, p) && B.split(' ' + p).length < 3);
+      if (miss.length) return { ok: false, near, rel: true, why: 'Main ingredient missing.' };
+      if (ours.length >= 3) {
+        const found = ours.filter(o => { const w = this.miNorm(o).trim().split(' ').filter(x => x.length > 2 && !MI_FILLER.includes(x)); return w.length && w.some(x => has(B, x)); });
+        if (found.length / ours.length < 0.4) return { ok: false, near, rel: true, why: 'Different recipe.' };
+      }
+      return { ok: true, near, rel: false, why: 'Same dish.' };
+    }
+    return { ok: false, near, rel, why: 'Different dish.' };
+  }
+  /* Guest feedback summary: counts are computed here from the comments (never
+     by the AI); the AI only writes the one-line summary and a fix per theme. */
+  /* Each guest comment is read by the AI once, soon after it arrives: its
+     meaning in plain English (Tamil, Hindi, Tanglish or slang in) and 1 to 3
+     categories from a fixed list, so "too much uppu" and "salty" count as one.
+     Stored on the feedback row; the summary counts these categories. */
+  async miTagFeedback(force) {
+    if (!this.sb || this._fbTagging) return 0;
+    const c = this.cfg(); if (!c.groqKey && !c.geminiKey) return 0;
+    this._fbTagging = true; let done = 0;
+    try {
+      for (let round = 0; round < (force ? 5 : 2); round++) {
+        const { data } = await this.sb.from('dish_feedback').select('id,comment,stars,dish_id,dishes!inner(restaurant_id,name_en)').eq('dishes.restaurant_id', this.rid).is('ai_tagged_at', null).not('comment', 'is', null).order('created_at', { ascending: false }).limit(30);
+        const rows = (data || []).filter(r => String(r.comment || '').trim());
+        if (!rows.length) break;
+        const cats = MI_THEMES.map(t => t[0]).concat(['Other praise', 'Other complaint']);
+        const prompt = 'Categories: ' + cats.join('; ') + '.\nComments (may be Tamil, Hindi, Tanglish, slang or misspelled):\n' +
+          rows.map((r, i) => (i + 1) + '. [' + ((r.dishes || {}).name_en || 'dish') + ', ' + (r.stars || '?') + ' stars] ' + String(r.comment).slice(0, 400)).join('\n') +
+          '\n\nReply JSON only: {"items":[{"n":1,"gist":"its meaning in plain English, max 12 words","tags":["1 to 3 categories exactly from the list"],"new":"only if it is a complaint none of the categories fit: a 2 to 3 word label, else empty"}]}. Judge meaning, not words: "not enough salt" is Bland, "uppu jaasthi" is Too salty. A comment that only praises is Loved it.';
+        let j = null;
+        try { const t = await (await this.aiMod()).creativeChat(c.groqKey, c.geminiKey, 'You classify restaurant guest comments by meaning. JSON only.', prompt); const m = String(t || '').match(/\{[\s\S]*\}/); j = m ? JSON.parse(m[0]) : null; } catch (e) { break; }
+        const ok = new Set(cats), items = (j && j.items) || [];
+        const up = rows.map((r, i) => { const it = items.find(x => +x.n === i + 1) || {};
+          let tags = (it.tags || []).filter(t => ok.has(t)).slice(0, 3); const nw = String(it.new || '').trim().replace(/\s+/g, ' ').slice(0, 28);
+          if (nw && !cats.some(cn => cn.toLowerCase() === nw.toLowerCase())) tags = tags.filter(t => t !== 'Other complaint').concat(nw.replace(/^./, ch => ch.toUpperCase()));
+          return { id: r.id, gist: String(it.gist || '').slice(0, 160), tags: tags.length ? tags : ['Other complaint'] }; }).filter((u, i) => items.some(x => +x.n === i + 1));
+        if (!up.length) break;
+        const { data: n } = await this.sb.rpc('feedback_tag', { p: up });
+        done += +n || 0;
+        this.setState(st => ({ miFb: (st.miFb || []).map(f => { const u = up.find(x => x.id === f.id); return u ? { ...f, ai_gist: u.gist, ai_tags: u.tags } : f; }) }));
+        if (rows.length < 30) break;
+      }
+    } catch (e) {} finally { this._fbTagging = false; }
+    return done;
+  }
+  async miFbOpen(d, start, end, sold) {
+    const set = p => this.setState(st => ({ miFbS: { ...(st.miFbS || {}), ...p } }));
+    const pick = () => (this.state.miFb || []).map(x => ({ ...x, day: new Date(x.created_at).toLocaleDateString('en-CA'), t: String(x.comment || '').toLowerCase() })).filter(x => x.dish_id === d.id && x.day >= start && x.day <= end && x.t);
+    let fb = pick();
+    set({ open: true, name: d.name_en, total: fb.length, base: Math.max(+sold || 0, fb.length), rows: [], fix: {}, summary: '', busy: fb.length > 0, range: start + ' to ' + end });
+    if (!fb.length) return;
+    if (fb.some(x => !x.ai_tags)) { set({ phase: 'Reading each comment\u2026' }); await this.miTagFeedback(true); fb = pick(); }
+    const total = fb.length, base = Math.max(+sold || 0, total), cnt = {}, ex = {};
+    fb.forEach(x => { const tags = x.ai_tags && x.ai_tags.length ? x.ai_tags : MI_THEMES.filter(([, re]) => re.test(x.t)).map(t => t[0]);
+      (tags.length ? tags : ['Other complaint']).forEach(l => { cnt[l] = (cnt[l] || 0) + 1; (ex[l] = ex[l] || []).length < 8 && ex[l].push(x.ai_gist || x.comment); }); });
+    const good = l => l === 'Loved it' || l === 'Other praise';
+    const rows = Object.entries(cnt).map(([l, n]) => ({ label: l, n, good: good(l) })).sort((p, q) => p.good - q.good || q.n - p.n);
+    set({ total, base, rows, phase: 'Summarising\u2026' });
+    try {
+      const c = this.cfg(); if (!c.groqKey && !c.geminiKey) throw new Error('off');
+      const prompt = 'Dish: ' + d.name_en + '. ' + base + ' plates sold, ' + total + ' written feedbacks, ' + start + ' to ' + end + '.\n' +
+        rows.map(r => r.label + ': ' + r.n + '. What guests meant: ' + (ex[r.label] || []).join(' | ')).join('\n') +
+        '\n\nReply JSON only: {"summary":"one or two plain sentences on what guests say overall","fixes":{"<category exactly as given>":"one short concrete kitchen or service fix for that complaint, max 18 words"}}. No fix for praise categories.';
+      const t = await (await this.aiMod()).creativeChat(c.groqKey, c.geminiKey, 'You summarise restaurant guest feedback for the owner. Use only what is given. Never change the counts. JSON only.', prompt);
+      const m = String(t || '').match(/\{[\s\S]*\}/), j = m ? JSON.parse(m[0]) : {};
+      set({ busy: false, summary: String(j.summary || '').trim(), fix: j.fixes || {} });
+    } catch (e) { set({ busy: false }); }
+  }
+  async miEnhance(d) {
+    const S = this.state, id = d.id, set = p => this.setState(st => ({ miEnh: { ...(st.miEnh || {}), ...p } }));
+    if (S.miEnh && S.miEnh.busy) return;
+    const gi = {}; (S.miIng || []).forEach(g => { gi[g.id] = g; });
+    const ours = (S.miRec || []).filter(r => r.dish_id === id && gi[r.ingredient_id]).map(r => ({ name: gi[r.ingredient_id].name, qty: (+r.qty || 0) + ' ' + (gi[r.ingredient_id].unit || '') }));
+    const vars = this.miIdent(d.name_en);
+    const words = [...new Set(vars.flatMap(v => v.dist.length ? v.dist : v.prot).flatMap(w => MI_SPELL[w] || [w]))];
+    const since = this.aiDayKey(-120), fb = (S.miFb || []).filter(x => x.dish_id === id && x.comment && new Date(x.created_at).toLocaleDateString('en-CA') >= since).slice(0, 15);
+    set({ open: true, id, name: d.name_en, busy: true, phase: 'Studying ' + d.name_en + '\u2026', ours, checked: [], sections: [], compare: '', note: '', err: '', dropped: 0, searched: 0 });
+    if (!this.sb) { set({ busy: false, err: 'Sign in to use the expert library.' }); return; }
+    let res;
+    try { const r = await this.sb.functions.invoke('kb', { body: { mode: 'dish', name: d.name_en, words } }); if (r.error) throw r.error; res = r.data || {}; if (res.error) throw new Error(res.error); }
+    catch (e) { set({ busy: false, err: 'Could not reach the expert library (' + String((e && e.message) || e).slice(0, 80) + ').' }); return; }
+    set({ phase: 'Comparing how top kitchens make it\u2026', searched: (res.searched || []).length });
+    const seen = new Set(), checked = [];
+    (res.candidates || []).forEach(a => { if (!a.url || seen.has(a.url)) return; seen.add(a.url); checked.push({ ...a, ...this.miCheck(a, vars, ours.map(o => o.name)) }); });
+    const good = checked.filter(c => c.ok).slice(0, 4), related = good.length >= 3 ? [] : checked.filter(c => c.rel).slice(0, 4 - good.length), shown = good.concat(related);
+    let notes = [];
+    try {
+      const { data } = await this.sb.rpc('kb_search', { p_q: d.name_en, p_topic: null, p_limit: 10 });
+      const key = vars.flatMap(v => v.dist.concat(v.prot.filter(p => p !== 'veg')));
+      const urls = (data || []).filter(n => String(n.url).startsWith('local://') && key.some(w => this.miNorm(n.title + ' ' + n.passage).includes(' ' + w))).slice(0, 3).map(n => n.url);
+      if (urls.length) { const r = await this.sb.from('kb_articles').select('title,url,body').in('url', urls); notes = r.data || []; }
+    } catch (e) {}
+    set({ checked: shown });
+    if (!good.length && !related.length && !notes.length) { set({ busy: false, note: 'There is not enough reliable know-how on ' + d.name_en + ' yet to improve it without guessing. Try again in a day or two.' }); return; }
+    set({ phase: 'Writing the chef\u2019s notes\u2026' });
+    const srcs = good.map(g => ({ kind: 'exact recipe for this dish', label: g.source, url: g.url, title: g.title, text: g.body.slice(0, 3500) }))
+      .concat(related.map(g => ({ kind: 'related dish, NOT the same dish: use only techniques that transfer', label: g.source, url: g.url, title: g.title, text: g.body.slice(0, 2500) })))
+      .concat(notes.map(n => ({ kind: 'general kitchen technique', label: 'Kitchen notes', url: '', title: n.title, text: n.body })));
+    const prompt = 'Dish at this restaurant: ' + d.name_en + ' (' + (this.miVegOf(d) ? 'veg' : 'non-veg') + ').\n' +
+      'Our recipe per portion: ' + (ours.length ? ours.map(o => o.name + ' ' + o.qty).join(', ') : 'not on file') + '.\n' +
+      'Guest comments, last 4 months: ' + (fb.length ? fb.map(x => x.stars + ' stars: ' + x.comment).join(' | ') : 'none') + '.\n\n' +
+      srcs.map((x, i) => '[' + (i + 1) + '] (' + x.kind + ') ' + x.title + '\n' + x.text).join('\n\n') +
+      '\n\nReply with JSON only: {"summary":"2 to 3 sentences: your assessment of what makes this dish great and where our version most likely falls short (use the guest comments and our recipe if given)","sections":[{"title":"Taste and texture","tips":[{"tip":"one concrete step for our kitchen","source":1,"quote":"6 to 20 words copied exactly from that source"}]},{"title":"Fix what guests complain about","tips":[]},{"title":"Save time","tips":[]},{"title":"Cut cost","tips":[]}]}. Up to 4 tips per section. Leave tips empty where no source supports a tip. Fix-what-guests-complain tips must answer a comment above.';
+    const sys = 'You are the restaurant\u2019s own executive chef, writing improvement notes for one dish in your own voice. Base every tip on one of the numbered references and carry a quote copied word for word from it (the quote is for checking and is never shown). Never mention blogs, websites, sources, references or other chefs. Prefer exact recipes. From a related dish take only techniques that clearly transfer, never its ingredients as if they belong to this dish. Do not invent ingredients, quantities, times or temperatures that are not in a reference. Where our recipe is given, say what to add, remove or change relative to it. Write plainly for cooks. JSON only.';
+    let j = null;
+    try {
+      const c = this.cfg(); if (!c.groqKey && !c.geminiKey) throw new Error('off');
+      const t = await (await this.aiMod()).creativeChat(c.groqKey, c.geminiKey, sys, prompt);
+      const m = String(t || '').match(/\{[\s\S]*\}/); j = m ? JSON.parse(m[0]) : null;
+    } catch (e) { set({ busy: false, err: /off/.test(String(e && e.message)) ? 'The assistant is off (no AI key).' : 'The AI did not answer. Try again.' }); return; }
+    const nq = x => String(x || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+    let dropped = 0;
+    const sections = ((j && j.sections) || []).map(sec => ({ title: String(sec.title || ''), tips: (sec.tips || []).filter(tp => {
+      const src = srcs[(+tp.source || 0) - 1], q = nq(tp.quote).split(' ').slice(0, 8).join(' ');
+      const ok = src && tp.tip && q.split(' ').length >= 4 && nq(src.text).includes(q);
+      if (!ok) dropped++; return ok;
+    }).map(tp => { const src = srcs[+tp.source - 1]; return { tip: String(tp.tip), src: src.label, url: src.url || '', hasUrl: !!src.url, quote: '\u201c' + String(tp.quote).trim() + '\u201d' }; }) })).filter(sec => sec.tips.length);
+    const clean = t => String(t || '').replace(/\s*\[\d+\]/g, '').replace(/\b(according to|as per|per) (the )?(source|reference|blog|recipe)s?( \d+)?,?\s*/gi, '').trim();
+    sections.forEach(sec => sec.tips.forEach(t => { t.tip = clean(t.tip); }));
+    set({ busy: false, compare: sections.length ? clean(j && (j.summary || j.compare)) : '', sections, dropped,
+      note: sections.length ? '' : 'There is not enough reliable know-how on ' + d.name_en + ' yet to improve it without guessing. Try again in a day or two.' });
+  }
+  async miWhyAi(ctx) {
+    const key = ctx.key;
+    this.setState(s => ({ miAi: { ...(s.miAi || {}), [key]: { busy: true } } }));
+    let text = '';
+    try {
+      text = String(await this.aiAsk('You are a restaurant sales analyst. Explain in 2 to 4 short plain sentences why this dish moved, using only the facts given. Name the most likely cause first and one thing to try next. No lists, no headings.', ctx.facts, 1) || '').trim();
+    } catch (e) { text = /off/.test(String(e && e.message)) ? 'The assistant is off (no AI key).' : 'The AI did not answer. Try again.'; }
+    this.setState(s => ({ miAi: { ...(s.miAi || {}), [key]: { text: text || 'The AI had nothing to add.' } } }));
+  }
+  intelVals() {
+    const S = this.state;
+    if (S.ov !== 'studio' && !this._miPubDue) return {};
+    const tab = S.miTab || 'Prep forecast', D = S.miData;
+    const out = {
+      miTabs: this.chipsOf(['Prep forecast', 'Festivals', 'Dish performance', 'Log a change'], tab, o => this.setState({ miTab: o })),
+      miReload: () => this.loadIntel(), miWait: !D,
+      miSrc: !D ? 'Reading sales history…' : D.live ? 'Your sales · ' + Object.keys(D.by).length + ' days · ' + D.n.toLocaleString('en-IN') + ' portions' : 'Sample data. Your own sales replace it once orders are recorded' + (S.miErr ? ' (' + S.miErr.slice(0, 60) + ')' : '') + '.',
+      miSrcC: D && !D.live ? '#c8a24a' : '#8d8272',
+      miSeeds: ['What should we prep tomorrow?', 'How did Deepavali change non-veg sales last year?', 'Why is my top dish dipping?'],
+      miBrief: () => 'AI Insights is open.',
+    };
+    { const F = S.miFbS || {};
+      out.miFbOpenV = !!F.open; out.miFbPhase = F.phase || 'Reading the feedback\u2026'; out.miFbName = F.name || ''; out.miFbBusy = !!F.busy; out.miFbSummary = F.summary || ''; out.miFbHasSummary = !F.busy && !!F.summary;
+      out.miFbSub = (F.base || 0) + ' plates sold \u00b7 ' + (F.total || 0) + ' written ' + (F.total === 1 ? 'feedback' : 'feedbacks') + ' \u00b7 ' + (F.range || '');
+      out.miFbRows = (F.rows || []).map(r => ({ label: r.label, count: r.n + '/' + (F.base || F.total), w: Math.max(4, Math.round(r.n / (F.base || F.total || 1) * 100)), bar: r.good ? '#9fc79a' : '#e08b73', fix: (F.fix || {})[r.label] || '', hasFix: !!(F.fix || {})[r.label] }));
+      out.miFbEmpty = !!F.open && !F.total;
+      out.closeFb = () => this.setState(st => ({ miFbS: { ...(st.miFbS || {}), open: false } }));
+    }
+    { const E = S.miEnh || {};
+      out.miEnhOpen = !!E.open; out.miEnhName = E.name || ''; out.miEnhBusy = !!E.busy; out.miEnhPhase = E.phase || '';
+      out.miEnhOurs = (E.ours || []).map(o => ({ label: o.name + ' \u00b7 ' + o.qty })); out.miEnhOursNone = !!E.open && !(E.ours || []).length;
+      out.miEnhChecked = (E.checked || []).map(c => ({ ...c, icon: c.ok ? '\u2713' : '\u2715', ic: c.ok ? '#9fc79a' : '#e08b73', line: c.ok ? 'rgba(159,199,154,.3)' : '#2a231b' }));
+      out.miEnhHasChecked = !!(E.checked || []).length;
+      out.miEnhCheckedSub = (E.checked || []).filter(c => c.ok).length + ' of ' + (E.checked || []).length + ' match' + (E.searched ? ' \u00b7 ' + E.searched + ' cooking blogs searched' : '');
+      out.miEnhCompare = E.compare || ''; out.miEnhHasCompare = !E.busy && !!E.compare;
+      out.miEnhSections = E.sections || []; out.miEnhHasSections = !E.busy && !!(E.sections || []).length;
+      out.miEnhNote = E.err || E.note || ''; out.miEnhHasNote = !E.busy && !!(E.err || E.note); out.miEnhNoteC = E.err ? '#e8b3a3' : '#cfc6b8';
+      out.miEnhDropped = E.dropped ? E.dropped + (E.dropped === 1 ? ' suggestion was' : ' suggestions were') + ' dropped because its quote was not found in the source.' : ''; out.miEnhHasDropped = !E.busy && !!E.dropped;
+      out.closeEnh = () => this.setState(st => ({ miEnh: { ...(st.miEnh || {}), open: false } }));
+      out.miEnhRetry = () => { const dd = this.miDishes().find(x => x.id === E.id); if (dd) this.miEnhance(dd); };
+    }
+    if (!D) return S.ov === 'studio' ? out : {};
+    const fx = this.miFests(), ds = this.miDishes(), today = this.aiDayKey(0), end = this.aiDayKey(-1);
+    const stamp = S.miAt + '|' + (S.aiTick || 0);
+    if (this._miStamp !== stamp) { this._miStamp = stamp; this._miSum = {}; this._miLearn = {}; this._miFc = {}; }
+    const pct = x => x == null || !isFinite(x) ? '\u2014' : (x >= 0 ? '+' : '\u2212') + Math.abs(Math.round(x * 100)) + '%';
+    const pc = x => x == null || !isFinite(x) ? '#9a8f7f' : x >= 0.03 ? '#9fc79a' : x <= -0.03 ? '#e08b73' : '#cfc6b8';
+    const rs = n => '\u20b9' + Math.round(n || 0).toLocaleString('en-IN');
+    const r1 = x => String(Math.round(x * 10) / 10);
+    const nice = k => this.aiNice(k), short = k => new Date(k + 'T00:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+    const on = { bg: 'rgba(200,162,74,.14)', line: 'rgba(200,162,74,.5)', fg: '#ffd678' }, off = { bg: '#0f0d0a', line: '#2a231b', fg: '#9a8f7f' };
+    const chip = (label, sel, onTap, x) => ({ label, onTap, ...(sel ? on : off), ...(x || {}) });
+    const byId = {}, vegOf = {}; ds.forEach(d => { byId[d.id] = d; vegOf[d.id] = this.miVegOf(d); });
+    const VC = v => v ? '#9fc79a' : '#e08b73';
+    const Q = (id, k) => { const o = D.by[k]; return o && o[id] ? o[id][0] : 0; };
+    const A = (id, k) => { const o = D.by[k]; return o && o[id] ? o[id][1] : 0; };
+    const sum = k => {
+      if (this._miSum[k]) return this._miSum[k];
+      const o = D.by[k] || {}; let v = 0, n = 0, a = 0;
+      for (const id in o) { if (vegOf[id] === undefined) continue; if (vegOf[id]) v += o[id][0]; else n += o[id][0]; a += o[id][1]; }
+      return this._miSum[k] = { v, n, a };
+    };
+    const TYPE = { veg: ['Veg day', '#9fc79a', 'Many guests skip non-veg on the day itself. Non-veg orders move to the two or three days before and after, and veg dishes rise on the day.'],
+      feast: ['Feast day', '#e08b73', 'Non-veg and biryani peak on the day itself, with a smaller rise the day before.'],
+      month: ['Veg month', '#7fb4d9', 'Many families skip non-veg for the whole month. Non-veg dips across the month and recovers in the week after.'] };
+    const spansOf = f => f.type === 'month' ? (() => { const L = f.len || 30, q = Math.ceil(L / 4); return [[-14, -8], [-7, -1], [0, q - 1], [q, 2 * q - 1], [2 * q, 3 * q - 1], [3 * q, L - 1], [L, L + 6]]; })() : [-3, -2, -1, 0, 1, 2, 3].map(t => [t, t]);
+    const occ = (f, d0) => {
+      const mo = f.type === 'month', spans = spansOf(f);
+      let bl = null;
+      if (mo) { let v = 0, n = 0, a = 0, c = 0; for (let t = -42; t < -14; t++) { const k = this.miAdd(d0, t); if (!D.by[k]) continue; const s = sum(k); v += s.v; n += s.n; a += s.a; c++; } bl = c >= 10 ? { v: v / c, n: n / c, a: a / c } : null; }
+      let ok = true;
+      const cols = spans.map(([s0, s1]) => {
+        let v = 0, n = 0, a = 0, c = 0, bv = 0, bn = 0, ba = 0, bc = 0;
+        for (let t = s0; t <= s1; t++) {
+          const k = this.miAdd(d0, t); if (k > end || !D.by[k]) continue;
+          const s = sum(k); v += s.v; n += s.n; a += s.a; c++;
+          if (!mo) for (let w = 1; w <= 4; w++) { const kb = this.miAdd(k, -7 * w); if (!D.by[kb]) continue; const b = sum(kb); bv += b.v; bn += b.n; ba += b.a; bc++; }
+        }
+        const B = mo ? bl : bc ? { v: bv / bc, n: bn / bc, a: ba / bc } : null;
+        if (!c || !B) ok = false;
+        return { v: c ? v / c : 0, n: c ? n / c : 0, a: c ? a / c : 0, bv: B ? B.v : 0, bn: B ? B.n : 0, ba: B ? B.a : 0, days: c, s0, s1 };
+      });
+      return { d0, cols, ok };
+    };
+    const clamp = x => Math.max(-0.8, Math.min(2, x));
+    const learn = f => {
+      if (this._miLearn[f.k]) return this._miLearn[f.k];
+      const past = (f.dates || []).filter(d0 => this.miAdd(d0, f.type === 'month' ? (f.len || 30) + 6 : 3) <= end).sort().map(d0 => occ(f, d0)).filter(o => o.ok);
+      const P = MI_PRIOR[f.type] || MI_PRIOR.veg, lv = [], ln = [];
+      for (let i = 0; i < 7; i++) {
+        const xs = past.map(o => o.cols[i]).filter(c => c.bv > 0 && c.bn > 0);
+        lv.push(clamp(xs.length ? xs.reduce((s, c) => s + c.v / c.bv - 1, 0) / xs.length : P.v[i]));
+        ln.push(clamp(xs.length ? xs.reduce((s, c) => s + c.n / c.bn - 1, 0) / xs.length : P.n[i]));
+      }
+      return this._miLearn[f.k] = { past, lv, ln, est: !past.length };
+    };
+    const WDN = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const fc = k => {
+      if (this._miFc[k]) return this._miFc[k];
+      const wd = new Date(k + 'T00:00:00').getDay(), w = this.miWin(k, fx), L = w ? learn(w.f) : null;
+      let cur = end; while (new Date(cur + 'T00:00:00').getDay() !== wd) cur = this.miAdd(cur, -1);
+      // Normal same-weekday days first. Short or festival-covered history falls
+      // back to in-window weekdays with their own lift divided out, then to
+      // every recent day scaled by how this weekday usually compares.
+      let samp = [], mode = 'clean';
+      for (let g = 0; g < 16 && samp.length < 4; g++) { const kk = this.miAdd(cur, -7 * g); if (D.by[kk] && !this.miWin(kk, fx)) samp.push(kk); }
+      if (samp.length < 2) { mode = 'win'; samp = []; for (let g = 0; g < 8 && samp.length < 4; g++) { const kk = this.miAdd(cur, -7 * g); if (D.by[kk]) samp.push(kk); } }
+      let wf = 1;
+      if (samp.length < 2) {
+        mode = 'all'; samp = []; for (let t = 0; t < 28; t++) { const kk = this.miAdd(end, -t); if (D.by[kk]) samp.push(kk); }
+        const tot = kk => { const s = sum(kk); return s.v + s.n; }, all = samp.map(tot), same = samp.filter(kk => new Date(kk + 'T00:00:00').getDay() === wd).map(tot), avg = xs => xs.reduce((s, x) => s + x, 0) / xs.length;
+        if (same.length && all.length && avg(all)) wf = avg(same) / avg(all);
+      }
+      const unlift = (kk, v) => { if (mode === 'clean') return 1; const w0 = this.miWin(kk, fx); return w0 ? 1 + (v ? learn(w0.f).lv : learn(w0.f).ln)[w0.i] : 1; };
+      const W = mode === 'all' ? samp.map((_, i) => samp.length - i) : [4, 3, 2, 1];
+      const rows = ds.map(d => {
+        if (!samp.length) return null;
+        const vv = vegOf[d.id], xs = samp.map(kk => Q(d.id, kk) / Math.max(0.2, unlift(kk, vv)) * wf);
+        let ws = 0, bs = 0; xs.forEach((x, i) => { ws += W[i]; bs += x * W[i]; });
+        const b = bs / ws; if (b < 0.5) return null;
+        const mean = xs.reduce((s, x) => s + x, 0) / xs.length, sd = Math.sqrt(xs.reduce((s, x) => s + (x - mean) ** 2, 0) / xs.length);
+        const v = vegOf[d.id], lift = L ? (v ? L.lv : L.ln)[w.i] : 0, m = 1 + lift;
+        const q = Math.max(0, Math.round(b * m));
+        return { d, v, q, lo: Math.max(0, Math.round((b - sd) * m)), hi: Math.round((b + sd) * m), b, lift, amt: q * (+d.price || 0) };
+      }).filter(Boolean).sort((a, b) => b.q - a.q);
+      return this._miFc[k] = { rows, w, L, samp, wd, mode };
+    };
+    const winName = (w, rel) => {
+      const f = w.f, i = w.i;
+      if (f.type === 'month') return i === 0 ? 'Two weeks before ' + f.name : i === 1 ? 'Week before ' + f.name : i === 6 ? 'Week after ' + f.name : f.name + ', week ' + (i - 1);
+      const t = i - 3;
+      return t === 0 ? f.name + (rel ? ' day' : '') : Math.abs(t) + (Math.abs(t) === 1 ? ' day ' : ' days ') + (t < 0 ? 'before ' : 'after ') + f.name;
+    };
+    const winShort = w => w.f.type === 'month' ? w.f.name : w.i === 3 ? w.f.name : w.f.name + ' ' + (w.i < 3 ? '\u2212' : '+') + Math.abs(w.i - 3);
+
+    // Prep forecast
+    const dOff = S.miDay || 0, dk = this.aiDayKey(dOff), F = fc(dk), fF = S.miFcF || 'All';
+    out.miT1 = tab === 'Prep forecast';
+    out.miDays = [0, 1, 2, 3, 4, 5, 6].map(n => {
+      const k = this.aiDayKey(n), w = this.miWin(k, fx), sel = n === dOff;
+      return { top: n === 0 ? 'Today' : n === 1 ? 'Tomorrow' : new Date(k + 'T00:00:00').toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric' }),
+        sub: w ? winShort(w) : short(k), subC: w ? (TYPE[w.f.type] || TYPE.veg)[1] : '#8d8272', ...(sel ? on : off), fg: sel ? '#ffd678' : '#cfc6b8', onTap: () => this.setState({ miDay: n }) };
+    });
+    let dayNote = '';
+    if (F.w) {
+      const i = F.w.i;
+      dayNote = winName(F.w, true) + ': veg ' + pct(F.L.lv[i]) + ', non-veg ' + pct(F.L.ln[i]) + ' against a normal ' + WDN[F.wd] + (F.L.est ? '. This is the usual pattern for a ' + (TYPE[F.w.f.type] || TYPE.veg)[0].toLowerCase() + '; there is no past ' + F.w.f.name + ' in your sales yet.' : ', from ' + F.L.past.length + (F.L.past.length === 1 ? ' past year' : ' past years') + ' of your own sales.') + ' The quantities below include it.';
+    }
+    out.miDayHasNote = !!dayNote; out.miDayNote = dayNote; out.miDayTone = F.w ? (TYPE[F.w.f.type] || TYPE.veg)[1] : '#c8a24a';
+    out.miDayTitle = dOff === 0 ? 'today' : dOff === 1 ? 'tomorrow' : nice(dk);
+    const fr = F.rows.filter(r => fF === 'All' || (fF === 'Veg') === r.v);
+    const tq = F.rows.reduce((s, r) => s + r.q, 0), tb = F.rows.reduce((s, r) => s + r.b, 0), tv = F.rows.filter(r => r.v).reduce((s, r) => s + r.q, 0);
+    out.miFcKpis = [
+      { label: 'Portions to prep', value: String(tq), sub: F.rows.length + ' dishes', subC: '#9a8f7f' },
+      { label: 'Veg · non-veg', value: tv + ' · ' + (tq - tv), sub: tq ? Math.round(tv / tq * 100) + '% veg' : '', subC: '#9a8f7f' },
+      { label: 'Expected sales', value: rs(F.rows.reduce((s, r) => s + r.amt, 0)), sub: 'At menu prices', subC: '#9a8f7f' },
+      { label: 'Against a normal ' + WDN[F.wd], value: pct(tb ? tq / tb - 1 : 0), sub: F.w ? winShort(F.w) : 'No festival nearby', subC: pc(tb ? tq / tb - 1 : 0) }];
+    out.miFcF = ['All', 'Veg', 'Non-veg'].map(o => chip(o, o === fF, () => this.setState({ miFcF: o })));
+    const mq = Math.max(1, ...fr.map(r => r.hi || r.q));
+    out.miFcRows = fr.slice(0, 40).map(r => ({ name: r.d.name_en, vc: VC(r.v), q: r.q, range: r.lo === r.hi ? '' : r.lo + '\u2013' + r.hi, w: Math.round(r.q / mq * 100),
+      basis: (F.mode === 'clean' ? 'Usual ' + WDN[F.wd] : F.mode === 'win' ? 'Recent ' + WDN[F.wd] + 's, festival effect removed' : 'Last ' + F.samp.length + ' days, weekday-adjusted') + ': ' + r1(r.b), hasAdj: Math.abs(r.lift) >= 0.03, adj: F.w ? winShort(F.w) + ' ' + pct(r.lift) : '', adjC: pc(r.lift) }));
+    out.miFcEmpty = !fr.length;
+    const rec = S.miRec || [], ing = S.miIng || [], need = {};
+    F.rows.forEach(r => rec.filter(x => x.dish_id === r.d.id).forEach(x => { need[x.ingredient_id] = (need[x.ingredient_id] || 0) + r.q * (+x.qty || 0); }));
+    out.miStk = ing.filter(g => need[g.id]).map(g => {
+      const n = need[g.id], h = +g.stock || 0, short = n > h, low = !short && h - n < (+g.reorder_level || 0);
+      return { name: g.name, need: r1(n) + ' ' + g.unit, have: r1(h) + ' ' + g.unit, st: short ? 'Short ' + r1(n - h) + ' ' + g.unit : low ? 'Low after service' : 'Enough',
+        bg: short ? 'rgba(224,139,115,.16)' : low ? 'rgba(226,192,106,.14)' : 'rgba(159,199,154,.12)', fg: short ? '#e08b73' : low ? '#e2c06a' : '#9fc79a', o: short ? 0 : low ? 1 : 2 };
+    }).sort((a, b) => a.o - b.o);
+    out.miStkNote = out.miStk.length ? 'Ingredients the forecast needs, from your recipes, against what is in the store now.' : 'Add recipes in Stock → Recipes and the ingredients this forecast needs show here against what is in the store.';
+
+    // Festivals
+    out.miT2 = tab === 'Festivals';
+    const nextOf = f => (f.dates || []).filter(d0 => this.miAdd(d0, f.type === 'month' ? (f.len || 30) : 3) >= today).sort()[0] || '';
+    const fl = fx.map(f => ({ f, next: nextOf(f) }));
+    const fs = fl.find(x => x.f.k === S.miFx) || fl.filter(x => x.next).sort((a, b) => (a.next < b.next ? -1 : 1))[0] || fl[0];
+    out.miFxList = fl.map(x => ({ name: x.f.name, sub: x.next ? (x.next <= today ? 'On now' : 'Next ' + short(x.next)) : 'No date ahead', tone: (TYPE[x.f.type] || TYPE.veg)[1],
+      bg: x === fs ? 'rgba(200,162,74,.12)' : '#0f0d0a', line: x === fs ? 'rgba(200,162,74,.5)' : '#2a231b', onTap: () => this.setState({ miFx: x.f.k, miFxOcc: '' }) }));
+    if (fs) {
+      const f = fs.f, T = TYPE[f.type] || TYPE.veg, L = learn(f), mo = f.type === 'month';
+      out.miFxName = f.name; out.miFxType = T[0]; out.miFxTone = T[1]; out.miFxRule = T[2];
+      out.miFxNext = fs.next ? (fs.next <= today ? 'On now, from ' + nice(fs.next) : 'Next: ' + nice(fs.next) + ' ' + fs.next.slice(0, 4)) : 'Add next date below';
+      const o = L.past.find(p => p.d0 === S.miFxOcc) || L.past[L.past.length - 1];
+      out.miFxHas = !!o; out.miFxNone = !o;
+      out.miFxNoneLine = 'No past ' + f.name + ' in your sales history yet. The prep plan below uses the usual pattern for a ' + T[0].toLowerCase() + ' and switches to your own numbers after this one.';
+      if (o) {
+        out.miFxOccs = L.past.map(p => chip(p.d0.slice(0, 4) + ' · ' + short(p.d0), p === o, () => this.setState({ miFxOcc: p.d0 })));
+        const mx = Math.max(1, ...o.cols.map(c => Math.max(c.v, c.n, c.bv, c.bn))) * 1.08;
+        const lf = (c, k) => c['b' + k] ? c[k] / c['b' + k] - 1 : null;
+        const WL = ['\u22122 wk', '\u22121 wk', 'Wk 1', 'Wk 2', 'Wk 3', 'Wk 4', 'After'];
+        out.miFxCols = o.cols.map((c, i) => {
+          const core = mo ? i >= 2 && i <= 5 : i === 3, k0 = this.miAdd(o.d0, c.s0);
+          return { vh: Math.round(c.v / mx * 100), nh: Math.round(c.n / mx * 100), vb: Math.round(c.bv / mx * 100), nb: Math.round(c.bn / mx * 100),
+            vL: pct(lf(c, 'v')), nL: pct(lf(c, 'n')), vLc: '#9fc79a', nLc: '#e08b73',
+            lbl: mo ? WL[i] : i === 3 ? 'Day' : (i < 3 ? '\u2212' : '+') + Math.abs(i - 3), lc: core ? '#ffd678' : '#cfc6b8',
+            sub: mo ? short(k0) : new Date(k0 + 'T00:00:00').toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric' }),
+            bg: core ? 'rgba(200,162,74,.07)' : 'transparent', line: core ? 'rgba(200,162,74,.25)' : '#1d1914' };
+        });
+        const avgL = (ix, k) => { const xs = ix.map(i => lf(o.cols[i], k)).filter(x => x != null); return xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : null; };
+        const tile = (title, ix) => { const v = avgL(ix, 'v'), n = avgL(ix, 'n'); return { title, aL: 'Veg', a: pct(v), aC: pc(v), bL: 'Non-veg', b: pct(n), bC: pc(n) }; };
+        const wa = o.cols.reduce((s, c) => s + c.a * c.days, 0), wb = o.cols.reduce((s, c) => s + c.ba * c.days, 0);
+        out.miFxTiles = (mo ? [tile('Two weeks before', [0, 1]), tile('During the month', [2, 3, 4, 5]), tile('Week after', [6])] : [tile('3 days before', [0, 1, 2]), tile('On the day', [3]), tile('3 days after', [4, 5, 6])])
+          .concat([{ title: 'Whole window', aL: 'Sales', a: rs(wa), aC: '#efe7db', bL: 'vs normal', b: pct(wb ? wa / wb - 1 : null), bC: pc(wb ? wa / wb - 1 : null) }]);
+        const spans = spansOf(f), dm = [];
+        ds.forEach(d => {
+          let q = 0, b = 0;
+          spans.forEach(([s0, s1]) => { for (let t = s0; t <= s1; t++) { const k = this.miAdd(o.d0, t); if (k > end) continue; q += Q(d.id, k);
+            if (mo) { let bb = 0, bc = 0; for (let w = 1; w <= 4; w++) { const kb = this.miAdd(k, -7 * w - 42); if (D.by[kb]) { bb += Q(d.id, kb); bc++; } } b += bc ? bb / bc : 0; }
+            else { let bb = 0, bc = 0; for (let w = 1; w <= 4; w++) { const kb = this.miAdd(k, -7 * w); if (D.by[kb]) { bb += Q(d.id, kb); bc++; } } b += bc ? bb / bc : 0; } } });
+          if (b >= 3) dm.push({ d, q, b, x: q / b - 1 });
+        });
+        dm.sort((a, b) => Math.abs(b.x) - Math.abs(a.x));
+        out.miFxMovers = dm.slice(0, 8).sort((a, b) => b.x - a.x).map(m => ({ name: m.d.name_en, vc: VC(vegOf[m.d.id]), qty: m.q + ' vs ' + Math.round(m.b) + ' usual', pct: pct(m.x), pc: pc(m.x) }));
+        out.miFxYears = L.past.slice().reverse().map(p => { const a = p.cols.reduce((s, c) => s + c.a * c.days, 0), b = p.cols.reduce((s, c) => s + c.ba * c.days, 0); return { when: nice(p.d0) + ' ' + p.d0.slice(0, 4), sales: rs(a), pct: pct(b ? a / b - 1 : null), pc: pc(b ? a / b - 1 : null) }; });
+      }
+      out.miFnHas = !!fs.next;
+      if (fs.next) {
+        const spans = spansOf(f), WL = ['\u22122 wk', '\u22121 wk', 'Wk 1', 'Wk 2', 'Wk 3', 'Wk 4', 'After'];
+        const colRows = spans.map(([s0, s1]) => { const m = {}; let v = 0, n = 0, a = 0; for (let t = s0; t <= s1; t++) { const k = this.miAdd(fs.next, t); if (k < today) continue; fc(k).rows.forEach(r => { m[r.d.id] = (m[r.d.id] || 0) + r.q; if (r.v) v += r.q; else n += r.q; a += r.amt; }); } return { m, v, n, a }; });
+        out.miFnTitle = 'Prep plan for ' + f.name + ' ' + fs.next.slice(0, 4) + ' · ' + nice(fs.next);
+        out.miFnNote = (L.est ? 'Uses the usual pattern for a ' + T[0].toLowerCase() + ', since there is no past ' + f.name + ' in your sales yet.' : 'Your last ' + (L.past.length === 1 ? f.name : L.past.length + ' ' + f.name + ' seasons') + ' applied to your current weekday averages.') + (mo ? ' Each column is a week total.' : ' Portions per day.') + ' Days already gone show as a dash.';
+        out.miFnHead = spans.map(([s0], i) => { const k = this.miAdd(fs.next, s0), core = mo ? i >= 2 && i <= 5 : i === 3; return { l: mo ? WL[i] : i === 3 ? 'Day' : (i < 3 ? '\u2212' : '+') + Math.abs(i - 3), s: mo ? short(k) : new Date(k + 'T00:00:00').toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric' }), c: core ? '#ffd678' : '#cfc6b8', bg: core ? 'rgba(200,162,74,.1)' : 'transparent' }; });
+        const gone = spans.map(([, s1]) => this.miAdd(fs.next, s1) < today);
+        const cell = (x, i, c) => ({ v: gone[i] ? '\u2013' : String(Math.round(x)), c: c || '#cfc6b8' });
+        const tot = {}; colRows.forEach(c => { for (const id in c.m) tot[id] = (tot[id] || 0) + c.m[id]; });
+        const top = Object.keys(tot).sort((a, b) => tot[b] - tot[a]).slice(0, 8);
+        out.miFnRows = [
+          { name: 'Veg portions', vc: '#9fc79a', fg: '#efe7db', line: '#2a231b', cells: colRows.map((c, i) => cell(c.v, i, '#9fc79a')) },
+          { name: 'Non-veg portions', vc: '#e08b73', fg: '#efe7db', line: '#1d1914', cells: colRows.map((c, i) => cell(c.n, i, '#e08b73')) },
+          { name: 'Expected sales (\u20b9k)', vc: '#c8a24a', fg: '#efe7db', line: '#1d1914', cells: colRows.map((c, i) => ({ v: gone[i] ? '\u2013' : r1(c.a / 1000), c: '#e2c06a' })) }]
+          .concat(top.map((id, j) => ({ name: byId[id].name_en, vc: VC(vegOf[id]), fg: '#cfc6b8', line: j ? '#1a1612' : '#2a231b', cells: colRows.map((c, i) => cell(c.m[id] || 0, i)) })));
+      }
+    }
+    const saveFx = list => this.aiPut('miFest2', list);
+    const TK = [['veg', 'Veg day'], ['feast', 'Feast day'], ['month', 'Veg month']];
+    out.miFxEdit = !!S.miFxEdit; out.miFxEditLbl = S.miFxEdit ? 'Done' : fx.length + ' festivals · Edit';
+    out.miFxEditTap = () => this.setState(s => ({ miFxEdit: !s.miFxEdit }));
+    out.miFxEd = fx.map((f, fi) => ({ name: f.name,
+      types: TK.map(([t, l]) => chip(l, f.type === t, () => saveFx(fx.map((g, j) => j === fi ? { ...g, type: t, len: t === 'month' ? g.len || 31 : g.len } : g)))),
+      onDel: () => saveFx(fx.filter((g, j) => j !== fi)),
+      dates: (f.dates || []).slice().sort().map(d0 => ({ lbl: short(d0) + ' ' + d0.slice(0, 4), onDel: () => saveFx(fx.map((g, j) => j === fi ? { ...g, dates: g.dates.filter(x => x !== d0) } : g)) })),
+      onAdd: e => { const v = e.target.value; if (v) saveFx(fx.map((g, j) => j === fi ? { ...g, dates: Array.from(new Set([...(g.dates || []), v])).sort() } : g)); e.target.value = ''; } }));
+    const nf = S.miNf || {};
+    out.miNfName = nf.name || ''; out.onMiNfName = e => this.setState({ miNf: { ...nf, name: e.target.value } });
+    out.miNfDate = nf.date || ''; out.onMiNfDate = e => this.setState({ miNf: { ...nf, date: e.target.value } });
+    out.miNfTypes = TK.map(([t, l]) => chip(l, (nf.type || 'veg') === t, () => this.setState({ miNf: { ...nf, type: t } })));
+    out.miNfAdd = () => { if (!String(nf.name || '').trim() || !nf.date) return this.say('Name the festival and pick a date'); const t = nf.type || 'veg';
+      saveFx([...fx, { k: 'c' + Date.now().toString(36), name: nf.name.trim(), type: t, len: t === 'month' ? 31 : undefined, dates: [nf.date] }]); this.setState({ miNf: {} }); };
+    out.miFxReset = () => { try { localStorage.removeItem('ai:miFest2'); } catch (e) {} this.setState(s => ({ aiTick: (s.aiTick || 0) + 1 })); };
+
+    // Dish performance
+    out.miT3 = tab === 'Dish performance';
+    const acts = this.miActs();
+    const RG = { Week: 7, Month: 30, '3 months': 90, Year: 364 }, rg = S.miRange || 'Month', R = RG[rg] || 30;
+    const tot30 = {}; for (let t = 0; t < 30; t++) { const o = D.by[this.aiDayKey(-1 - t)] || {}; for (const id in o) tot30[id] = (tot30[id] || 0) + o[id][0]; }
+    const ranked = ds.slice().sort((a, b) => (tot30[b.id] || 0) - (tot30[a.id] || 0));
+    const sel = byId[S.miDish] ? S.miDish : (ranked[0] || {}).id;
+    out.miSel = sel || ''; out.onMiSel = e => this.setState({ miDish: e.target.value });
+    out.miDishOpts = ranked.map(d => ({ v: d.id, label: d.name_en + (tot30[d.id] ? ' \u00b7 ' + tot30[d.id] + ' in 30 days' : '') }));
+    out.miRanges = Object.keys(RG).map(o => chip(o, o === rg, () => this.setState({ miRange: o })));
+    const start = this.miAdd(end, -(R - 1)), pS = this.miAdd(start, -R), pE = this.miAdd(start, -1);
+    const qR = (id, a, b) => { let q = 0, m = 0; for (let k = a; k <= b; k = this.miAdd(k, 1)) { q += Q(id, k); m += A(id, k); } return [q, m]; };
+    const KIND = MI_KIND, kOf = a => KIND[a.kind] || KIND.offer;
+    const THEMES = MI_THEMES;
+    const fbAll = (S.miFb || []).map(x => ({ ...x, day: new Date(x.created_at).toLocaleDateString('en-CA'), t: String(x.comment || '').toLowerCase() }));
+    const themeCount = (id, a, b) => { const m = {}; fbAll.forEach(x => { if (x.dish_id !== id || x.day < a || x.day > b || !x.t) return; (x.ai_tags && x.ai_tags.length ? x.ai_tags : THEMES.filter(([, re]) => re.test(x.t)).map(t => t[0])).forEach(l => { m[l] = (m[l] || 0) + 1; }); }); return m; };
+    const rating = (id, a, b) => { const xs = fbAll.filter(x => x.dish_id === id && x.day >= a && x.day <= b); return xs.length ? { avg: xs.reduce((s, x) => s + x.stars, 0) / xs.length, n: xs.length } : null; };
+    const measure = a => {
+      const L = a.kind === 'staff' || a.kind === 'offer' ? (a.until ? Math.max(1, this.miDiff(a.until, a.day) + 1) : 7) : 7;
+      const s0 = a.kind === 'staff' || a.kind === 'offer' ? a.day : this.miAdd(a.day, 1);
+      let bq = 0, bc = 0, aq = 0, ac = 0;
+      for (let t = 1; t <= 7; t++) { const k = this.miAdd(a.day, -t); if (D.by[k]) { bq += Q(a.dish, k); bc++; } }
+      for (let t = 0; t < L; t++) { const k = this.miAdd(s0, t); if (k > end) break; if (D.by[k]) { aq += Q(a.dish, k); ac++; } }
+      const b = bc ? bq / bc : 0, af = ac ? aq / ac : 0;
+      return { b, af, lift: b && ac ? af / b - 1 : null, n: ac, L };
+    };
+    const summary = a => {
+      const n = a.note ? a.note : '';
+      if (a.kind === 'tweak') return [(a.what || []).join(', '), n].filter(Boolean).join('. ') + (a.fromFb ? ' (after guest feedback)' : '');
+      if (a.kind === 'social') return [a.platform, a.format].filter(Boolean).join(' ') + (a.views ? ' \u00b7 ' + (+a.views).toLocaleString('en-IN') + ' views' : '') + (a.spend ? ' \u00b7 ' + rs(a.spend) + ' boost' : '') + (n ? '. ' + n : '');
+      if (a.kind === 'staff') return (a.how || 'Recommended') + ' by ' + (a.who || 'staff') + (a.shift ? ', ' + a.shift.toLowerCase() : '') + (a.until ? ', until ' + short(a.until) : '') + (n ? '. ' + n : '');
+      if (a.kind === 'price') return rs(a.oldP) + ' \u2192 ' + rs(a.newP) + (n ? '. ' + n : '');
+      return (n || 'Offer') + (a.until ? ', until ' + short(a.until) : '');
+    };
+    const TW = { 'Less salt': 'Too salty', 'More salt': 'Bland', 'Less spice': 'Too spicy', 'More spice': 'Bland', 'Less oil': 'Oily', 'Bigger portion': 'Small portion', 'Cooked longer': 'Undercooked', 'Cooked less': 'Dry or hard', 'Served hotter': 'Cold when served' };
+    if (sel) {
+      const d = byId[sel], wk = R > 90, step = wk ? 7 : 1, N = Math.round(R / step), bk = [];
+      for (let i = N - 1; i >= 0; i--) { const e = this.miAdd(end, -i * step), s = this.miAdd(e, -(step - 1)); const [q, m] = qR(sel, s, e); bk.push({ s, e, q, m }); }
+      const mw = wk ? 4 : R <= 7 ? 3 : 7, ma = bk.map((b, i) => { const xs = bk.slice(Math.max(0, i - mw + 1), i + 1); return xs.reduce((t, x) => t + x.q, 0) / xs.length; });
+      const mx = Math.max(1, ...bk.map(b => b.q), ...ma) * 1.12;
+      const [cq, cm] = qR(sel, start, end), [pq] = qR(sel, pS, pE), ch = pq ? cq / pq - 1 : null;
+      out.miBars = bk.map(b => { const w = this.miWin(b.s, fx); return { h: Math.round(b.q / mx * 100), c: w ? (w.f.type === 'feast' ? 'rgba(224,139,115,.6)' : w.f.type === 'month' ? 'rgba(127,180,217,.5)' : 'rgba(159,199,154,.6)') : 'rgba(200,162,74,.42)',
+        tip: (wk ? 'Week of ' + short(b.s) : nice(b.s)) + ' \u00b7 ' + b.q + ' sold' + (w ? ' \u00b7 ' + winShort(w) : '') }; });
+      out.miMa = ma.map((v, i) => (i ? 'L' : 'M') + r1((i + 0.5) / N * 100) + ' ' + r1(100 - v / mx * 100)).join(' ');
+      out.miMaLbl = wk ? '4-week average' : R <= 7 ? '3-day average' : '7-day average';
+      out.miChartTitle = d.name_en; out.miChartSub = (wk ? 'Portions a week' : 'Portions a day') + ' \u00b7 ' + short(start) + ' to ' + short(end);
+      out.miAxisA = short(start); out.miAxisB = short(end);
+      const dActs = acts.filter(a => a.dish === sel);
+      out.miMarks = dActs.filter(a => a.day >= start && a.day <= end).map(a => { const K = kOf(a); return { x: r1((Math.floor(this.miDiff(a.day, start) / step) + 0.5) / N * 100), c: K[2], l: K[1], tip: K[0] + ' \u00b7 ' + nice(a.day) + ' \u00b7 ' + summary(a) }; });
+      out.miLegend = Object.values(KIND).map(K => ({ l: K[1], c: K[2], label: K[0] }));
+      const rc = rating(sel, start, end), rp = rating(sel, pS, pE), tc = themeCount(sel, start, end), tp = themeCount(sel, pS, pE);
+      const neg = Object.entries(tc).filter(([l]) => l !== 'Loved it' && l !== 'Other praise').sort((a, b) => b[1] - a[1]);
+      const nFb = fbAll.filter(x => x.dish_id === sel && x.day >= start && x.day <= end && x.t).length;
+      out.miPKpis = [
+        { label: 'Sold', value: cq + ' portions', sub: pct(ch) + ' vs previous ' + (rg === 'Year' ? 'year' : rg.toLowerCase()), subC: pc(ch), line: '#221d16' },
+        { label: 'Sales', value: rs(cm), sub: r1(cq / R) + ' portions a day', subC: '#9a8f7f', line: '#221d16' },
+        { label: 'Guest rating', value: rc ? r1(rc.avg) + ' \u2605' : '\u2014', sub: rc ? rc.n + ' ratings' + (rp ? ', was ' + r1(rp.avg) : '') : 'No ratings in range', subC: rc && rp ? pc(rc.avg - rp.avg) : '#9a8f7f', line: '#221d16' },
+        { label: 'Guest feedback summary', value: nFb ? (neg[0] ? neg[0][0] + ' \u00b7 ' + neg[0][1] + '/' + Math.max(cq, nFb) : 'No complaints') : 'No feedback', sub: nFb ? 'Tap for the AI summary and fixes' : 'No written feedback in range', subC: '#c8a24a', onTap: () => this.miFbOpen(d, start, end, cq), tap: true, line: 'rgba(200,162,74,.45)' }];
+      const why = [];
+      if (ch != null) why.push({ i: ch >= 0 ? '\u2191' : '\u2193', c: pc(ch), bg: ch >= 0 ? 'rgba(159,199,154,.14)' : 'rgba(224,139,115,.14)', text: (Math.abs(ch) < 0.05 ? 'Steady: ' : ch > 0 ? 'Gaining: ' : 'Dipping: ') + cq + ' portions against ' + pq + ' in the previous ' + (rg === 'Year' ? 'year' : rg.toLowerCase()) + ' (' + pct(ch) + ').' });
+      neg.filter(([, n]) => n >= 2).slice(0, 2).forEach(([l, n]) => why.push({ i: '!', c: '#e08b73', bg: 'rgba(224,139,115,.14)', text: '\u201c' + l + '\u201d came up in ' + n + ' reviews in this range' + (tp[l] ? ' (' + tp[l] + ' before)' : '') + '. Repeated complaints like this usually show up as a dip within a week or two.' }));
+      Object.entries(tp).filter(([l, n]) => l !== 'Loved it' && n >= 2 && (tc[l] || 0) < n / 2).slice(0, 1).forEach(([l, n]) => why.push({ i: '\u2713', c: '#9fc79a', bg: 'rgba(159,199,154,.14)', text: '\u201c' + l + '\u201d fell from ' + n + ' mentions to ' + (tc[l] || 0) + '.' }));
+      dActs.filter(a => a.day >= this.miAdd(start, -7) && a.day <= end).slice(0, 3).forEach(a => { const m = measure(a), K = kOf(a); why.push({ i: K[1], c: '#0b0a09', bg: K[2], text: K[0] + ' on ' + nice(a.day) + ': ' + summary(a) + '. ' + (m.lift == null ? 'Too early to measure.' : pct(m.lift) + ' a day in the ' + m.n + (m.n === 1 ? ' day' : ' days') + ' after.') }); });
+      const fd = {}; for (let k = start; k <= end; k = this.miAdd(k, 1)) { const w = this.miWin(k, fx); if (w) { const key = w.f.k + w.D; fd[key] = fd[key] || { w, n: 0 }; fd[key].n++; } }
+      Object.values(fd).slice(0, 2).forEach(({ w, n }) => { const L = learn(w.f), v = vegOf[sel], core = w.f.type === 'month' ? [2, 3, 4, 5] : [3], x = core.reduce((s, i) => s + (v ? L.lv : L.ln)[i], 0) / core.length;
+        why.push({ i: '\u2600', c: (TYPE[w.f.type] || TYPE.veg)[1], bg: 'rgba(200,162,74,.1)', text: w.f.name + ' touches ' + n + (n === 1 ? ' day' : ' days') + ' of this range. ' + (v ? 'Veg' : 'Non-veg') + ' dishes run ' + pct(x) + ' in its core days' + (L.est ? ' (usual pattern).' : ' in your own sales.') }); });
+      if (why.length < 2) why.push({ i: '\u00b7', c: '#9a8f7f', bg: '#1d1914', text: 'No logged change, repeated complaint or festival in this range. Log posts, staff pushes and recipe tweaks to explain the next move.' });
+      out.miWhy = why.slice(0, 6);
+      const aiKey = sel + '|' + rg, ai = (S.miAi || {})[aiKey];
+      out.miAiHas = !!(ai && ai.text); out.miAiText = ai ? ai.text || '' : ''; out.miAskLbl = ai && ai.busy ? 'Thinking\u2026' : ai && ai.text ? 'Ask again' : 'Ask AI why';
+      const recent = fbAll.filter(x => x.dish_id === sel && x.day >= start && x.day <= end && x.comment);
+      out.miEnhance = () => this.miEnhance(d);
+      out.miAskWhy = () => { if (ai && ai.busy) return; this.miWhyAi({ key: aiKey, facts: 'Dish: ' + d.name_en + ' (' + (vegOf[sel] ? 'veg' : 'non-veg') + '). Range: ' + rg + ' to ' + end + '. ' + why.map(w => w.text).join(' ') + ' Recent guest comments: ' + recent.slice(0, 12).map(x => x.stars + '\u2605 ' + x.comment).join(' | ') + '.' }); };
+      out.miThemes = Object.entries(tc).sort((a, b) => b[1] - a[1]).map(([l, n]) => { const p = tp[l] || 0, good = l === 'Loved it', up = n > p;
+        return { label: l, n, d: p === n ? '' : (up ? '\u2191' : '\u2193') + ' from ' + p, dc: (up !== good) ? '#e08b73' : '#9fc79a', c: good ? '#9fc79a' : '#e8b3a3', line: good ? 'rgba(159,199,154,.35)' : 'rgba(224,139,115,.35)' }; });
+      out.miThemesNone = !out.miThemes.length;
+      out.miQuotes = recent.slice(0, 3).map(x => ({ text: x.comment, meta: x.stars + ' \u2605 \u00b7 ' + nice(x.day) }));
+      out.miImp = dActs.slice(0, 8).map(a => {
+        const K = kOf(a), m = measure(a), mxh = Math.max(m.b, m.af, 0.1), ex = [];
+        if (a.kind === 'tweak') {
+          const rb = rating(sel, this.miAdd(a.day, -30), this.miAdd(a.day, -1)), ra = rating(sel, a.day, this.miAdd(a.day, 30));
+          if (rb && ra) ex.push({ t: 'Rating ' + r1(rb.avg) + ' \u2192 ' + r1(ra.avg) + ' \u2605', c: pc(ra.avg - rb.avg) });
+          (a.what || []).map(w => TW[w]).filter(Boolean).forEach(th => { const b = themeCount(sel, this.miAdd(a.day, -30), this.miAdd(a.day, -1))[th] || 0, af = themeCount(sel, a.day, this.miAdd(a.day, 30))[th] || 0; if (b || af) ex.push({ t: '\u201c' + th + '\u201d ' + b + ' \u2192 ' + af + ' mentions (30 days each side)', c: af < b ? '#9fc79a' : af > b ? '#e08b73' : '#cfc6b8' }); });
+        }
+        return { kc: K[2], kl: K[1], kLbl: K[0], when: nice(a.day), what: summary(a) || K[0], bh: Math.round(m.b / mxh * 100), ah: Math.round(m.af / mxh * 100), lc: m.lift == null ? '#9a8f7f' : pc(m.lift),
+          lift: m.lift == null ? '\u2014' : pct(m.lift), ba: r1(m.b) + ' \u2192 ' + r1(m.af) + ' a day', extra: ex, partial: m.n < m.L, partialLbl: m.n ? 'Measuring: ' + m.n + ' of ' + m.L + ' days so far' : 'Starts measuring tomorrow' };
+      });
+      out.miImpNone = !dActs.length;
+      out.miGoLog = () => this.setState(s => ({ miTab: 'Log a change', miF: { ...(s.miF || {}), dish: sel } }));
+      const board = ds.map(x => { const [c] = qR(x.id, start, end), [p] = qR(x.id, pS, pE); return { x, c, p, ch: p >= 5 ? c / p - 1 : null }; }).filter(b => b.ch != null && Math.abs(b.ch) >= 0.05);
+      const reason = (b, up) => {
+        const a = acts.find(a => a.dish === b.x.id && a.day >= this.miAdd(start, -7) && a.day <= end); if (a) return kOf(a)[0] + ' on ' + short(a.day);
+        const t = Object.entries(themeCount(b.x.id, start, end)).filter(([l, n]) => (up ? l === 'Loved it' : l !== 'Loved it') && n >= 2).sort((p, q) => q[1] - p[1])[0];
+        if (t) return '\u201c' + t[0] + '\u201d \u00d7' + t[1];
+        const w = this.miWin(end, fx) || this.miWin(start, fx); if (w) return w.f.name + ' window';
+        return up ? 'No logged cause' : 'No complaint or change logged';
+      };
+      const row = (b, up) => { const sp = []; for (let t = 13; t >= 0; t--) sp.push(Q(b.x.id, this.aiDayKey(-1 - t))); const m = Math.max(1, ...sp);
+        return { name: b.x.name_en, why: reason(b, up), pct: pct(b.ch), pc: pc(b.ch), spark: sp.map(v => ({ h: Math.round(v / m * 100) })), onTap: () => this.setState({ miDish: b.x.id }) }; };
+      const g = board.filter(b => b.ch > 0).sort((a, b) => b.ch - a.ch).slice(0, 6), dn = board.filter(b => b.ch < 0).sort((a, b) => a.ch - b.ch).slice(0, 6);
+      out.miBoards = [{ title: 'Gaining', sub: 'vs previous ' + (rg === 'Year' ? 'year' : rg.toLowerCase()), rows: g.map(b => row(b, true)), none: !g.length },
+        { title: 'Dipping', sub: 'Tap a dish to open it', rows: dn.map(b => row(b, false)), none: !dn.length }];
+    }
+
+    // Log a change
+    out.miT4 = tab === 'Log a change';
+    const Fm = S.miF || {}, kind = Fm.kind || 'tweak', setF = p => this.setState(s => ({ miF: { ...(s.miF || {}), ...p } }));
+    const fDish = byId[Fm.dish] ? Fm.dish : sel || '';
+    out.miKinds = Object.entries(KIND).map(([k, K]) => chip(K[0], k === kind, () => setF({ kind: k }), { kc: K[2], kl: K[1] }));
+    out.miFDish = fDish; out.onMiFDish = e => { const id = e.target.value; setF({ dish: id, oldP: byId[id] ? byId[id].price : '' }); };
+    out.miFDayLbl = kind === 'staff' || kind === 'offer' ? 'From' : 'Date'; out.miFDay = Fm.day || today; out.onMiFDay = e => setF({ day: e.target.value });
+    out.miFHasUntil = kind === 'staff' || kind === 'offer'; out.miFUntil = Fm.until || ''; out.onMiFUntil = e => setF({ until: e.target.value });
+    out.miFTweak = kind === 'tweak'; out.miFSocial = kind === 'social'; out.miFStaff = kind === 'staff'; out.miFPrice = kind === 'price';
+    const multi = (key, opts) => opts.map(o => { const cur = Fm[key] || []; const hit = cur.indexOf(o) >= 0; return chip(o, hit, () => setF({ [key]: hit ? cur.filter(x => x !== o) : [...cur, o] })); });
+    const one = (key, opts, def) => opts.map(o => chip(o, (Fm[key] || def) === o, () => setF({ [key]: o })));
+    out.miFWhat = multi('what', Object.keys(TW).concat(['New ingredient', 'New plating']));
+    out.miFFbLbl = Fm.fromFb ? '\u2713 Made after guest feedback' : 'Made after guest feedback?'; out.miFFbTap = () => setF({ fromFb: !Fm.fromFb });
+    out.miFFbBg = Fm.fromFb ? on.bg : off.bg; out.miFFbLine = Fm.fromFb ? on.line : off.line; out.miFFbFg = Fm.fromFb ? on.fg : off.fg;
+    out.miFPlat = one('platform', ['Instagram', 'Facebook', 'WhatsApp', 'YouTube', 'Google'], ''); out.miFFmt = one('format', ['Reel', 'Post', 'Story', 'Short'], '');
+    out.miFViews = Fm.views || ''; out.onMiFViews = e => setF({ views: e.target.value }); out.miFSpend = Fm.spend || ''; out.onMiFSpend = e => setF({ spend: e.target.value });
+    out.miFLink = Fm.link || ''; out.onMiFLink = e => setF({ link: e.target.value });
+    const staffN = (S.staff || []).filter(s => s.active !== false && s.name).map(s => s.name).slice(0, 12);
+    out.miFWho = one('who', staffN.concat(['Whole floor team']), ''); out.miFHow = one('how', ['Suggested at table', 'Combo upsell', 'Free taste', 'Chef\u2019s special board'], ''); out.miFShift = one('shift', ['Lunch', 'Dinner', 'All day'], '');
+    out.miFOld = Fm.oldP != null && Fm.oldP !== '' ? Fm.oldP : (byId[fDish] || {}).price || ''; out.onMiFOld = e => setF({ oldP: e.target.value }); out.miFNew = Fm.newP || ''; out.onMiFNew = e => setF({ newP: e.target.value });
+    out.miFNoteLbl = kind === 'offer' ? 'The offer' : 'Note (optional)'; out.miFNote = Fm.note || ''; out.onMiFNote = e => setF({ note: e.target.value });
+    out.miFNotePh = { tweak: 'Salt cut by a third in the marinade', social: 'What the post showed', staff: 'What staff said to guests', price: 'Why the price changed', offer: 'Buy 2 mandi, get a free lime juice' }[kind];
+    out.miFSave = () => { if (!Fm.dish && fDish) setF({ dish: fDish }); this.setState(s => ({ miF: { ...(s.miF || {}), dish: (s.miF || {}).dish || fDish, oldP: (s.miF || {}).oldP || out.miFOld } }), () => this.miSave()); };
+    const hf = S.miHistF || 'All dishes';
+    out.miHistF = ['All dishes', 'This dish'].map(o => chip(o, o === hf, () => this.setState({ miHistF: o })));
+    const hist = acts.filter(a => hf === 'All dishes' || a.dish === fDish).slice(0, 60);
+    out.miHist = hist.map(a => { const K = kOf(a), m = measure(a); return { kc: K[2], kl: K[1], kLbl: K[0], dish: (byId[a.dish] || {}).name_en || 'Removed dish', when: nice(a.day) + (a.until ? ' to ' + short(a.until) : ''), what: summary(a),
+      eff: m.lift == null ? 'Measuring' : pct(m.lift), ec: m.lift == null ? '#8d8272' : pc(m.lift), sample: !!a.sample, canDel: !a.sample && !a.fromLog, onDel: () => this.miDel(a.id) }; });
+    out.miHistNone = !hist.length;
+
+    out.miBrief = () => 'AI INSIGHTS (computed from ' + (D.live ? 'the restaurant\u2019s own sales' : 'SAMPLE data, say so if asked') + '). Prep forecast for ' + nice(dk) + ': ' + F.rows.slice(0, 15).map(r => r.d.name_en + ' ' + r.q).join(', ') + '. ' + dayNote +
+      ' Upcoming festivals: ' + fl.filter(x => x.next).map(x => { const L = learn(x.f), c = x.f.type === 'month' ? 3 : 3; return x.f.name + ' ' + x.next + ' (' + (TYPE[x.f.type] || TYPE.veg)[0] + '; non-veg ' + pct(L.ln[c]) + ' and veg ' + pct(L.lv[c]) + ' on the core day, non-veg ' + pct((L.ln[1] + L.ln[2]) / 2) + ' just before and ' + pct((L.ln[4] + L.ln[5]) / 2) + ' just after' + (L.est ? ', usual pattern' : ', learned') + ')'; }).join('; ') +
+      '. Hindu festival days: guests avoid non-veg on the day and eat it 1 to 3 days before or after. Logged dish changes: ' + acts.slice(0, 12).map(a => (byId[a.dish] || {}).name_en + ' ' + kOf(a)[0] + ' ' + a.day + ' ' + summary(a) + ' ' + pct(measure(a).lift)).join('; ') + '.';
+
+    // Snapshot for the assistant in both apps. Rupee fields are snake_case so
+    // ai-direct's money filter drops them off the counter.
+    if (this.sb && (this._miPubDue || this._miPubStamp !== stamp)) {
+      this._miPubDue = false; this._miPubStamp = stamp;
+      try {
+        const nm = id => (byId[id] || {}).name_en || 'Removed dish';
+        const forecast = [0, 1, 2, 3, 4, 5, 6].map(n => { const k = this.aiDayKey(n), f = fc(k), q = f.rows.reduce((s, r) => s + r.q, 0), v = f.rows.filter(r => r.v).reduce((s, r) => s + r.q, 0);
+          return { day: k, weekday: WDN[f.wd], festival: f.w ? winName(f.w, true) : null, festival_effect: f.w ? { veg: pct(f.L.lv[f.w.i]), non_veg: pct(f.L.ln[f.w.i]), from: f.L.est ? 'usual pattern' : f.L.past.length + ' past years of own sales' } : null,
+            portions: q, veg_portions: v, non_veg_portions: q - v, expected_sales: Math.round(f.rows.reduce((s, r) => s + r.amt, 0)), basis: f.mode === 'clean' ? 'last 4 normal ' + WDN[f.wd] + 's' : f.mode === 'win' ? 'recent ' + WDN[f.wd] + 's, festival effect removed' : 'last 28 days, weekday-adjusted',
+            dishes: f.rows.slice(0, 30).map(r => ({ dish: r.d.name_en, veg: r.v, prep: r.q, likely_range: r.lo + '-' + r.hi })) }; });
+        const tf = fc(this.aiDayKey(1)), nd = {};
+        tf.rows.forEach(r => rec.filter(x => x.dish_id === r.d.id).forEach(x => { nd[x.ingredient_id] = (nd[x.ingredient_id] || 0) + r.q * (+x.qty || 0); }));
+        const stock_tomorrow = ing.filter(g => nd[g.id]).map(g => ({ ingredient: g.name, need: r1(nd[g.id]) + ' ' + g.unit, in_store: r1(+g.stock || 0) + ' ' + g.unit, status: nd[g.id] > (+g.stock || 0) ? 'short ' + r1(nd[g.id] - (+g.stock || 0)) + ' ' + g.unit : (+g.stock || 0) - nd[g.id] < (+g.reorder_level || 0) ? 'low after service' : 'enough' }));
+        const festivals = fl.map(x => { const L = learn(x.f), mo = x.f.type === 'month', lb = mo ? ['2 weeks before', 'week before', 'week 1', 'week 2', 'week 3', 'week 4', 'week after'] : ['3 days before', '2 days before', 'day before', 'the day', 'day after', '2 days after', '3 days after'];
+          return { name: x.f.name, type: (TYPE[x.f.type] || TYPE.veg)[0], rule: (TYPE[x.f.type] || TYPE.veg)[2], next: x.next || null, all_dates: x.f.dates || [], pattern_from: L.est ? 'usual pattern (no past occurrence in own sales)' : L.past.length + ' past occurrences in own sales',
+            by_day: lb.map((l, i) => ({ when: l, veg: pct(L.lv[i]), non_veg: pct(L.ln[i]) })),
+            past: L.past.map(p => { const a = p.cols.reduce((s, c) => s + c.a * c.days, 0), b = p.cols.reduce((s, c) => s + c.ba * c.days, 0); return { start: p.d0, sales: Math.round(a), vs_normal: pct(b ? a / b - 1 : null) }; }) }; });
+        const s30 = this.miAdd(end, -29), p30e = this.miAdd(s30, -1), p30s = this.miAdd(p30e, -29);
+        const moves = ds.map(x => { const [c] = qR(x.id, s30, end), [p] = qR(x.id, p30s, p30e); return { x, c, p, ch: p >= 5 ? c / p - 1 : null }; }).filter(b => b.ch != null);
+        const perf = b => { const th = Object.entries(themeCount(b.x.id, s30, end)).sort((p, q) => q[1] - p[1]).slice(0, 3).map(([l, n]) => l + ' x' + n), rc = rating(b.x.id, s30, end), la = acts.find(a => a.dish === b.x.id && a.day >= this.miAdd(s30, -7));
+          return { dish: b.x.name_en, veg: vegOf[b.x.id], sold_last_30_days: b.c, sold_previous_30_days: b.p, change: pct(b.ch), rating: rc ? r1(rc.avg) + ' from ' + rc.n : null, guest_themes: th, recent_change: la ? kOf(la)[0] + ' on ' + la.day + ': ' + summary(la) : null }; };
+        const body = { sample_data: !D.live, forecast, stock_tomorrow, festivals,
+          dish_performance: { window: s30 + ' to ' + end, gaining: moves.filter(b => b.ch >= 0.05).sort((a, b) => b.ch - a.ch).slice(0, 10).map(perf), dipping: moves.filter(b => b.ch <= -0.05).sort((a, b) => a.ch - b.ch).slice(0, 10).map(perf) },
+          logged_changes: acts.slice(0, 40).map(a => { const m = measure(a); return { dish: nm(a.dish), kind: kOf(a)[0], day: a.day, until: a.until || null, what: summary(a), effect: m.lift == null ? 'measuring' : pct(m.lift) + ' a day', per_day_before: r1(m.b), per_day_after: r1(m.af), days_measured: m.n + ' of ' + m.L }; }) };
+        this.sb.from('ai_engine_snapshot').upsert({ restaurant_id: this.rid, section: 'menuIntel', body, at: new Date().toISOString() }).then(() => { try { localStorage.setItem('ai:miPubAt', String(Date.now())); } catch (e) {} }, () => {});
+      } catch (e) {}
+    }
+    return S.ov === 'studio' ? out : {};
+  }
   aiVals() {
     const S = this.state;
     const tab = S.aiStudio || 'All', htab = S.aiHubPf || 'All', etab = S.aiEvTab || 'All';
@@ -6126,7 +7311,7 @@ class Component extends DCLogic {
       insNote: S.aiInsNote2 || (S.aiInsBusy ? 'Reading sales, events and search trends\u2026' :
         'Weather is live from Open-Meteo. ' + (S.aiEvents ? 'Events found by web research are shown only after their date and name are found on the source page' + (S.aiEvDropped ? ' (' + S.aiEvDropped + ' left out today)' : '') + '. ' : '') + (plan.all.length ? 'The plan scores ' + plan.all.length + ' dishes on the menu. ' : '') + 'Posts you log or publish are what the rotation remembers.'),
       insSeeds: ['What should I push tonight, and why that dish?', 'Which events in the next two weeks deserve a campaign?', 'Which rarely ordered dish is worth a spotlight?'],
-      insBrief: () => 'Only mention events, matches and films that appear in the context below; they were checked against their source pages. If asked about anything else, say you have no checked source for it. You are the AI Insights desk. Answer about the weather, events, the dish plan and sales. Never recommend the same dish two days running or a dish posted in the last 4 days; give low-order, well-rated dishes a fair turn. Context: ' + ctx(),
+      insBrief: () => 'Only mention events, matches and films that appear in the context below; they were checked against their source pages. If asked about anything else, say you have no checked source for it. You are the AI Planner desk. Answer about the weather, events, the dish plan and sales. Never recommend the same dish two days running or a dish posted in the last 4 days; give low-order, well-rated dishes a fair turn. Context: ' + ctx(),
 
       studioKpis: [
         kpi('Prompts ready', srcRows.filter(p => p.kind === 'Image').length + ' image \u00b7 ' + srcRows.filter(p => p.kind === 'Video').length + ' video', S.aiStudioRows ? 'Built today' : 'Last good set'),
@@ -6215,8 +7400,7 @@ class Component extends DCLogic {
     if (k === 'hist') this.loadHist().catch(() => {});
     if (k === 'book') this.loadBook().catch(() => {});
     if (k === 'ins' && !this.state.aiPerf && !this.state.aiInsBusy) this.loadIns();
-    if (k === 'studio' && !this.state.aiDishStats && !this.state.aiInsBusy) this.loadIns();
-    if (k === 'studio' && !this.state.aiStudioRows && !this.state.aiStudioBusy) this.loadStudio();
+    if (k === 'studio' && !this.state.miData && !this.state.miBusy) this.loadIntel();
     // The push panel picks its audience out of the book's folders, so the book
     // has to be read before the chips can be drawn.
     if (k === 'push') { this.loadBook().catch(() => {}); this.campLoad().catch(() => {}); }
@@ -6905,6 +8089,10 @@ class Component extends DCLogic {
       assistSb: this.sb || null,
       assistRid: this.rid || '',
       takeDictated: t => this.takeDictated(t),
+      assistTables: this.tableCount(),
+      assistHours: this.props.openingHours || '', assistBreak: this.props.staffBreakMins ?? '',
+      assistVoiceMode: this.props.voiceMode || '', assistSilence: this.props.voiceSilenceSecs ?? '',
+      assistFloor: () => this.floorSnapshot(),
       err: S.err, toast: S.toast, refusal: S.refusal,
       email: S.email, pass: S.pass,
       onEmail: e => this.setState({ email: e.target.value }),
@@ -7150,6 +8338,7 @@ class Component extends DCLogic {
       ...this.bookVals(),
       ...this.campVals(),
       ...this.aiVals(),
+      ...this.intelVals(),
       kots, noKots: !kots.length,
 
       noBill: !S.bill, hasBill: !!S.bill,

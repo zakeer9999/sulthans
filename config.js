@@ -10,6 +10,18 @@ window.SULTHANS_CONFIG = {
   town: 'Aruppukottai, Virudhunagar district, Tamil Nadu',
   lat: 9.51,
   lon: 78.10,
+  /* Opening hours, as staff would say them. The assistant reads the hours
+     saved on the restaurant row first and falls back to this line. */
+  openingHours: '11 AM to 11 PM',
+  /* Break every staff shift includes, in minutes. Taken off hours worked when
+     a clock-out records none, and off the hours expected of each shift. */
+  staffBreakMins: 30,
+  /* Voice chat. 'auto': speak, pause, it replies and listens again, like a
+     phone call — tap to end. 'tap': tap to speak, tap again to send.
+     voiceSilenceSecs is the pause that counts as "done speaking". Both can
+     also be switched in the assistant panel and in each app's Tweaks. */
+  voiceMode: 'auto',
+  voiceSilenceSecs: 2,
   /* Sending a WhatsApp push without a cashier tapping through it needs a
      WhatsApp Cloud API token, and a token in the till's browser is a token on
      the internet. So it lives in an endpoint you deploy — a Supabase Edge

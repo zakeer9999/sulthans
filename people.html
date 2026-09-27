@@ -20,6 +20,7 @@
   a { color: #c8a24a; text-decoration: none; }
   a:hover { color: #e0bd6a; }
   input, select, button, textarea { font: inherit; color: inherit; }
+  button { cursor: pointer; }
   select { background: #0b0a09; }
   ::placeholder { color: #6b6255; }
   @media print { body { display: none; } }
@@ -32,15 +33,15 @@
     <div style="flex:1;display:flex;align-items:center;justify-content:center;min-height:70vh;color:#6b6255;font-size:14px;letter-spacing:.14em">CONNECTING</div>
   </sc-if>
 
-  <sc-if value="{{ gateSignin }}">
+  <sc-if value="{{ gateSignin }}" hint-placeholder-val="{{ false }}">
     <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:24px;min-height:80vh">
-      <div style="width:100%;max-width:360px;background:#16130f;border:1px solid #2a231b;border-radius:14px;padding:22px">
-        <div style="font-family:'Cormorant Garamond',serif;font-size:26px;letter-spacing:.06em;margin-bottom:4px">People</div>
+      <div style="width:100%;max-width:360px;background:#16130f;border:1px solid #2a231b;border-radius:16px;padding:22px">
+        <div style="font-family:'Cormorant Garamond',serif;font-size:28px;letter-spacing:.06em;margin-bottom:4px">People</div>
         <div style="font-size:13px;color:#9a8f7f;line-height:1.5;margin-bottom:18px">This terminal signs in once. Staff punch the clock with their own PIN.</div>
-        <input value="{{ email }}" onInput="{{ onEmail }}" type="email" placeholder="staff email" autocomplete="username" style="width:100%;box-sizing:border-box;height:46px;padding:0 12px;margin-bottom:10px;background:#0b0a09;border:1px solid #2a231b;border-radius:9px" />
-        <input value="{{ pass }}" onInput="{{ onPass }}" type="password" placeholder="password" autocomplete="current-password" style="width:100%;box-sizing:border-box;height:46px;padding:0 12px;margin-bottom:14px;background:#0b0a09;border:1px solid #2a231b;border-radius:9px" />
-        <button onClick="{{ doSignin }}" style="width:100%;height:48px;border:0;border-radius:9px;background:#c8a24a;color:#171204;font-weight:500;letter-spacing:.04em">{{ signinLabel }}</button>
-        <sc-if value="{{ err }}"><div style="margin-top:12px;font-size:13px;color:#d98a6f;line-height:1.5">{{ err }}</div></sc-if>
+        <input value="{{ email }}" onInput="{{ onEmail }}" type="email" placeholder="staff email" autocomplete="username" style="width:100%;box-sizing:border-box;height:48px;padding:0 12px;margin-bottom:10px;background:#0b0a09;border:1px solid #2a231b;border-radius:10px" />
+        <input value="{{ pass }}" onInput="{{ onPass }}" type="password" placeholder="password" autocomplete="current-password" style="width:100%;box-sizing:border-box;height:48px;padding:0 12px;margin-bottom:14px;background:#0b0a09;border:1px solid #2a231b;border-radius:10px" />
+        <button onClick="{{ doSignin }}" style="width:100%;height:50px;border:0;border-radius:10px;background:#c8a24a;color:#171204;font-weight:500;letter-spacing:.04em">{{ signinLabel }}</button>
+        <sc-if value="{{ err }}" hint-placeholder-val="{{ false }}"><div style="margin-top:12px;font-size:13px;color:#d98a6f;line-height:1.5">{{ err }}</div></sc-if>
       </div>
     </div>
   </sc-if>
@@ -48,63 +49,73 @@
   <sc-if value="{{ ready }}" hint-placeholder-val="{{ false }}">
     <div data-screen-label="People" style="flex:1;display:flex;flex-direction:column;min-height:100vh">
 
-      <div style="flex:0 0 auto;display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 14px;background:#0f0d0a;border-bottom:1px solid #1e1a14">
-        <div style="font-family:'Cormorant Garamond',serif;font-size:21px;letter-spacing:.06em">People</div>
-        <div style="font-size:12px;color:#8d8272">{{ houseName }}</div>
-        <div style="display:flex;gap:6px;margin-left:8px">
-          <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="5">
-            <button onClick="{{ t.onTap }}" style="height:34px;padding:0 14px;border:1px solid {{ t.border }};border-radius:9px;background:{{ t.bg }};color:{{ t.fg }};font-size:13px;letter-spacing:.02em">{{ t.label }}</button>
-          </sc-for>
+      <div style="position:sticky;top:0;z-index:20;background:rgba(15,13,10,.96);backdrop-filter:blur(10px);border-bottom:1px solid #1e1a14">
+        <div style="display:flex;align-items:center;gap:10px;padding:12px 16px 8px">
+          <div style="display:flex;flex-direction:column;gap:1px;min-width:0">
+            <div style="font-family:'Cormorant Garamond',serif;font-size:24px;line-height:1.05;letter-spacing:.05em">People</div>
+            <div style="font-size:11.5px;color:#8d8272">{{ houseName }}</div>
+          </div>
+          <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
+            <div style="display:flex;align-items:center;gap:7px;height:30px;padding:0 11px;border:1px solid {{ floorPillLine }};border-radius:999px;font-size:12px;color:{{ floorPillFg }}">
+              <span style="width:7px;height:7px;border-radius:50%;background:{{ floorPillDot }}"></span>{{ floorLine }}
+            </div>
+            <a href="./counter.html" style="font-size:12.5px;letter-spacing:.04em">Counter →</a>
+          </div>
         </div>
-        <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
-          <div style="font-size:12px;color:#8d8272">{{ floorLine }}</div>
-          <a href="./counter.html" style="font-size:12px;letter-spacing:.04em">Counter →</a>
+        <div style="display:flex;gap:6px;overflow-x:auto;padding:0 16px 10px;scrollbar-width:none">
+          <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="5">
+            <button onClick="{{ t.onTap }}" style="flex:0 0 auto;height:38px;display:flex;align-items:center;gap:7px;padding:0 15px;border:1px solid {{ t.border }};border-radius:999px;background:{{ t.bg }};color:{{ t.fg }};font-size:13.5px;letter-spacing:.02em">{{ t.label }}<span style="font-size:11px;opacity:.7">{{ t.lock }}</span></button>
+          </sc-for>
         </div>
       </div>
 
-      <sc-if value="{{ needSql }}">
-        <div style="padding:10px 14px;background:#211a10;border-bottom:1px solid #3a2d18;font-size:12.5px;color:#e0bd6a;line-height:1.5">{{ needSqlMsg }}</div>
+      <sc-if value="{{ needSql }}" hint-placeholder-val="{{ false }}">
+        <div style="padding:10px 16px;background:#211a10;border-bottom:1px solid #3a2d18;font-size:12.5px;color:#e0bd6a;line-height:1.5">{{ needSqlMsg }}</div>
       </sc-if>
 
-      <div style="flex:1;min-height:0;overflow:auto;padding:14px">
+      <div style="flex:1;min-height:0;padding:16px 16px 90px">
 
-        <!-- CLOCK -->
-        <sc-if value="{{ tabClock }}">
-          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;align-items:start;max-width:1100px">
-
-            <div style="background:#12100c;border:1px solid #2a231b;border-radius:14px;padding:18px;text-align:center">
-              <div style="font-size:10px;letter-spacing:.2em;color:#8d8272">PUNCH IN OR OUT</div>
-              <div style="height:38px;margin-top:10px;font-size:32px;letter-spacing:.34em;color:#c8a24a">{{ pinMask }}</div>
-              <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px">
+        <!-- ATTENDANCE -->
+        <sc-if value="{{ tabClock }}" hint-placeholder-val="{{ false }}">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:14px;align-items:start;max-width:1100px;margin:0 auto">
+            <div style="background:#12100c;border:1px solid #2a231b;border-radius:18px;padding:20px;text-align:center">
+              <div style="font-family:'Cormorant Garamond',serif;font-size:44px;line-height:1;color:#efe7db;font-variant-numeric:tabular-nums">{{ nowTime }}</div>
+              <div style="font-size:12px;color:#8d8272;margin-top:4px">{{ nowDate }}</div>
+              <div style="font-size:10.5px;letter-spacing:.2em;color:#8d8272;margin-top:18px">ENTER YOUR PIN</div>
+              <div style="display:flex;justify-content:center;gap:10px;height:22px;align-items:center;margin-top:10px">
+                <sc-for list="{{ pinDots }}" as="d" hint-placeholder-count="4"><span style="width:12px;height:12px;border-radius:50%;border:1.5px solid #c8a24a;background:{{ d.bg }}"></span></sc-for>
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:14px">
                 <sc-for list="{{ pinKeys }}" as="k" hint-placeholder-count="12">
-                  <button onClick="{{ k.onTap }}" style="height:56px;border:1px solid #2a231b;border-radius:11px;background:#16130f;font-size:19px;color:#efe7db">{{ k.label }}</button>
+                  <button onClick="{{ k.onTap }}" style="height:60px;border:1px solid {{ k.line }};border-radius:14px;background:{{ k.bg }};font-size:21px;color:{{ k.fg }}" style-active="transform:scale(.96)">{{ k.label }}</button>
                 </sc-for>
               </div>
-              <div style="display:flex;align-items:center;gap:8px;margin-top:12px;justify-content:center">
-                <span style="font-size:12px;color:#8d8272">Break taken</span>
-                <input value="{{ breakMins }}" onInput="{{ onBreak }}" inputMode="numeric" placeholder="0" style="width:74px;height:36px;padding:0 10px;text-align:center;background:#0b0a09;border:1px solid #2a231b;border-radius:9px" />
-                <span style="font-size:12px;color:#8d8272">min</span>
+              <div style="display:flex;align-items:center;gap:8px;margin-top:14px;justify-content:center;flex-wrap:wrap">
+                <span style="font-size:12px;color:#8d8272">Break when clocking out</span>
+                <sc-for list="{{ breakChips }}" as="b" hint-placeholder-count="4">
+                  <button onClick="{{ b.onTap }}" style="height:34px;padding:0 12px;border:1px solid {{ b.line }};border-radius:999px;background:{{ b.bg }};color:{{ b.fg }};font-size:12.5px">{{ b.label }}</button>
+                </sc-for>
               </div>
-              <div style="font-size:11.5px;color:#6b6255;margin-top:8px;line-height:1.5">Counted off the stint on the way out. Leave it at zero if there was none.</div>
-              <sc-if value="{{ clockMsg }}">
-                <div style="margin-top:12px;padding:11px 12px;border:1px solid #2a231b;border-radius:10px;background:#16130f;font-size:13.5px;color:#efe7db;line-height:1.5">{{ clockMsg }}</div>
+              <sc-if value="{{ clockMsg }}" hint-placeholder-val="{{ false }}">
+                <div style="margin-top:14px;padding:12px 13px;border:1px solid rgba(159,199,154,.35);border-radius:12px;background:rgba(159,199,154,.08);font-size:14px;color:#efe7db;line-height:1.5">{{ clockMsg }}</div>
               </sc-if>
-              <sc-if value="{{ clockErr }}">
+              <sc-if value="{{ clockErr }}" hint-placeholder-val="{{ false }}">
                 <div style="margin-top:12px;font-size:13px;color:#d98a6f">{{ clockErr }}</div>
               </sc-if>
             </div>
 
-            <div style="background:#12100c;border:1px solid #2a231b;border-radius:14px;padding:18px">
-              <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px">
-                <div style="font-size:10px;letter-spacing:.2em;color:#8d8272">ON THE FLOOR</div>
-                <button onClick="{{ reloadFloor }}" style="height:28px;padding:0 10px;border:1px solid #2a231b;border-radius:8px;background:#16130f;color:#9a8f7f;font-size:11.5px">Refresh</button>
+            <div style="background:#12100c;border:1px solid #2a231b;border-radius:18px;padding:18px">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+                <div style="font-size:10.5px;letter-spacing:.2em;color:#8d8272">ON THE FLOOR</div>
+                <button onClick="{{ reloadFloor }}" style="height:32px;padding:0 12px;border:1px solid #2a231b;border-radius:9px;background:#16130f;color:#9a8f7f;font-size:12px">Refresh</button>
               </div>
-              <sc-if value="{{ floorEmpty }}">
-                <div style="font-size:13px;color:#6b6255;padding:14px 0">Nobody is clocked in.</div>
+              <sc-if value="{{ floorEmpty }}" hint-placeholder-val="{{ false }}">
+                <div style="font-size:13px;color:#6b6255;padding:18px 0;text-align:center">Nobody is clocked in.</div>
               </sc-if>
-              <div style="display:flex;flex-direction:column;gap:7px">
+              <div style="display:flex;flex-direction:column;gap:8px">
                 <sc-for list="{{ floor }}" as="p" hint-placeholder-count="3">
-                  <div style="display:flex;align-items:center;gap:12px;padding:11px 12px;border:1px solid {{ p.border }};border-radius:10px;background:#16130f">
+                  <div style="display:flex;align-items:center;gap:12px;padding:11px 12px;border:1px solid {{ p.border }};border-radius:12px;background:#16130f">
+                    <div style="flex:0 0 38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:{{ p.av }};color:#171204;font-size:13px;font-weight:500">{{ p.ini }}</div>
                     <div style="flex:1;min-width:0">
                       <div style="font-size:14.5px">{{ p.staff }}</div>
                       <div style="font-size:11.5px;color:#8d8272;margin-top:2px">{{ p.sub }}</div>
@@ -118,50 +129,60 @@
         </sc-if>
 
         <!-- TODAY -->
-        <sc-if value="{{ tabToday }}">
-          <div style="max-width:1100px">
-            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px">
-              <input value="{{ day }}" onChange="{{ onDay }}" type="date" style="height:38px;padding:0 10px;background:#12100c;border:1px solid #2a231b;border-radius:9px" />
-              <button onClick="{{ dayBack }}" style="height:38px;padding:0 13px;border:1px solid #2a231b;border-radius:9px;background:#16130f;color:#9a8f7f;font-size:13px">‹ Day</button>
-              <button onClick="{{ dayFwd }}" style="height:38px;padding:0 13px;border:1px solid #2a231b;border-radius:9px;background:#16130f;color:#9a8f7f;font-size:13px">Day ›</button>
-              <button onClick="{{ openAdd }}" style="height:38px;padding:0 14px;border:1px solid #2a231b;border-radius:9px;background:#16130f;color:#c8a24a;font-size:13px">+ Stint by hand</button>
+        <sc-if value="{{ tabToday }}" hint-placeholder-val="{{ false }}">
+          <div style="max-width:1100px;margin:0 auto;display:flex;flex-direction:column;gap:14px">
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+              <button onClick="{{ dayBack }}" style="width:42px;height:42px;border:1px solid #2a231b;border-radius:11px;background:#16130f;color:#9a8f7f;font-size:16px">‹</button>
+              <input value="{{ day }}" onChange="{{ onDay }}" type="date" style="height:42px;padding:0 11px;background:#12100c;border:1px solid #2a231b;border-radius:11px" />
+              <button onClick="{{ dayFwd }}" style="width:42px;height:42px;border:1px solid #2a231b;border-radius:11px;background:#16130f;color:#9a8f7f;font-size:16px">›</button>
+              <button onClick="{{ dayToday }}" style="height:42px;padding:0 14px;border:1px solid #2a231b;border-radius:11px;background:#16130f;color:#9a8f7f;font-size:13px">Today</button>
+              <button onClick="{{ openAdd }}" style="margin-left:auto;height:42px;padding:0 15px;border:1px solid rgba(200,162,74,.5);border-radius:11px;background:rgba(200,162,74,.12);color:#e0bd6a;font-size:13px">+ Add hours by hand</button>
             </div>
 
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:9px;margin-bottom:14px">
-              <sc-for list="{{ dayTiles }}" as="t" hint-placeholder-count="3">
-                <div style="padding:12px 13px;border:1px solid #2a231b;border-radius:11px;background:#12100c">
-                  <div style="font-size:10px;letter-spacing:.18em;color:#8d8272">{{ t.label }}</div>
-                  <div style="font-size:22px;margin-top:5px;color:{{ t.tone }};font-variant-numeric:tabular-nums">{{ t.value }}</div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:9px">
+              <sc-for list="{{ dayTiles }}" as="t" hint-placeholder-count="4">
+                <div style="padding:13px 14px;border:1px solid #2a231b;border-radius:13px;background:#12100c">
+                  <div style="font-size:10.5px;letter-spacing:.16em;color:#8d8272">{{ t.label }}</div>
+                  <div style="font-family:'Cormorant Garamond',serif;font-size:28px;line-height:1.1;margin-top:4px;color:{{ t.tone }};font-variant-numeric:tabular-nums">{{ t.value }}</div>
                 </div>
               </sc-for>
             </div>
 
-            <sc-if value="{{ dayEmpty }}">
-              <div style="font-size:13px;color:#6b6255;padding:16px 0">No attendance on this day.</div>
+            <sc-if value="{{ dayEmpty }}" hint-placeholder-val="{{ false }}">
+              <div style="font-size:13px;color:#6b6255;padding:22px 0;text-align:center;border:1px dashed #2a231b;border-radius:13px">No attendance on this day.</div>
             </sc-if>
 
-            <div style="display:flex;flex-direction:column;gap:7px">
+            <div style="display:flex;flex-direction:column;gap:8px">
               <sc-for list="{{ dayRows }}" as="r" hint-placeholder-count="4">
-                <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:12px 13px;border:1px solid {{ r.border }};border-radius:11px;background:#12100c">
-                  <div style="flex:1 1 170px;min-width:0">
-                    <div style="font-size:14.5px">{{ r.staff }}</div>
-                    <div style="font-size:11.5px;color:#8d8272;margin-top:2px">{{ r.role }}</div>
+                <div style="display:flex;flex-direction:column;gap:9px;padding:13px 14px;border:1px solid {{ r.border }};border-radius:13px;background:#12100c">
+                  <div style="display:flex;align-items:center;gap:11px">
+                    <div style="flex:0 0 36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:{{ r.av }};color:#171204;font-size:12.5px;font-weight:500">{{ r.ini }}</div>
+                    <div style="flex:1;min-width:0">
+                      <div style="font-size:14.5px">{{ r.staff }}</div>
+                      <div style="font-size:11.5px;color:#8d8272;margin-top:2px">{{ r.role }}</div>
+                    </div>
+                    <span style="height:24px;display:inline-flex;align-items:center;padding:0 9px;border-radius:999px;background:{{ r.chipBg }};color:{{ r.chipFg }};font-size:11.5px">{{ r.chip }}</span>
+                    <div style="font-size:15px;color:#c8a24a;font-variant-numeric:tabular-nums">{{ r.dur }}</div>
                   </div>
-                  <div style="flex:0 0 auto;font-size:13.5px;font-variant-numeric:tabular-nums">{{ r.span }}</div>
-                  <div style="flex:0 0 auto;font-size:12px;color:#8d8272">{{ r.planned }}</div>
-                  <div style="flex:0 0 auto;font-size:12px;color:#8d8272">{{ r.breakLine }}</div>
-                  <div style="flex:0 0 74px;text-align:right;font-size:14px;color:#c8a24a;font-variant-numeric:tabular-nums">{{ r.dur }}</div>
-                  <button onClick="{{ r.onEdit }}" style="height:32px;padding:0 12px;border:1px solid #2a231b;border-radius:8px;background:#16130f;color:#9a8f7f;font-size:12px">Edit</button>
+                  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:12.5px;color:#9a8f7f">
+                    <span style="color:#efe7db;font-variant-numeric:tabular-nums">{{ r.span }}</span>
+                    <span>{{ r.planned }}</span>
+                    <span>{{ r.breakLine }}</span>
+                    <div style="margin-left:auto;display:flex;gap:7px">
+                      <sc-if value="{{ r.open }}" hint-placeholder-val="{{ false }}"><button onClick="{{ r.onOut }}" style="height:34px;padding:0 12px;border:1px solid rgba(224,189,106,.45);border-radius:9px;background:rgba(224,189,106,.1);color:#e0bd6a;font-size:12.5px">Clock out now</button></sc-if>
+                      <button onClick="{{ r.onEdit }}" style="height:34px;padding:0 12px;border:1px solid #2a231b;border-radius:9px;background:#16130f;color:#9a8f7f;font-size:12.5px">Edit</button>
+                    </div>
+                  </div>
                 </div>
               </sc-for>
             </div>
 
-            <sc-if value="{{ awayAny }}">
-              <div style="margin-top:18px">
-                <div style="font-size:10px;letter-spacing:.2em;color:#8d8272;margin-bottom:8px">ROSTERED, DID NOT PUNCH</div>
+            <sc-if value="{{ awayAny }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;flex-direction:column;gap:8px">
+                <div style="font-size:10.5px;letter-spacing:.2em;color:#8d8272">ROSTERED, NOT CLOCKED IN</div>
                 <div style="display:flex;flex-wrap:wrap;gap:7px">
                   <sc-for list="{{ away }}" as="a" hint-placeholder-count="2">
-                    <div style="padding:9px 12px;border:1px solid #3a2d18;border-radius:9px;background:#1a1409;font-size:13px;color:#e0bd6a">{{ a.line }}</div>
+                    <div style="padding:9px 12px;border:1px solid #3a2d18;border-radius:10px;background:#1a1409;font-size:13px;color:#e0bd6a">{{ a.line }}</div>
                   </sc-for>
                 </div>
               </div>
@@ -170,271 +191,425 @@
         </sc-if>
 
         <!-- ROSTER -->
-        <sc-if value="{{ tabRoster }}">
-          <div style="max-width:1300px">
-            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px">
-              <div style="font-size:13.5px;color:#9a8f7f">{{ weekLabel }}</div>
-              <button onClick="{{ weekBack }}" style="height:36px;padding:0 13px;border:1px solid #2a231b;border-radius:9px;background:#16130f;color:#9a8f7f;font-size:13px">‹ Week</button>
-              <button onClick="{{ weekFwd }}" style="height:36px;padding:0 13px;border:1px solid #2a231b;border-radius:9px;background:#16130f;color:#9a8f7f;font-size:13px">Week ›</button>
+        <sc-if value="{{ tabRoster }}" hint-placeholder-val="{{ false }}">
+          <div style="max-width:1300px;margin:0 auto;display:flex;flex-direction:column;gap:14px">
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+              <button onClick="{{ weekBack }}" style="width:42px;height:42px;border:1px solid #2a231b;border-radius:11px;background:#16130f;color:#9a8f7f;font-size:16px">‹</button>
+              <div style="font-size:14px;color:#efe7db;padding:0 4px">{{ weekLabel }}</div>
+              <button onClick="{{ weekFwd }}" style="width:42px;height:42px;border:1px solid #2a231b;border-radius:11px;background:#16130f;color:#9a8f7f;font-size:16px">›</button>
+              <button onClick="{{ copyWeek }}" style="margin-left:auto;height:42px;padding:0 15px;border:1px solid rgba(200,162,74,.5);border-radius:11px;background:rgba(200,162,74,.12);color:#e0bd6a;font-size:13px">{{ copyLabel }}</button>
             </div>
 
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));gap:8px;align-items:start">
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,170px),1fr));gap:8px;align-items:start">
               <sc-for list="{{ weekDays }}" as="d" hint-placeholder-count="7">
-                <div style="border:1px solid {{ d.border }};border-radius:11px;background:#12100c;padding:11px;min-height:150px;display:flex;flex-direction:column;gap:7px">
+                <div style="border:1px solid {{ d.border }};border-radius:13px;background:#12100c;padding:11px;display:flex;flex-direction:column;gap:7px">
                   <div style="display:flex;align-items:baseline;justify-content:space-between">
-                    <div style="font-size:12.5px;color:{{ d.tone }}">{{ d.label }}</div>
+                    <div style="font-size:13px;color:{{ d.tone }}">{{ d.label }}</div>
                     <div style="font-size:11px;color:#8d8272;font-variant-numeric:tabular-nums">{{ d.worked }}</div>
                   </div>
-                  <sc-for list="{{ d.planned }}" as="s" hint-placeholder-count="2">
-                    <div style="display:flex;align-items:center;gap:8px;padding:8px 9px;border:1px solid #2a231b;border-radius:9px;background:#16130f">
+                  <sc-for list="{{ d.planned }}" as="s" hint-placeholder-count="1">
+                    <div style="display:flex;align-items:center;gap:8px;padding:8px 9px;border:1px solid #2a231b;border-radius:10px;background:#16130f">
+                      <div style="flex:0 0 26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:{{ s.av }};color:#171204;font-size:10.5px;font-weight:500">{{ s.ini }}</div>
                       <div style="flex:1;min-width:0">
                         <div style="font-size:12.5px">{{ s.staff }}</div>
-                        <div style="font-size:11px;color:#8d8272;margin-top:2px">{{ s.span }}</div>
+                        <div style="font-size:11px;color:#8d8272;margin-top:1px">{{ s.span }}</div>
                       </div>
-                      <button onClick="{{ s.onClear }}" style="width:24px;height:24px;border:0;border-radius:6px;background:#221d16;color:#8d8272;font-size:13px;line-height:1">×</button>
+                      <button onClick="{{ s.onClear }}" aria-label="Remove shift" style="width:30px;height:30px;border:0;border-radius:8px;background:#221d16;color:#8d8272;font-size:14px;line-height:1">×</button>
                     </div>
                   </sc-for>
-                  <button onClick="{{ d.onAdd }}" style="margin-top:auto;height:30px;border:1px dashed #2a231b;border-radius:8px;background:transparent;color:#6b6255;font-size:12px">+ Shift</button>
+                  <button onClick="{{ d.onAdd }}" style="height:36px;border:1px dashed #3a3226;border-radius:9px;background:transparent;color:#8d8272;font-size:12.5px">+ Shift</button>
                 </div>
               </sc-for>
             </div>
+
+            <sc-if value="{{ weekHoursAny }}" hint-placeholder-val="{{ false }}">
+              <div style="padding:14px;border:1px solid #2a231b;border-radius:13px;background:#12100c">
+                <div style="font-size:10.5px;letter-spacing:.2em;color:#8d8272;margin-bottom:10px">ROSTERED HOURS THIS WEEK</div>
+                <div style="display:flex;flex-wrap:wrap;gap:7px">
+                  <sc-for list="{{ weekHours }}" as="w" hint-placeholder-count="3">
+                    <div style="display:flex;align-items:center;gap:8px;padding:7px 11px;border:1px solid #2a231b;border-radius:999px;background:#16130f;font-size:12.5px"><span>{{ w.name }}</span><span style="color:#c8a24a;font-variant-numeric:tabular-nums">{{ w.h }}</span></div>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-if>
           </div>
         </sc-if>
 
         <!-- PAYROLL -->
-        <sc-if value="{{ tabPay }}">
-          <div style="max-width:1200px">
-            <div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:12px">
-              <input value="{{ payFrom }}" onChange="{{ onPayFrom }}" type="date" style="height:38px;padding:0 10px;background:#12100c;border:1px solid #2a231b;border-radius:9px" />
-              <span style="font-size:12px;color:#8d8272">to</span>
-              <input value="{{ payTo }}" onChange="{{ onPayTo }}" type="date" style="height:38px;padding:0 10px;background:#12100c;border:1px solid #2a231b;border-radius:9px" />
-              <button onClick="{{ runPay }}" style="height:38px;padding:0 15px;border:0;border-radius:9px;background:#c8a24a;color:#171204;font-size:13px">{{ payLabel }}</button>
-              <div style="font-size:12px;color:#8d8272;margin-left:6px">{{ otLine }}</div>
+        <sc-if value="{{ tabPay }}" hint-placeholder-val="{{ false }}">
+          <div style="max-width:1100px;margin:0 auto;display:flex;flex-direction:column;gap:14px">
+            <div style="display:flex;gap:6px;flex-wrap:wrap">
+              <sc-for list="{{ payPresets }}" as="p" hint-placeholder-count="3">
+                <button onClick="{{ p.onTap }}" style="height:36px;padding:0 13px;border:1px solid {{ p.line }};border-radius:999px;background:{{ p.bg }};color:{{ p.fg }};font-size:12.5px">{{ p.label }}</button>
+              </sc-for>
             </div>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+              <input value="{{ payFrom }}" onChange="{{ onPayFrom }}" type="date" style="height:42px;padding:0 10px;background:#12100c;border:1px solid #2a231b;border-radius:11px" />
+              <span style="font-size:12px;color:#8d8272">to</span>
+              <input value="{{ payTo }}" onChange="{{ onPayTo }}" type="date" style="height:42px;padding:0 10px;background:#12100c;border:1px solid #2a231b;border-radius:11px" />
+              <button onClick="{{ runPay }}" style="height:42px;padding:0 17px;border:0;border-radius:11px;background:#c8a24a;color:#171204;font-size:13.5px">{{ payLabel }}</button>
+              <button onClick="{{ exportCsv }}" style="height:42px;padding:0 14px;border:1px solid #2a231b;border-radius:11px;background:#16130f;color:#9a8f7f;font-size:13px">Export CSV</button>
+            </div>
+            <label style="display:flex;align-items:center;gap:10px;font-size:13px;color:#cfc6b8;cursor:pointer">
+              <button onClick="{{ toggleMonthly }}" aria-label="Count monthly salaries" style="flex:0 0 auto;width:44px;height:26px;border:0;border-radius:999px;background:{{ monthlyTrack }};position:relative;padding:0"><span style="position:absolute;top:3px;left:{{ monthlyKnob }}px;width:20px;height:20px;border-radius:50%;background:#efe7db"></span></button>
+              Count monthly salaries for the days in this range
+            </label>
 
-            <div style="border:1px solid #2a231b;border-radius:12px;background:#12100c;overflow:hidden">
-              <div style="display:grid;grid-template-columns:1.4fr 1fr .7fr .6fr .6fr .6fr .6fr .8fr;gap:10px;padding:10px 13px;border-bottom:1px solid #221d16;font-size:10px;letter-spacing:.14em;color:#8d8272">
-                <div>PERSON</div><div>POSITION</div><div>PAID</div><div>RATE</div><div>DAYS</div><div>HOURS</div><div>OT</div><div style="text-align:right">PAY</div>
-              </div>
-              <sc-for list="{{ payRows }}" as="p" hint-placeholder-count="6">
-                <div style="display:grid;grid-template-columns:1.4fr 1fr .7fr .6fr .6fr .6fr .6fr .8fr;gap:10px;padding:11px 13px;border-bottom:1px solid #191510;font-size:13px;font-variant-numeric:tabular-nums">
-                  <div>{{ p.staff }}</div>
-                  <div style="color:#9a8f7f">{{ p.position }}</div>
-                  <div style="color:#9a8f7f">{{ p.kind }}</div>
-                  <div>{{ p.rate }}</div>
-                  <div>{{ p.days }}</div>
-                  <div>{{ p.hours }}</div>
-                  <div style="color:{{ p.otTone }}">{{ p.ot }}</div>
-                  <div style="text-align:right;color:{{ p.payTone }}">{{ p.pay }}</div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:9px">
+              <sc-for list="{{ payTiles }}" as="t" hint-placeholder-count="4">
+                <div style="padding:13px 14px;border:1px solid {{ t.line }};border-radius:13px;background:#12100c">
+                  <div style="font-size:10.5px;letter-spacing:.16em;color:#8d8272">{{ t.label }}</div>
+                  <div style="font-family:'Cormorant Garamond',serif;font-size:27px;line-height:1.1;margin-top:4px;color:{{ t.tone }};font-variant-numeric:tabular-nums">{{ t.value }}</div>
                 </div>
               </sc-for>
-              <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 13px;font-size:13.5px">
-                <div style="color:#8d8272">{{ payFoot }}</div>
-                <div style="color:#c8a24a;font-variant-numeric:tabular-nums">{{ payTotal }}</div>
-              </div>
             </div>
-            <div style="font-size:11.5px;color:#6b6255;margin-top:10px;line-height:1.6;max-width:640px;text-wrap:pretty">Monthly salaries are not divided by attendance — a monthly person who took a day off is still owed the month. Their days present are shown so the arithmetic stays with you. Overtime counts per day, above {{ otHours }} hours, at {{ otMult }}×.</div>
+
+            <div style="display:flex;flex-direction:column;gap:9px">
+              <sc-for list="{{ payRows }}" as="p" hint-placeholder-count="4">
+                <div style="display:flex;flex-direction:column;gap:11px;padding:14px;border:1px solid #2a231b;border-radius:14px;background:#12100c">
+                  <div style="display:flex;align-items:center;gap:11px">
+                    <div style="flex:0 0 38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:{{ p.av }};color:#171204;font-size:13px;font-weight:500">{{ p.ini }}</div>
+                    <div style="flex:1;min-width:0">
+                      <div style="font-size:15px">{{ p.staff }}</div>
+                      <div style="font-size:11.5px;color:#8d8272;margin-top:2px">{{ p.sub }}</div>
+                    </div>
+                    <div style="text-align:right">
+                      <div style="font-size:10.5px;letter-spacing:.14em;color:#8d8272">NET</div>
+                      <div style="font-family:'Cormorant Garamond',serif;font-size:24px;line-height:1.1;color:{{ p.netTone }};font-variant-numeric:tabular-nums">{{ p.net }}</div>
+                    </div>
+                  </div>
+                  <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px">
+                    <sc-for list="{{ p.stats }}" as="s" hint-placeholder-count="4">
+                      <div style="padding:8px 9px;border-radius:9px;background:#16130f;min-width:0">
+                        <div style="font-size:10px;letter-spacing:.12em;color:#8d8272">{{ s.k }}</div>
+                        <div style="font-size:13.5px;margin-top:2px;color:{{ s.c }};font-variant-numeric:tabular-nums;overflow-wrap:anywhere">{{ s.v }}</div>
+                      </div>
+                    </sc-for>
+                  </div>
+                  <sc-if value="{{ p.hasLedger }}" hint-placeholder-val="{{ false }}">
+                    <div style="display:flex;flex-direction:column;gap:5px">
+                      <sc-for list="{{ p.ledger }}" as="l" hint-placeholder-count="0">
+                        <div style="display:flex;align-items:center;gap:9px;font-size:12.5px">
+                          <span style="color:{{ l.c }}">{{ l.kind }}</span>
+                          <span style="flex:1;min-width:0;color:#8d8272;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ l.note }}</span>
+                          <span style="color:{{ l.c }};font-variant-numeric:tabular-nums">{{ l.amt }}</span>
+                          <button onClick="{{ l.onDel }}" aria-label="Remove entry" style="width:26px;height:26px;border:0;border-radius:7px;background:#1b1712;color:#6b6255;font-size:13px">×</button>
+                        </div>
+                      </sc-for>
+                    </div>
+                  </sc-if>
+                  <div style="display:flex;gap:7px;flex-wrap:wrap">
+                    <button onClick="{{ p.onLedger }}" style="height:36px;padding:0 13px;border:1px solid #2a231b;border-radius:9px;background:#16130f;color:#e0bd6a;font-size:12.5px">+ Advance, bonus or deduction</button>
+                    <sc-if value="{{ p.canSlip }}" hint-placeholder-val="{{ false }}"><a href="{{ p.slip }}" target="_blank" rel="noopener" style="height:36px;display:inline-flex;align-items:center;padding:0 13px;border:1px solid #2a231b;border-radius:9px;background:#16130f;color:#9fc79a;font-size:12.5px">Send pay slip on WhatsApp</a></sc-if>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+            <div style="font-size:11.5px;color:#6b6255;line-height:1.6;max-width:680px;text-wrap:pretty">Hourly pay counts hours worked; overtime is per day above {{ otHours }} hours at {{ otMult }}×. Daily pay counts days present. Monthly salaries, when counted, are the salary for each calendar day in the range, whatever the attendance. Advances and deductions dated inside the range come off the net.</div>
           </div>
         </sc-if>
 
         <!-- PEOPLE -->
-        <sc-if value="{{ tabStaff }}">
-          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:14px;align-items:start;max-width:1200px">
-
-            <div style="background:#12100c;border:1px solid #2a231b;border-radius:14px;padding:16px">
-              <div style="font-size:10px;letter-spacing:.2em;color:#8d8272;margin-bottom:11px">POSITIONS</div>
-              <div style="display:flex;flex-direction:column;gap:7px">
-                <sc-for list="{{ positions }}" as="p" hint-placeholder-count="5">
-                  <div style="display:flex;align-items:center;gap:9px;padding:9px 11px;border:1px solid #2a231b;border-radius:10px;background:#16130f">
-                    <div style="flex:1;min-width:0;font-size:13.5px">{{ p.name }}</div>
-                    <select value="{{ p.kind }}" onChange="{{ p.onKind }}" style="height:32px;padding:0 6px;border:1px solid #2a231b;border-radius:8px;font-size:12px">
-                      <option value="hourly">hourly</option>
-                      <option value="daily">daily</option>
-                      <option value="monthly">monthly</option>
-                    </select>
-                    <input value="{{ p.rate }}" onInput="{{ p.onRate }}" onBlur="{{ p.onSave }}" inputMode="decimal" placeholder="0" style="width:84px;height:32px;padding:0 9px;text-align:right;background:#0b0a09;border:1px solid #2a231b;border-radius:8px;font-size:12.5px" />
-                  </div>
-                </sc-for>
+        <sc-if value="{{ tabStaff }}" hint-placeholder-val="{{ false }}">
+          <div style="max-width:1100px;margin:0 auto;display:flex;flex-direction:column;gap:16px">
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+              <div style="display:flex;flex-direction:column;gap:2px">
+                <div style="font-family:'Cormorant Garamond',serif;font-size:24px">Team</div>
+                <div style="font-size:12px;color:#8d8272">{{ teamLine }}</div>
               </div>
-              <div style="display:flex;gap:7px;margin-top:11px">
-                <input value="{{ npName }}" onInput="{{ onNpName }}" placeholder="new position" style="flex:1;min-width:0;height:36px;padding:0 10px;background:#0b0a09;border:1px solid #2a231b;border-radius:9px;font-size:13px" />
-                <select value="{{ npKind }}" onChange="{{ onNpKind }}" style="height:36px;padding:0 8px;border:1px solid #2a231b;border-radius:9px;font-size:12.5px">
-                  <option value="hourly">hourly</option>
-                  <option value="daily">daily</option>
-                  <option value="monthly">monthly</option>
-                </select>
-                <button onClick="{{ addPosition }}" style="height:36px;padding:0 13px;border:1px solid #2a231b;border-radius:9px;background:#16130f;color:#c8a24a;font-size:13px">Add</button>
-              </div>
-              <div style="font-size:11.5px;color:#6b6255;margin-top:9px;line-height:1.55">Rates start at zero on purpose. A wrong number on a payroll screen is worse than a blank one.</div>
+              <button onClick="{{ openNewStaff }}" style="margin-left:auto;height:44px;padding:0 18px;border:0;border-radius:12px;background:#c8a24a;color:#171204;font-size:14px;font-weight:500">+ Add staff</button>
             </div>
 
-            <div style="background:#12100c;border:1px solid #2a231b;border-radius:14px;padding:16px">
-              <div style="font-size:10px;letter-spacing:.2em;color:#8d8272;margin-bottom:11px">STAFF</div>
-              <div style="display:flex;flex-direction:column;gap:7px">
-                <sc-for list="{{ staffRows }}" as="s" hint-placeholder-count="6">
-                  <div style="padding:10px 11px;border:1px solid #2a231b;border-radius:10px;background:#16130f">
-                    <div style="display:flex;align-items:center;gap:9px">
-                      <div style="flex:1;min-width:0">
-                        <div style="font-size:13.5px">{{ s.name }}</div>
-                        <div style="font-size:11px;color:#8d8272;margin-top:2px">{{ s.sub }}</div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:9px">
+              <sc-for list="{{ staffRows }}" as="s" hint-placeholder-count="4">
+                <button onClick="{{ s.onEdit }}" style="display:flex;align-items:center;gap:12px;padding:13px 14px;border:1px solid #2a231b;border-radius:14px;background:#12100c;text-align:left" style-hover="border-color:#3a3226">
+                  <div style="flex:0 0 42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:{{ s.av }};color:#171204;font-size:14px;font-weight:500">{{ s.ini }}</div>
+                  <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px">
+                    <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap"><span style="font-size:15px;color:#efe7db">{{ s.name }}</span><span style="height:20px;display:inline-flex;align-items:center;padding:0 8px;border-radius:999px;background:#1f1a13;color:#c8a24a;font-size:11px">{{ s.role }}</span></div>
+                    <div style="font-size:12px;color:#9a8f7f">{{ s.sub }}</div>
+                    <div style="font-size:11.5px;color:#6b6255">{{ s.meta }}</div>
+                  </div>
+                  <span style="font-size:18px;color:#6b6255">›</span>
+                </button>
+              </sc-for>
+            </div>
+            <sc-if value="{{ noStaff }}" hint-placeholder-val="{{ false }}">
+              <div style="padding:22px;border:1px dashed #2a231b;border-radius:14px;text-align:center;font-size:13px;color:#8d8272">No staff yet. Add the first person to give them a PIN for the clock.</div>
+            </sc-if>
+
+            <sc-if value="{{ formerAny }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;flex-direction:column;gap:8px">
+                <button onClick="{{ toggleFormer }}" style="align-self:flex-start;height:34px;padding:0 12px;border:1px solid #2a231b;border-radius:9px;background:#16130f;color:#9a8f7f;font-size:12.5px">{{ formerLabel }}</button>
+                <sc-if value="{{ showFormer }}" hint-placeholder-val="{{ false }}">
+                  <div style="display:flex;flex-direction:column;gap:7px">
+                    <sc-for list="{{ formerRows }}" as="f" hint-placeholder-count="1">
+                      <div style="display:flex;align-items:center;gap:11px;padding:10px 13px;border:1px solid #221d16;border-radius:12px;background:#0f0d0a">
+                        <div style="flex:1;min-width:0"><div style="font-size:13.5px;color:#9a8f7f">{{ f.name }}</div><div style="font-size:11.5px;color:#6b6255">{{ f.sub }}</div></div>
+                        <button onClick="{{ f.onBack }}" style="height:34px;padding:0 12px;border:1px solid #2a231b;border-radius:9px;background:#16130f;color:#9fc79a;font-size:12.5px">Bring back</button>
                       </div>
-                      <select value="{{ s.positionId }}" onChange="{{ s.onPosition }}" style="height:32px;padding:0 6px;border:1px solid #2a231b;border-radius:8px;font-size:12px;max-width:140px">
-                        <option value="">no position</option>
-                        <sc-for list="{{ positionOpts }}" as="o" hint-placeholder-count="4">
-                          <option value="{{ o.id }}">{{ o.name }}</option>
-                        </sc-for>
-                      </select>
-                    </div>
-                    <div style="display:flex;align-items:center;gap:7px;margin-top:8px">
-                      <span style="font-size:11.5px;color:#8d8272;flex:0 0 auto">Own rate</span>
-                      <select value="{{ s.payKind }}" onChange="{{ s.onKind }}" style="height:30px;padding:0 6px;border:1px solid #2a231b;border-radius:8px;font-size:12px">
-                        <option value="">as position</option>
-                        <option value="hourly">hourly</option>
-                        <option value="daily">daily</option>
-                        <option value="monthly">monthly</option>
-                      </select>
-                      <input value="{{ s.payRate }}" onInput="{{ s.onRate }}" onBlur="{{ s.onSave }}" inputMode="decimal" placeholder="—" style="width:80px;height:30px;padding:0 9px;text-align:right;background:#0b0a09;border:1px solid #2a231b;border-radius:8px;font-size:12.5px" />
-                      <input value="{{ s.phone }}" onInput="{{ s.onPhone }}" onBlur="{{ s.onSave }}" placeholder="phone" style="flex:1;min-width:0;height:30px;padding:0 9px;background:#0b0a09;border:1px solid #2a231b;border-radius:8px;font-size:12.5px" />
-                    </div>
+                    </sc-for>
                   </div>
-                </sc-for>
+                </sc-if>
               </div>
-            </div>
+            </sc-if>
 
-            <div style="background:#12100c;border:1px solid #2a231b;border-radius:14px;padding:16px">
-              <div style="font-size:10px;letter-spacing:.2em;color:#8d8272;margin-bottom:11px">HOUSE POLICY</div>
-              <div style="display:flex;align-items:center;gap:9px;margin-bottom:9px">
-                <span style="flex:1;font-size:13px;color:#9a8f7f">Overtime after</span>
-                <input value="{{ otHoursIn }}" onInput="{{ onOtHours }}" onBlur="{{ saveOt }}" inputMode="decimal" style="width:74px;height:34px;padding:0 10px;text-align:right;background:#0b0a09;border:1px solid #2a231b;border-radius:8px" />
-                <span style="font-size:12px;color:#8d8272;width:42px">hours</span>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,330px),1fr));gap:14px;align-items:start">
+              <div style="background:#12100c;border:1px solid #2a231b;border-radius:16px;padding:16px">
+                <div style="font-size:10.5px;letter-spacing:.2em;color:#8d8272;margin-bottom:4px">POSITIONS AND DEFAULT PAY</div>
+                <div style="font-size:11.5px;color:#6b6255;margin-bottom:11px;line-height:1.5">Each person is paid their position's rate unless their own rate is set.</div>
+                <div style="display:flex;flex-direction:column;gap:7px">
+                  <sc-for list="{{ positions }}" as="p" hint-placeholder-count="4">
+                    <div style="display:flex;align-items:center;gap:8px;padding:9px 11px;border:1px solid #2a231b;border-radius:11px;background:#16130f">
+                      <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:1px"><span style="font-size:13.5px">{{ p.name }}</span><span style="font-size:11px;color:#6b6255">{{ p.count }}</span></div>
+                      <select value="{{ p.kind }}" onChange="{{ p.onKind }}" style="height:36px;padding:0 6px;border:1px solid #2a231b;border-radius:9px;font-size:12.5px">
+                        <option value="hourly">per hour</option>
+                        <option value="daily">per day</option>
+                        <option value="monthly">per month</option>
+                      </select>
+                      <div style="display:flex;align-items:center;height:36px;border:1px solid #2a231b;border-radius:9px;background:#0b0a09;padding-left:9px"><span style="font-size:12px;color:#6b6255">₹</span><input value="{{ p.rate }}" onInput="{{ p.onRate }}" onBlur="{{ p.onSave }}" inputMode="decimal" placeholder="0" style="width:72px;height:34px;padding:0 9px 0 4px;text-align:right;background:transparent;border:0;font-size:13px" /></div>
+                    </div>
+                  </sc-for>
+                </div>
+                <div style="display:flex;gap:7px;margin-top:11px">
+                  <input value="{{ npName }}" onInput="{{ onNpName }}" placeholder="New position" style="flex:1;min-width:0;height:40px;padding:0 11px;background:#0b0a09;border:1px solid #2a231b;border-radius:10px;font-size:13px" />
+                  <select value="{{ npKind }}" onChange="{{ onNpKind }}" style="height:40px;padding:0 8px;border:1px solid #2a231b;border-radius:10px;font-size:12.5px">
+                    <option value="hourly">per hour</option>
+                    <option value="daily">per day</option>
+                    <option value="monthly">per month</option>
+                  </select>
+                  <button onClick="{{ addPosition }}" style="height:40px;padding:0 14px;border:1px solid #2a231b;border-radius:10px;background:#16130f;color:#c8a24a;font-size:13px">Add</button>
+                </div>
               </div>
-              <div style="display:flex;align-items:center;gap:9px">
-                <span style="flex:1;font-size:13px;color:#9a8f7f">Paid at</span>
-                <input value="{{ otMultIn }}" onInput="{{ onOtMult }}" onBlur="{{ saveOt }}" inputMode="decimal" style="width:74px;height:34px;padding:0 10px;text-align:right;background:#0b0a09;border:1px solid #2a231b;border-radius:8px" />
-                <span style="font-size:12px;color:#8d8272;width:42px">×</span>
+
+              <div style="background:#12100c;border:1px solid #2a231b;border-radius:16px;padding:16px">
+                <div style="font-size:10.5px;letter-spacing:.2em;color:#8d8272;margin-bottom:12px">OVERTIME POLICY</div>
+                <div style="display:flex;align-items:center;gap:9px;margin-bottom:10px">
+                  <span style="flex:1;font-size:13.5px;color:#cfc6b8">Overtime starts after</span>
+                  <input value="{{ otHoursIn }}" onInput="{{ onOtHours }}" onBlur="{{ saveOt }}" inputMode="decimal" style="width:70px;height:38px;padding:0 10px;text-align:right;background:#0b0a09;border:1px solid #2a231b;border-radius:9px" />
+                  <span style="font-size:12px;color:#8d8272;width:52px">hours a day</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:9px">
+                  <span style="flex:1;font-size:13.5px;color:#cfc6b8">Overtime is paid at</span>
+                  <input value="{{ otMultIn }}" onInput="{{ onOtMult }}" onBlur="{{ saveOt }}" inputMode="decimal" style="width:70px;height:38px;padding:0 10px;text-align:right;background:#0b0a09;border:1px solid #2a231b;border-radius:9px" />
+                  <span style="font-size:12px;color:#8d8272;width:52px">× rate</span>
+                </div>
+                <div style="font-size:11.5px;color:#6b6255;margin-top:12px;line-height:1.55">Applies to hourly staff. Nine hours is the usual shop-and-establishment day.</div>
               </div>
-              <div style="font-size:11.5px;color:#6b6255;margin-top:11px;line-height:1.55">Nine hours is the ordinary shop-and-establishment day. It is a house setting because the number is a policy, not a law of nature.</div>
             </div>
           </div>
         </sc-if>
-
       </div>
 
-      <!-- stint editor -->
-      <sc-if value="{{ editOpen }}">
-        <div style="position:fixed;inset:0;background:rgba(6,5,4,.72);display:flex;align-items:center;justify-content:center;padding:20px;z-index:40">
-          <div style="width:100%;max-width:400px;background:#12100c;border:1px solid #2a231b;border-radius:14px;padding:20px">
-            <div style="font-family:'Cormorant Garamond',serif;font-size:22px;letter-spacing:.05em">{{ editTitle }}</div>
-            <div style="font-size:12px;color:#8d8272;margin:5px 0 16px;line-height:1.5">{{ editSub }}</div>
-
-            <sc-if value="{{ editPickStaff }}">
-              <select value="{{ edStaff }}" onChange="{{ onEdStaff }}" style="width:100%;box-sizing:border-box;height:42px;padding:0 10px;margin-bottom:10px;border:1px solid #2a231b;border-radius:9px;font-size:13.5px">
-                <option value="">who worked?</option>
-                <sc-for list="{{ staffOpts }}" as="o" hint-placeholder-count="5">
-                  <option value="{{ o.id }}">{{ o.name }}</option>
+      <!-- staff editor -->
+      <sc-if value="{{ seOpen }}" hint-placeholder-val="{{ false }}">
+        <div style="position:fixed;inset:0;background:rgba(6,5,4,.74);display:flex;align-items:flex-end;justify-content:center;z-index:40">
+          <div style="box-sizing:border-box;width:100%;max-width:520px;max-height:92vh;overflow-y:auto;background:linear-gradient(180deg,#1a1611,#12100c);border:1px solid #2e271d;border-radius:20px 20px 0 0;padding:20px 18px 28px;display:flex;flex-direction:column;gap:14px">
+            <div style="display:flex;align-items:center;gap:10px">
+              <div style="flex:1;font-family:'Cormorant Garamond',serif;font-size:26px">{{ seTitle }}</div>
+              <button onClick="{{ closeSe }}" style="height:36px;padding:0 13px;border:1px solid #2a231b;border-radius:9px;background:#0f0d0a;color:#9a8f7f;font-size:13px">Close</button>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px">
+              <span style="font-size:11px;letter-spacing:.14em;color:#8d8272">NAME</span>
+              <input value="{{ seName }}" onInput="{{ onSeName }}" placeholder="Full name" style="height:46px;padding:0 12px;background:#0b0a09;border:1px solid #2a231b;border-radius:10px;font-size:15px" />
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px">
+              <span style="font-size:11px;letter-spacing:.14em;color:#8d8272">ACCESS</span>
+              <div style="display:flex;gap:6px;flex-wrap:wrap">
+                <sc-for list="{{ seRoles }}" as="r" hint-placeholder-count="5">
+                  <button onClick="{{ r.onTap }}" style="height:38px;padding:0 13px;border:1px solid {{ r.line }};border-radius:999px;background:{{ r.bg }};color:{{ r.fg }};font-size:13px">{{ r.label }}</button>
                 </sc-for>
-              </select>
+              </div>
+              <span style="font-size:11.5px;color:#6b6255">{{ seRoleHint }}</span>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px">
+              <span style="font-size:11px;letter-spacing:.14em;color:#8d8272">POSITION</span>
+              <div style="display:flex;gap:6px;flex-wrap:wrap">
+                <sc-for list="{{ sePositions }}" as="p" hint-placeholder-count="4">
+                  <button onClick="{{ p.onTap }}" style="height:38px;padding:0 13px;border:1px solid {{ p.line }};border-radius:999px;background:{{ p.bg }};color:{{ p.fg }};font-size:13px">{{ p.label }}</button>
+                </sc-for>
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px">
+              <span style="font-size:11px;letter-spacing:.14em;color:#8d8272">OWN PAY RATE</span>
+              <div style="display:flex;gap:8px">
+                <select value="{{ seKind }}" onChange="{{ onSeKind }}" style="flex:1;min-width:0;height:44px;padding:0 10px;border:1px solid #2a231b;border-radius:10px;font-size:13.5px">
+                  <option value="">Use the position's rate</option>
+                  <option value="hourly">per hour</option>
+                  <option value="daily">per day</option>
+                  <option value="monthly">per month</option>
+                </select>
+                <div style="display:flex;align-items:center;height:44px;border:1px solid #2a231b;border-radius:10px;background:#0b0a09;padding-left:11px"><span style="font-size:13px;color:#6b6255">₹</span><input value="{{ seRate }}" onInput="{{ onSeRate }}" inputMode="decimal" placeholder="0" style="width:96px;height:42px;padding:0 11px 0 5px;text-align:right;background:transparent;border:0;font-size:14px" /></div>
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px">
+              <div style="display:flex;flex-direction:column;gap:6px">
+                <span style="font-size:11px;letter-spacing:.14em;color:#8d8272">PHONE</span>
+                <input value="{{ sePhone }}" onInput="{{ onSePhone }}" inputMode="tel" placeholder="98xxxxxxxx" style="min-width:0;height:44px;padding:0 12px;background:#0b0a09;border:1px solid #2a231b;border-radius:10px;font-size:14px" />
+              </div>
+              <div style="display:flex;flex-direction:column;gap:6px">
+                <span style="font-size:11px;letter-spacing:.14em;color:#8d8272">JOINED</span>
+                <input value="{{ seJoined }}" onChange="{{ onSeJoined }}" type="date" style="min-width:0;height:44px;padding:0 10px;background:#0b0a09;border:1px solid #2a231b;border-radius:10px;font-size:13.5px" />
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px">
+              <span style="font-size:11px;letter-spacing:.14em;color:#8d8272">{{ sePinLabel }}</span>
+              <div style="display:flex;gap:8px">
+                <input value="{{ sePin }}" onInput="{{ onSePin }}" inputMode="numeric" placeholder="4 to 8 digits" style="flex:1;min-width:0;height:44px;padding:0 12px;background:#0b0a09;border:1px solid #2a231b;border-radius:10px;font-size:16px;letter-spacing:.2em" />
+                <button onClick="{{ sePinGen }}" style="height:44px;padding:0 14px;border:1px solid #2a231b;border-radius:10px;background:#16130f;color:#c8a24a;font-size:13px">Make one</button>
+              </div>
+              <span style="font-size:11.5px;color:#6b6255">{{ sePinHint }}</span>
+            </div>
+            <sc-if value="{{ seErr }}" hint-placeholder-val="{{ false }}"><div style="font-size:13px;color:#d98a6f">{{ seErr }}</div></sc-if>
+            <button onClick="{{ saveSe }}" style="height:50px;border:0;border-radius:12px;background:#c8a24a;color:#171204;font-size:15px;font-weight:500">{{ seSaveLabel }}</button>
+            <sc-if value="{{ seCanRemove }}" hint-placeholder-val="{{ false }}">
+              <button onClick="{{ removeSe }}" style="height:44px;border:1px solid rgba(217,138,111,.35);border-radius:12px;background:transparent;color:#d98a6f;font-size:13.5px">{{ seRemoveLabel }}</button>
             </sc-if>
+          </div>
+        </div>
+      </sc-if>
 
-            <div style="font-size:11px;letter-spacing:.14em;color:#8d8272;margin-bottom:5px">CAME IN</div>
-            <input value="{{ edIn }}" onChange="{{ onEdIn }}" type="datetime-local" style="width:100%;box-sizing:border-box;height:42px;padding:0 10px;margin-bottom:11px;background:#0b0a09;border:1px solid #2a231b;border-radius:9px" />
-            <div style="font-size:11px;letter-spacing:.14em;color:#8d8272;margin-bottom:5px">WENT OUT</div>
-            <input value="{{ edOut }}" onChange="{{ onEdOut }}" type="datetime-local" style="width:100%;box-sizing:border-box;height:42px;padding:0 10px;margin-bottom:11px;background:#0b0a09;border:1px solid #2a231b;border-radius:9px" />
-            <div style="display:flex;gap:9px;margin-bottom:11px">
-              <input value="{{ edBreak }}" onInput="{{ onEdBreak }}" inputMode="numeric" placeholder="break min" style="width:110px;height:42px;padding:0 10px;background:#0b0a09;border:1px solid #2a231b;border-radius:9px" />
-              <input value="{{ edNote }}" onInput="{{ onEdNote }}" placeholder="why, in a few words" style="flex:1;min-width:0;height:42px;padding:0 10px;background:#0b0a09;border:1px solid #2a231b;border-radius:9px" />
+      <!-- ledger editor -->
+      <sc-if value="{{ lgOpen }}" hint-placeholder-val="{{ false }}">
+        <div style="position:fixed;inset:0;background:rgba(6,5,4,.74);display:flex;align-items:flex-end;justify-content:center;z-index:40">
+          <div style="box-sizing:border-box;width:100%;max-width:460px;background:linear-gradient(180deg,#1a1611,#12100c);border:1px solid #2e271d;border-radius:20px 20px 0 0;padding:20px 18px 28px;display:flex;flex-direction:column;gap:13px">
+            <div style="display:flex;align-items:center;gap:10px">
+              <div style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font-family:'Cormorant Garamond',serif;font-size:24px">{{ lgTitle }}</span><span style="font-size:12px;color:#8d8272">Comes off or adds to the net for the range it is dated in.</span></div>
+              <button onClick="{{ closeLg }}" style="height:36px;padding:0 13px;border:1px solid #2a231b;border-radius:9px;background:#0f0d0a;color:#9a8f7f;font-size:13px">Close</button>
             </div>
-            <sc-if value="{{ edErr }}"><div style="font-size:12.5px;color:#d98a6f;margin-bottom:10px">{{ edErr }}</div></sc-if>
-            <div style="display:flex;gap:9px">
-              <button onClick="{{ closeEdit }}" style="flex:1;height:44px;border:1px solid #2a231b;border-radius:9px;background:#16130f;color:#9a8f7f">Cancel</button>
-              <button onClick="{{ saveEdit }}" style="flex:1;height:44px;border:0;border-radius:9px;background:#c8a24a;color:#171204">{{ edSaveLabel }}</button>
+            <div style="display:flex;gap:6px">
+              <sc-for list="{{ lgKinds }}" as="k" hint-placeholder-count="3">
+                <button onClick="{{ k.onTap }}" style="flex:1;height:42px;border:1px solid {{ k.line }};border-radius:11px;background:{{ k.bg }};color:{{ k.fg }};font-size:13.5px">{{ k.label }}</button>
+              </sc-for>
             </div>
-            <div style="font-size:11px;color:#6b6255;margin-top:10px;line-height:1.5">Saved by hand and stamped with your name. Leave "went out" empty to keep the stint open.</div>
+            <div style="display:flex;gap:8px">
+              <div style="flex:1;display:flex;align-items:center;height:48px;border:1px solid #2a231b;border-radius:11px;background:#0b0a09;padding-left:12px"><span style="font-size:15px;color:#6b6255">₹</span><input value="{{ lgAmt }}" onInput="{{ onLgAmt }}" inputMode="decimal" placeholder="Amount" style="flex:1;min-width:0;height:46px;padding:0 12px 0 6px;background:transparent;border:0;font-size:17px" /></div>
+              <input value="{{ lgDay }}" onChange="{{ onLgDay }}" type="date" style="height:48px;padding:0 10px;background:#0b0a09;border:1px solid #2a231b;border-radius:11px" />
+            </div>
+            <input value="{{ lgNote }}" onInput="{{ onLgNote }}" placeholder="Note, e.g. festival advance" style="height:46px;padding:0 12px;background:#0b0a09;border:1px solid #2a231b;border-radius:11px;font-size:14px" />
+            <sc-if value="{{ lgErr }}" hint-placeholder-val="{{ false }}"><div style="font-size:13px;color:#d98a6f">{{ lgErr }}</div></sc-if>
+            <button onClick="{{ saveLg }}" style="height:50px;border:0;border-radius:12px;background:#c8a24a;color:#171204;font-size:15px;font-weight:500">Save</button>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- stint editor -->
+      <sc-if value="{{ editOpen }}" hint-placeholder-val="{{ false }}">
+        <div style="position:fixed;inset:0;background:rgba(6,5,4,.74);display:flex;align-items:flex-end;justify-content:center;z-index:40">
+          <div style="box-sizing:border-box;width:100%;max-width:460px;max-height:92vh;overflow-y:auto;background:linear-gradient(180deg,#1a1611,#12100c);border:1px solid #2e271d;border-radius:20px 20px 0 0;padding:20px 18px 28px;display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;align-items:center;gap:10px">
+              <div style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font-family:'Cormorant Garamond',serif;font-size:24px">{{ editTitle }}</span><span style="font-size:12px;color:#8d8272">{{ editSub }}</span></div>
+              <button onClick="{{ closeEdit }}" style="height:36px;padding:0 13px;border:1px solid #2a231b;border-radius:9px;background:#0f0d0a;color:#9a8f7f;font-size:13px">Close</button>
+            </div>
+            <sc-if value="{{ editPickStaff }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;flex-direction:column;gap:6px">
+                <span style="font-size:11px;letter-spacing:.14em;color:#8d8272">WHO WORKED</span>
+                <div style="display:flex;gap:6px;flex-wrap:wrap">
+                  <sc-for list="{{ edPick }}" as="o" hint-placeholder-count="3">
+                    <button onClick="{{ o.onTap }}" style="height:38px;padding:0 13px;border:1px solid {{ o.line }};border-radius:999px;background:{{ o.bg }};color:{{ o.fg }};font-size:13px">{{ o.name }}</button>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-if>
+            <span style="font-size:11px;letter-spacing:.14em;color:#8d8272">CAME IN</span>
+            <input value="{{ edIn }}" onChange="{{ onEdIn }}" type="datetime-local" style="height:46px;padding:0 11px;background:#0b0a09;border:1px solid #2a231b;border-radius:10px" />
+            <span style="font-size:11px;letter-spacing:.14em;color:#8d8272">WENT OUT</span>
+            <input value="{{ edOut }}" onChange="{{ onEdOut }}" type="datetime-local" style="height:46px;padding:0 11px;background:#0b0a09;border:1px solid #2a231b;border-radius:10px" />
+            <div style="display:flex;gap:8px">
+              <input value="{{ edBreak }}" onInput="{{ onEdBreak }}" inputMode="numeric" placeholder="Break min" style="width:110px;height:46px;padding:0 11px;background:#0b0a09;border:1px solid #2a231b;border-radius:10px" />
+              <input value="{{ edNote }}" onInput="{{ onEdNote }}" placeholder="Why, in a few words" style="flex:1;min-width:0;height:46px;padding:0 11px;background:#0b0a09;border:1px solid #2a231b;border-radius:10px" />
+            </div>
+            <sc-if value="{{ edErr }}" hint-placeholder-val="{{ false }}"><div style="font-size:13px;color:#d98a6f">{{ edErr }}</div></sc-if>
+            <button onClick="{{ saveEdit }}" style="height:50px;border:0;border-radius:12px;background:#c8a24a;color:#171204;font-size:15px;font-weight:500">{{ edSaveLabel }}</button>
+            <div style="font-size:11.5px;color:#6b6255;line-height:1.5">Stamped with the manager's name. Leave "went out" empty to keep the stint open.</div>
           </div>
         </div>
       </sc-if>
 
       <!-- shift editor -->
-      <sc-if value="{{ shiftOpen }}">
-        <div style="position:fixed;inset:0;background:rgba(6,5,4,.72);display:flex;align-items:center;justify-content:center;padding:20px;z-index:40">
-          <div style="width:100%;max-width:380px;background:#12100c;border:1px solid #2a231b;border-radius:14px;padding:20px">
-            <div style="font-family:'Cormorant Garamond',serif;font-size:22px;letter-spacing:.05em">Roster a shift</div>
-            <div style="font-size:12px;color:#8d8272;margin:5px 0 16px">{{ shiftDayLabel }}</div>
-            <select value="{{ shStaff }}" onChange="{{ onShStaff }}" style="width:100%;box-sizing:border-box;height:42px;padding:0 10px;margin-bottom:11px;border:1px solid #2a231b;border-radius:9px;font-size:13.5px">
-              <option value="">who?</option>
-              <sc-for list="{{ staffOpts }}" as="o" hint-placeholder-count="5">
-                <option value="{{ o.id }}">{{ o.name }}</option>
+      <sc-if value="{{ shiftOpen }}" hint-placeholder-val="{{ false }}">
+        <div style="position:fixed;inset:0;background:rgba(6,5,4,.74);display:flex;align-items:flex-end;justify-content:center;z-index:40">
+          <div style="box-sizing:border-box;width:100%;max-width:460px;max-height:92vh;overflow-y:auto;background:linear-gradient(180deg,#1a1611,#12100c);border:1px solid #2e271d;border-radius:20px 20px 0 0;padding:20px 18px 28px;display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;align-items:center;gap:10px">
+              <div style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font-family:'Cormorant Garamond',serif;font-size:24px">Add a shift</span><span style="font-size:12px;color:#8d8272">{{ shiftDayLabel }}</span></div>
+              <button onClick="{{ closeShift }}" style="height:36px;padding:0 13px;border:1px solid #2a231b;border-radius:9px;background:#0f0d0a;color:#9a8f7f;font-size:13px">Close</button>
+            </div>
+            <span style="font-size:11px;letter-spacing:.14em;color:#8d8272">WHO</span>
+            <div style="display:flex;gap:6px;flex-wrap:wrap">
+              <sc-for list="{{ shPick }}" as="o" hint-placeholder-count="3">
+                <button onClick="{{ o.onTap }}" style="height:38px;padding:0 13px;border:1px solid {{ o.line }};border-radius:999px;background:{{ o.bg }};color:{{ o.fg }};font-size:13px">{{ o.name }}</button>
               </sc-for>
-            </select>
-            <div style="display:flex;align-items:center;gap:9px;margin-bottom:11px">
-              <input value="{{ shFrom }}" onChange="{{ onShFrom }}" type="time" style="flex:1;min-width:0;height:42px;padding:0 10px;background:#0b0a09;border:1px solid #2a231b;border-radius:9px" />
+            </div>
+            <span style="font-size:11px;letter-spacing:.14em;color:#8d8272">TIME</span>
+            <div style="display:flex;gap:6px;flex-wrap:wrap">
+              <sc-for list="{{ shPresets }}" as="p" hint-placeholder-count="3">
+                <button onClick="{{ p.onTap }}" style="height:36px;padding:0 12px;border:1px solid {{ p.line }};border-radius:999px;background:{{ p.bg }};color:{{ p.fg }};font-size:12.5px">{{ p.label }}</button>
+              </sc-for>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <input value="{{ shFrom }}" onChange="{{ onShFrom }}" type="time" style="flex:1;min-width:0;height:46px;padding:0 11px;background:#0b0a09;border:1px solid #2a231b;border-radius:10px" />
               <span style="font-size:12px;color:#8d8272">to</span>
-              <input value="{{ shTo }}" onChange="{{ onShTo }}" type="time" style="flex:1;min-width:0;height:42px;padding:0 10px;background:#0b0a09;border:1px solid #2a231b;border-radius:9px" />
+              <input value="{{ shTo }}" onChange="{{ onShTo }}" type="time" style="flex:1;min-width:0;height:46px;padding:0 11px;background:#0b0a09;border:1px solid #2a231b;border-radius:10px" />
             </div>
-            <input value="{{ shNote }}" onInput="{{ onShNote }}" placeholder="note (optional)" style="width:100%;box-sizing:border-box;height:42px;padding:0 10px;margin-bottom:11px;background:#0b0a09;border:1px solid #2a231b;border-radius:9px" />
-            <sc-if value="{{ shErr }}"><div style="font-size:12.5px;color:#d98a6f;margin-bottom:10px">{{ shErr }}</div></sc-if>
-            <div style="display:flex;gap:9px">
-              <button onClick="{{ closeShift }}" style="flex:1;height:44px;border:1px solid #2a231b;border-radius:9px;background:#16130f;color:#9a8f7f">Cancel</button>
-              <button onClick="{{ saveShift }}" style="flex:1;height:44px;border:0;border-radius:9px;background:#c8a24a;color:#171204">Roster</button>
-            </div>
-            <div style="font-size:11px;color:#6b6255;margin-top:10px;line-height:1.5">An end before the start is read as the next morning.</div>
+            <input value="{{ shNote }}" onInput="{{ onShNote }}" placeholder="Note (optional)" style="height:46px;padding:0 11px;background:#0b0a09;border:1px solid #2a231b;border-radius:10px" />
+            <sc-if value="{{ shErr }}" hint-placeholder-val="{{ false }}"><div style="font-size:13px;color:#d98a6f">{{ shErr }}</div></sc-if>
+            <button onClick="{{ saveShift }}" style="height:50px;border:0;border-radius:12px;background:#c8a24a;color:#171204;font-size:15px;font-weight:500">Add shift</button>
+            <div style="font-size:11.5px;color:#6b6255">An end before the start is read as the next morning.</div>
           </div>
         </div>
       </sc-if>
 
       <!-- manager gate -->
-      <sc-if value="{{ askOpen }}">
-        <div style="position:fixed;inset:0;background:rgba(6,5,4,.78);display:flex;align-items:center;justify-content:center;padding:20px;z-index:50">
-          <div style="width:100%;max-width:310px;text-align:center">
-            <div style="font-family:'Cormorant Garamond',serif;font-size:22px;letter-spacing:.05em">{{ askTitle }}</div>
-            <div style="font-size:12.5px;color:#9a8f7f;margin:6px 0 12px;line-height:1.5">{{ askBody }}</div>
-            <div style="height:30px;font-size:26px;letter-spacing:.3em;color:#c8a24a">{{ askMask }}</div>
-            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:12px">
+      <sc-if value="{{ askOpen }}" hint-placeholder-val="{{ false }}">
+        <div style="position:fixed;inset:0;background:rgba(6,5,4,.82);display:flex;align-items:center;justify-content:center;padding:20px;z-index:50">
+          <div style="width:100%;max-width:320px;text-align:center">
+            <div style="font-family:'Cormorant Garamond',serif;font-size:26px">{{ askTitle }}</div>
+            <div style="font-size:12.5px;color:#9a8f7f;margin:6px 0 14px;line-height:1.5">{{ askBody }}</div>
+            <div style="display:flex;justify-content:center;gap:10px;height:22px;align-items:center">
+              <sc-for list="{{ askDots }}" as="d" hint-placeholder-count="4"><span style="width:12px;height:12px;border-radius:50%;border:1.5px solid #c8a24a;background:{{ d.bg }}"></span></sc-for>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px">
               <sc-for list="{{ askKeys }}" as="k" hint-placeholder-count="12">
-                <button onClick="{{ k.onTap }}" style="height:52px;border:1px solid #2a231b;border-radius:10px;background:#12100c;font-size:18px;color:#efe7db">{{ k.label }}</button>
+                <button onClick="{{ k.onTap }}" style="height:56px;border:1px solid {{ k.line }};border-radius:13px;background:{{ k.bg }};font-size:19px;color:{{ k.fg }}">{{ k.label }}</button>
               </sc-for>
             </div>
-            <sc-if value="{{ askErr }}"><div style="margin-top:12px;font-size:13px;color:#d98a6f">{{ askErr }}</div></sc-if>
-            <button onClick="{{ closeAsk }}" style="margin-top:12px;height:38px;padding:0 16px;border:1px solid #2a231b;border-radius:9px;background:#16130f;color:#9a8f7f;font-size:13px">Back</button>
+            <sc-if value="{{ askErr }}" hint-placeholder-val="{{ false }}"><div style="margin-top:12px;font-size:13px;color:#d98a6f">{{ askErr }}</div></sc-if>
+            <button onClick="{{ closeAsk }}" style="margin-top:14px;height:40px;padding:0 18px;border:1px solid #2a231b;border-radius:10px;background:#16130f;color:#9a8f7f;font-size:13px">Back</button>
           </div>
         </div>
       </sc-if>
 
-      <sc-if value="{{ toast }}">
-        <div style="position:fixed;left:50%;bottom:22px;transform:translateX(-50%);padding:11px 18px;border:1px solid #2a231b;border-radius:10px;background:#16130f;font-size:13px;color:#efe7db;z-index:60">{{ toast }}</div>
+      <sc-if value="{{ toast }}" hint-placeholder-val="{{ false }}">
+        <div style="position:fixed;left:50%;bottom:24px;transform:translateX(-50%);max-width:calc(100% - 32px);padding:12px 18px;border:1px solid #2a231b;border-radius:12px;background:#1a1611;font-size:13.5px;color:#efe7db;z-index:60;box-shadow:0 10px 30px rgba(0,0,0,.4)">{{ toast }}</div>
       </sc-if>
 
     </div>
   </sc-if>
 </div>
-
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;startTab&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;clock&quot;,&quot;today&quot;,&quot;roster&quot;,&quot;pay&quot;,&quot;people&quot;],&quot;default&quot;:&quot;clock&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Screen&quot;},&quot;requireManagerPin&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Screen&quot;},&quot;floorPollSeconds&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:30,&quot;min&quot;:10,&quot;max&quot;:300,&quot;unit&quot;:&quot;s&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Screen&quot;}}">
+const AV = ['#c8a24a', '#9fc79a', '#7fb4d9', '#e0a080', '#c9a3d9', '#d9c27f', '#8fc9c0'];
+const ROLES = [['waiter', 'Staff', 'Clock only, plus table orders. Use for cooks, cleaners, riders and waiters.'], ['cashier', 'Cashier', 'Takes orders and bills at the counter.'], ['manager', 'Manager', 'Opens payroll, rates, and corrects hours.'], ['admin', 'Admin', 'Everything a manager can, plus settings.']];
+const KIND = { hourly: 'per hour', daily: 'per day', monthly: 'per month' };
+
 class Component extends DCLogic {
   state = {
     phase: 'load', tab: '', err: '', toast: '', busy: '', needSql: '',
     email: '', pass: '',
-    pin: '', breakMins: '', clockMsg: '', clockErr: '', floor: [],
+    pin: '', breakMins: 0, clockMsg: '', clockErr: '', floor: [], now: Date.now(),
     day: '', dayData: null,
-    weekFrom: '', week: null,
-    payFrom: '', payTo: '', pay: null, payBusy: false,
-    positions: [], staff: [], house: {},
+    weekFrom: '', week: null, copying: false,
+    payFrom: '', payTo: '', pay: null, payBusy: false, ledger: [], countMonthly: true, preset: '30',
+    positions: [], allStaff: [], house: {}, showFormer: false,
     np: { name: '', kind: 'monthly' },
     ot: { hours: '', mult: '' },
-    ed: null, sh: null, ask: null, mgr: null,
+    ed: null, sh: null, ask: null, mgr: null, se: null, lg: null,
   };
 
   cfg() { return window.SULTHANS_CONFIG || {}; }
-
-  script(src) {
-    return new Promise((ok, no) => {
-      const s = document.createElement('script');
-      s.src = src; s.onload = ok; s.onerror = () => no(new Error('could not load ' + src));
-      document.head.appendChild(s);
-    });
-  }
+  script(src) { return new Promise((ok, no) => { const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = () => no(new Error('could not load ' + src)); document.head.appendChild(s); }); }
 
   async componentDidMount() {
+    this._clock = setInterval(() => this.setState({ now: Date.now() }), 15000);
     try {
       if (!window.supabase) await this.script('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js');
       const c = this.cfg();
@@ -447,54 +622,47 @@ class Component extends DCLogic {
       const { data: sess } = await this.sb.auth.getSession();
       if (!sess || !sess.session) return this.setState({ phase: 'signin', email: c.staffEmail || '' });
       await this.load();
-    } catch (e) {
-      this.setState({ phase: 'signin', err: e.message, email: this.cfg().staffEmail || '' });
-    }
+    } catch (e) { this.setState({ phase: 'signin', err: e.message, email: this.cfg().staffEmail || '' }); }
   }
+  componentWillUnmount() { clearInterval(this._tick); clearInterval(this._clock); }
 
-  componentWillUnmount() { clearInterval(this._tick); }
+  async loadStaff() {
+    const [staff, pos] = await Promise.all([
+      this.sb.from('staff').select('id,name,role,active,position_id,pay_kind,pay_rate,phone,joined_on,left_on,created_at').eq('restaurant_id', this.rid).order('created_at'),
+      this.sb.from('positions').select('id,name,pay_kind,rate,active').eq('restaurant_id', this.rid).order('name'),
+    ]);
+    return { staff, pos };
+  }
 
   async load() {
     const today = this.todayStr();
-    const [house, staff, pos] = await Promise.all([
-      this.sb.from('restaurants').select('*').eq('id', this.rid).maybeSingle(),
-      this.sb.from('staff').select('id,name,role,active,position_id,pay_kind,pay_rate,phone').eq('restaurant_id', this.rid).order('created_at'),
-      this.sb.from('positions').select('id,name,pay_kind,rate,active').eq('restaurant_id', this.rid).order('name'),
-    ]);
-    /* hr.sql adds these columns and this table. Until it is run the screen has
-       nothing to show, so say which file rather than fail silently. */
+    const [house, { staff, pos }] = await Promise.all([this.sb.from('restaurants').select('*').eq('id', this.rid).maybeSingle(), this.loadStaff()]);
     const miss = [staff.error, pos.error].filter(Boolean).map(e => e.message || '').join(' ');
-    const needSql = /positions|position_id|pay_kind|does not exist|schema cache/i.test(miss)
-      ? 'The people tables are not in the database yet — run supabase/hr.sql in the Supabase SQL editor. Until then this screen has nothing to read.' : '';
+    const needSql = /positions|position_id|pay_kind|does not exist|schema cache/i.test(miss) ? 'The people tables are not in the database yet — run supabase/hr.sql in the Supabase SQL editor.' : '';
     const h = house.data || {};
     this.setState({
-      phase: 'ready', house: h, needSql,
-      staff: (staff.data || []).filter(s => s.active),
-      positions: pos.data || [],
-      day: today, weekFrom: this.weekStart(today),
-      payFrom: this.shiftDay(today, -29), payTo: today,
-      ot: { hours: String(h.ot_after_hours == null ? 9 : h.ot_after_hours), mult: String(h.ot_multiplier == null ? 1.5 : h.ot_multiplier) },
-      err: '',
+      phase: 'ready', house: h, needSql, allStaff: staff.data || [], positions: pos.data || [],
+      day: today, weekFrom: this.weekStart(today), payFrom: this.shiftDay(today, -29), payTo: today,
+      ot: { hours: String(h.ot_after_hours == null ? 9 : h.ot_after_hours), mult: String(h.ot_multiplier == null ? 1.5 : h.ot_multiplier) }, err: '',
     });
     if (needSql) return this.setState({ tab: 'clock' });
+    if (staff.error || pos.error) this.say('Could not read staff: ' + ((staff.error || pos.error).message || ''));
     this.enter(this.state.tab || (['clock', 'today', 'roster'].find(t => t === new URLSearchParams(location.search).get('tab'))) || this.props.startTab || 'clock');
     this.loadFloor();
     const every = Math.max(10, Number(this.props.floorPollSeconds) || 30) * 1000;
     this._tick = setInterval(() => { if (this.state.tab === 'clock') this.loadFloor(); }, every);
   }
-
-  async rpc(fn, args) {
-    const { data, error } = await this.sb.rpc(fn, args);
-    if (error) throw error;
-    return data;
+  async reloadStaff() {
+    const { staff, pos } = await this.loadStaff();
+    if (staff.error || pos.error) this.say('Could not read staff: ' + ((staff.error || pos.error).message || ''));
+    this.setState({ allStaff: staff.data || this.state.allStaff, positions: pos.data || this.state.positions });
   }
 
-  oops(e) { this.setState({ toast: (e && e.message) || String(e) }); this.clearToast(); }
-  say(t) { this.setState({ toast: t }); this.clearToast(); }
-  clearToast() { clearTimeout(this._t); this._t = setTimeout(() => this.setState({ toast: '' }), 3200); }
+  async rpc(fn, args) { const { data, error } = await this.sb.rpc(fn, args); if (error) throw error; return data; }
+  oops(e) { this.say((e && e.message) || String(e)); }
+  say(t) { this.setState({ toast: t }); clearTimeout(this._t); this._t = setTimeout(() => this.setState({ toast: '' }), 3200); }
 
-  /* ---- dates ------------------------------------------------------------ */
-  todayStr() { const d = new Date(); return this.dstr(d); }
+  todayStr() { return this.dstr(new Date()); }
   dstr(d) { const p = n => String(n).padStart(2, '0'); return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()); }
   shiftDay(s, n) { const d = new Date(s + 'T12:00'); d.setDate(d.getDate() + n); return this.dstr(d); }
   weekStart(s) { const d = new Date(s + 'T12:00'); d.setDate(d.getDate() - d.getDay()); return this.dstr(d); }
@@ -504,8 +672,11 @@ class Component extends DCLogic {
   toLocal(iso) { if (!iso) return ''; const d = new Date(iso); const p = n => String(n).padStart(2, '0'); return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + 'T' + p(d.getHours()) + ':' + p(d.getMinutes()); }
   fromLocal(v) { return v ? new Date(v).toISOString() : null; }
   money(n) { return '₹' + Math.round(Number(n) || 0).toLocaleString('en-IN'); }
+  ini(n) { return String(n || '?').trim().split(/\s+/).slice(0, 2).map(w => w[0] || '').join('').toUpperCase() || '?'; }
+  av(id) { let h = 0; String(id || '').split('').forEach(c => { h = (h * 31 + c.charCodeAt(0)) >>> 0; }); return AV[h % AV.length]; }
+  chip(on) { return { line: on ? '#c8a24a' : '#2a231b', bg: on ? 'rgba(200,162,74,.16)' : '#16130f', fg: on ? '#f0d089' : '#9a8f7f' }; }
+  active() { return this.state.allStaff.filter(s => s.active); }
 
-  /* ---- sign in ---------------------------------------------------------- */
   async doSignin() {
     if (this.state.busy) return;
     this.setState({ busy: 'signin', err: '' });
@@ -515,11 +686,8 @@ class Component extends DCLogic {
     try { await this.load(); } catch (e) { this.setState({ phase: 'signin', err: e.message }); }
   }
 
-  /* ---- the clock -------------------------------------------------------- */
-  async loadFloor() {
-    try { this.setState({ floor: (await this.rpc('on_floor', { p_rid: this.rid })) || [] }); } catch (e) {}
-  }
-
+  /* ---- clock ---- */
+  async loadFloor() { try { this.setState({ floor: (await this.rpc('on_floor', { p_rid: this.rid })) || [] }); } catch (e) {} }
   async punch() {
     const pin = this.state.pin;
     if (pin.length < 4) return this.setState({ clockErr: 'A PIN is at least four digits.', pin: '' });
@@ -527,157 +695,194 @@ class Component extends DCLogic {
       const r = await this.rpc('clock_pin', { p_rid: this.rid, p_pin: pin, p_break_mins: Number(this.state.breakMins) || 0 });
       if (!r || !r.ok) return this.setState({ pin: '', clockErr: 'That PIN is not on the list.', clockMsg: '' });
       const at = this.hm(r.at);
-      const msg = r.action === 'in'
-        ? r.staff + ' clocked in at ' + at + '.'
-        : r.staff + ' clocked out at ' + at + ' — ' + this.dur(r.minutes) + ' on the floor'
-          + (Number(this.state.breakMins) > 0 ? ', break taken off' : '') + '.'
-          + (r.suspect ? ' That stint ran longer than a day; correct the hour under Today.' : '');
-      this.setState({ pin: '', breakMins: '', clockErr: '', clockMsg: msg });
+      const msg = r.action === 'in' ? 'Welcome, ' + r.staff + '. Clocked in at ' + at + '.'
+        : 'Bye, ' + r.staff + '. Clocked out at ' + at + ' after ' + this.dur(r.minutes) + (Number(this.state.breakMins) > 0 ? ' (break taken off)' : '') + '.' + (r.suspect ? ' That stint ran over a day; a manager should correct it under Today.' : '');
+      this.setState({ pin: '', breakMins: 0, clockErr: '', clockMsg: msg });
+      clearTimeout(this._cm); this._cm = setTimeout(() => this.setState({ clockMsg: '' }), 8000);
       this.loadFloor();
-      if (this.state.day === this.todayStr()) this.loadDay(this.state.day);
-    } catch (e) {
-      this.setState({ pin: '', clockErr: /function .*clock_pin/i.test(e.message || '') ? 'The clock is not in the database yet — run supabase/hr.sql.' : e.message });
-    }
+      if (this.state.day === this.todayStr() && this.state.dayData) this.loadDay(this.state.day);
+    } catch (e) { this.setState({ pin: '', clockErr: /function .*clock_pin/i.test(e.message || '') ? 'The clock is not in the database yet — run supabase/hr.sql.' : e.message }); }
   }
 
-  /* ---- the day ---------------------------------------------------------- */
-  async loadDay(day) {
-    try {
-      const d = await this.rpc('attendance_day', { p_rid: this.rid, p_day: day === this.todayStr() ? null : day });
-      this.setState({ dayData: d || null });
-    } catch (e) { this.oops(e); }
-  }
-
+  /* ---- day ---- */
+  async loadDay(day) { try { this.setState({ dayData: (await this.rpc('attendance_day', { p_rid: this.rid, p_day: day === this.todayStr() ? null : day })) || null }); } catch (e) { this.oops(e); } }
+  setDay(v) { this.setState({ day: v }); this.loadDay(v); }
   openEdit(row) {
     this.setState({ ed: row
       ? { id: row.id, staffId: row.staffId, staff: row.staff, in: this.toLocal(row.in), out: this.toLocal(row.out), brk: String(row.break || 0), note: row.note || '', err: '' }
       : { id: null, staffId: '', staff: '', in: this.toLocal(new Date(this.state.day + 'T10:00').toISOString()), out: '', brk: '0', note: '', err: '' } });
   }
-
   async saveEdit() {
     const e = this.state.ed;
     if (!e.staffId) return this.setState({ ed: { ...e, err: 'Pick who worked.' } });
     if (!e.in) return this.setState({ ed: { ...e, err: 'A stint needs a start.' } });
     if (e.out && new Date(e.out) <= new Date(e.in)) return this.setState({ ed: { ...e, err: 'A stint has to end after it starts.' } });
     try {
-      await this.rpc('attendance_set', {
-        p_rid: this.rid, p_staff: e.staffId, p_in: this.fromLocal(e.in), p_out: this.fromLocal(e.out),
-        p_break: Number(e.brk) || 0, p_by: (this.state.mgr && this.state.mgr.id) || null,
-        p_note: e.note || null, p_id: e.id,
-      });
-      this.setState({ ed: null });
-      this.say(e.id ? 'Stint corrected' : 'Stint written');
-      this.loadDay(this.state.day);
-      this.loadFloor();
+      await this.rpc('attendance_set', { p_rid: this.rid, p_staff: e.staffId, p_in: this.fromLocal(e.in), p_out: this.fromLocal(e.out), p_break: Number(e.brk) || 0, p_by: (this.state.mgr && this.state.mgr.id) || null, p_note: e.note || null, p_id: e.id });
+      this.setState({ ed: null }); this.say(e.id ? 'Hours corrected' : 'Hours added');
+      this.loadDay(this.state.day); this.loadFloor();
     } catch (err) { this.setState({ ed: { ...e, err: err.message } }); }
   }
-
-  /* ---- the roster ------------------------------------------------------- */
-  async loadWeek(from) {
-    try { this.setState({ week: await this.rpc('roster_week', { p_rid: this.rid, p_from: from }) }); }
-    catch (e) { this.oops(e); }
+  async clockOutNow(r) {
+    try {
+      await this.rpc('attendance_set', { p_rid: this.rid, p_staff: r.staffId, p_in: r.in, p_out: new Date().toISOString(), p_break: Number(r.break) || 0, p_by: (this.state.mgr && this.state.mgr.id) || null, p_note: 'clocked out by hand', p_id: r.id });
+      this.say(r.staff + ' clocked out'); this.loadDay(this.state.day); this.loadFloor();
+    } catch (e) { this.oops(e); }
   }
 
+  /* ---- roster ---- */
+  async loadWeek(from) { try { this.setState({ week: await this.rpc('roster_week', { p_rid: this.rid, p_from: from }) }); } catch (e) { this.oops(e); } }
+  setWeek(v) { this.setState({ weekFrom: v, week: null }); this.loadWeek(v); }
   async saveShift() {
     const s = this.state.sh;
     if (!s.staffId) return this.setState({ sh: { ...s, err: 'Pick who.' } });
-    const from = new Date(s.day + 'T' + s.from);
-    let to = new Date(s.day + 'T' + s.to);
+    const from = new Date(s.day + 'T' + s.from); let to = new Date(s.day + 'T' + s.to);
     if (to <= from) to = new Date(to.getTime() + 86400000);
     try {
-      await this.rpc('roster_set', {
-        p_rid: this.rid, p_staff: s.staffId, p_day: s.day,
-        p_from: from.toISOString(), p_to: to.toISOString(), p_note: s.note || null,
-      });
-      this.setState({ sh: null });
-      this.loadWeek(this.state.weekFrom);
-      this.say('Rostered');
+      await this.rpc('roster_set', { p_rid: this.rid, p_staff: s.staffId, p_day: s.day, p_from: from.toISOString(), p_to: to.toISOString(), p_note: s.note || null });
+      this.setState({ sh: null }); this.loadWeek(this.state.weekFrom); this.say('Shift added');
     } catch (e) { this.setState({ sh: { ...s, err: e.message } }); }
   }
-
-  async clearShift(id) {
-    try { await this.rpc('roster_clear', { p_shift: id }); this.loadWeek(this.state.weekFrom); }
-    catch (e) { this.oops(e); }
+  async clearShift(id) { try { await this.rpc('roster_clear', { p_shift: id }); this.loadWeek(this.state.weekFrom); } catch (e) { this.oops(e); } }
+  async copyWeek() {
+    if (this.state.copying) return;
+    this.setState({ copying: true });
+    try {
+      const prev = await this.rpc('roster_week', { p_rid: this.rid, p_from: this.shiftDay(this.state.weekFrom, -7) });
+      const cur = this.state.week || {}, have = new Set();
+      (cur.days || []).forEach(d => (d.planned || []).forEach(s => have.add(s.staffId + '|' + d.day)));
+      let n = 0;
+      for (const d of (prev.days || [])) for (const s of (d.planned || [])) {
+        const day = this.shiftDay(d.day, 7);
+        if (have.has(s.staffId + '|' + day) || !this.active().some(x => x.id === s.staffId)) continue;
+        await this.rpc('roster_set', { p_rid: this.rid, p_staff: s.staffId, p_day: day, p_from: new Date(new Date(s.from).getTime() + 7 * 864e5).toISOString(), p_to: new Date(new Date(s.to).getTime() + 7 * 864e5).toISOString(), p_note: s.note || null });
+        n++;
+      }
+      this.say(n ? n + ' shifts copied from last week' : 'Nothing new to copy from last week');
+      this.loadWeek(this.state.weekFrom);
+    } catch (e) { this.oops(e); } finally { this.setState({ copying: false }); }
   }
 
-  /* ---- payroll ---------------------------------------------------------- */
+  /* ---- payroll ---- */
   async runPay() {
     this.setState({ payBusy: true });
     try {
-      const d = await this.rpc('payroll_summary', { p_rid: this.rid, p_from: this.state.payFrom, p_to: this.state.payTo });
-      this.setState({ pay: d || null, payBusy: false });
+      const [d, lg] = await Promise.all([
+        this.rpc('payroll_summary', { p_rid: this.rid, p_from: this.state.payFrom, p_to: this.state.payTo }),
+        this.sb.from('staff_ledger').select('*').eq('restaurant_id', this.rid).gte('day', this.state.payFrom).lte('day', this.state.payTo).order('day'),
+      ]);
+      this.setState({ pay: d || null, ledger: lg.data || [], payBusy: false });
     } catch (e) { this.setState({ payBusy: false }); this.oops(e); }
   }
+  preset(k) {
+    const t = this.todayStr(), d = new Date(t + 'T12:00');
+    let a, b = t;
+    if (k === 'this') a = this.dstr(new Date(d.getFullYear(), d.getMonth(), 1));
+    else if (k === 'last') { a = this.dstr(new Date(d.getFullYear(), d.getMonth() - 1, 1)); b = this.dstr(new Date(d.getFullYear(), d.getMonth(), 0)); }
+    else if (k === 'week') a = this.weekStart(t);
+    else a = this.shiftDay(t, -29);
+    this.setState({ payFrom: a, payTo: b, preset: k }, () => this.runPay());
+  }
+  monthShare(from, to) {
+    let s = 0, d = new Date(from + 'T12:00'); const e = new Date(to + 'T12:00');
+    for (let i = 0; d <= e && i < 800; i++) { s += 1 / new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate(); d.setDate(d.getDate() + 1); }
+    return s;
+  }
+  payCalc() {
+    const S = this.state, rows = (S.pay && S.pay.rows) || [], share = this.monthShare(S.payFrom, S.payTo);
+    return rows.map(r => {
+      const mine = S.ledger.filter(l => l.staff_id === r.staff_id);
+      const sum = k => mine.filter(l => l.kind === k).reduce((a, l) => a + (+l.amount || 0), 0);
+      const monthly = r.pay == null, earned = monthly ? (S.countMonthly ? (+r.rate || 0) * share : null) : +r.pay || 0;
+      const bonus = sum('bonus'), adv = sum('advance'), ded = sum('deduction');
+      return { ...r, monthly, earned, bonus, adv, ded, mine, net: earned == null ? null : earned + bonus - adv - ded };
+    });
+  }
+  exportCsv() {
+    const S = this.state, q = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+    const lines = [['Name', 'Position', 'Paid', 'Rate', 'Days', 'Hours', 'OT hours', 'Earned', 'Bonus', 'Advance', 'Deduction', 'Net'].map(q).join(',')]
+      .concat(this.payCalc().map(r => [r.staff, r.position, KIND[r.pay_kind] || r.pay_kind, r.rate, r.days, r.hours, r.ot_hours, r.earned == null ? '' : Math.round(r.earned), r.bonus, r.adv, r.ded, r.net == null ? '' : Math.round(r.net)].map(q).join(',')));
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([lines.join('\n')], { type: 'text/csv' }));
+    a.download = 'payroll ' + S.payFrom + ' to ' + S.payTo + '.csv';
+    document.body.appendChild(a); a.click(); a.remove();
+  }
+  slip(r) {
+    const S = this.state, ph = String((this.active().find(s => s.id === r.staff_id) || {}).phone || '').replace(/\D/g, '');
+    if (ph.length < 10) return '';
+    const L = [(this.houseName || 'Pay slip') + ' · pay slip', this.dayName(S.payFrom) + ' to ' + this.dayName(S.payTo), '', r.staff + (r.position && r.position !== '—' ? ' · ' + r.position : ''),
+      'Days present: ' + (r.days || 0) + ', hours: ' + (r.hours || 0) + (r.ot_hours ? ', overtime: ' + r.ot_hours + ' h' : ''),
+      'Earned: ' + (r.earned == null ? 'monthly salary' : this.money(r.earned))];
+    if (r.bonus) L.push('Bonus: +' + this.money(r.bonus));
+    if (r.adv) L.push('Advance: −' + this.money(r.adv));
+    if (r.ded) L.push('Deduction: −' + this.money(r.ded));
+    if (r.net != null) L.push('', 'Net pay: ' + this.money(r.net));
+    return 'https://wa.me/' + (ph.length === 10 ? '91' + ph : ph) + '?text=' + encodeURIComponent(L.join('\n'));
+  }
+  async saveLg() {
+    const g = this.state.lg, amt = Number(g.amt);
+    if (!(amt > 0)) return this.setState({ lg: { ...g, err: 'Enter an amount.' } });
+    const { error } = await this.sb.from('staff_ledger').insert({ restaurant_id: this.rid, staff_id: g.staffId, day: g.day, kind: g.kind, amount: amt, note: g.note || null, by_staff: (this.state.mgr && this.state.mgr.id) || null });
+    if (error) return this.setState({ lg: { ...g, err: /staff_ledger/.test(error.message) ? 'Run supabase/staff-ledger.sql first.' : error.message } });
+    this.setState({ lg: null }); this.say('Saved'); this.runPay();
+  }
+  async delLg(id) { const { error } = await this.sb.from('staff_ledger').delete().eq('id', id); if (error) return this.oops(error); this.runPay(); }
 
-  /* ---- positions and staff ---------------------------------------------- */
+  /* ---- staff and positions ---- */
+  openSe(s) {
+    this.setState({ se: s ? { id: s.id, name: s.name || '', role: s.role || 'cashier', positionId: s.position_id || '', kind: s.pay_kind || '', rate: s.pay_rate == null ? '' : String(s.pay_rate), phone: s.phone || '', joined: s.joined_on || '', pin: '', err: '', busy: false, confirm: false }
+      : { id: null, name: '', role: 'waiter', positionId: '', kind: '', rate: '', phone: '', joined: this.todayStr(), pin: '', err: '', busy: false, confirm: false } });
+  }
+  async saveSe() {
+    const e = this.state.se; if (e.busy) return;
+    const name = e.name.trim();
+    if (!name) return this.setState({ se: { ...e, err: 'Give them a name.' } });
+    if (!e.id && !/^\d{4,8}$/.test(e.pin)) return this.setState({ se: { ...e, err: 'Set a PIN of 4 to 8 digits for the clock.' } });
+    if (e.id && e.pin && !/^\d{4,8}$/.test(e.pin)) return this.setState({ se: { ...e, err: 'A PIN is 4 to 8 digits.' } });
+    this.setState({ se: { ...e, busy: true, err: '' } });
+    try {
+      if (e.pin) { const who = await this.rpc('staff_pin_login', { p_rid: this.rid, p_pin: e.pin }).catch(() => null); if (who && who.id !== e.id) throw new Error('That PIN already belongs to ' + who.name + '. Pick another.'); }
+      let id = e.id;
+      if (!id) id = await this.rpc('staff_add', { p_rid: this.rid, p_name: name, p_role: e.role, p_pin: e.pin, p_cap: e.role === 'manager' || e.role === 'admin' ? 100 : 10 });
+      else if (e.pin) await this.rpc('staff_pin_set', { p_staff: id, p_pin: e.pin });
+      const { error } = await this.sb.from('staff').update({ name, role: e.role, position_id: e.positionId || null, pay_kind: e.kind || null, pay_rate: e.kind && e.rate !== '' ? Number(e.rate) : null, phone: e.phone.trim() || null, joined_on: e.joined || null }).eq('id', id);
+      if (error) throw error;
+      this.setState({ se: null }); this.say(e.id ? name + ' updated' : name + ' added. PIN ' + e.pin + ' works on the clock now.');
+      this.reloadStaff();
+    } catch (err) { this.setState({ se: { ...this.state.se, busy: false, err: /duplicate|unique/i.test(err.message) ? 'That PIN is already taken. Pick another.' : err.message } }); }
+  }
+  async setActive(id, on) {
+    const { error } = await this.sb.from('staff').update({ active: on, left_on: on ? null : this.todayStr() }).eq('id', id);
+    if (error) return this.oops(error);
+    this.setState({ se: null }); this.say(on ? 'Back on the team' : 'Removed from the team. Past hours and pay stay on record.');
+    this.reloadStaff();
+  }
   async addPosition() {
-    const n = this.state.np;
-    if (!n.name.trim()) return;
+    const n = this.state.np; if (!n.name.trim()) return;
     try {
       const { error } = await this.sb.from('positions').insert({ restaurant_id: this.rid, name: n.name.trim(), pay_kind: n.kind, rate: 0 });
       if (error) throw error;
-      const { data } = await this.sb.from('positions').select('id,name,pay_kind,rate,active').eq('restaurant_id', this.rid).order('name');
-      this.setState({ positions: data || [], np: { name: '', kind: 'monthly' } });
+      this.setState({ np: { name: '', kind: 'monthly' } }); this.reloadStaff();
     } catch (e) { this.oops(e); }
   }
-
-  patchPosition(id, patch) {
-    this.setState({ positions: this.state.positions.map(p => (p.id === id ? { ...p, ...patch } : p)) });
-  }
-
+  patchPosition(id, patch) { this.setState({ positions: this.state.positions.map(p => (p.id === id ? { ...p, ...patch } : p)) }); }
   async savePosition(id) {
-    const p = this.state.positions.find(x => x.id === id);
-    if (!p) return;
-    try {
-      const { error } = await this.sb.from('positions').update({ pay_kind: p.pay_kind, rate: Number(p.rate) || 0 }).eq('id', id);
-      if (error) throw error;
-      this.say('Saved');
-    } catch (e) { this.oops(e); }
+    const p = this.state.positions.find(x => x.id === id); if (!p) return;
+    const { error } = await this.sb.from('positions').update({ pay_kind: p.pay_kind, rate: Number(p.rate) || 0 }).eq('id', id);
+    if (error) this.oops(error); else this.say('Saved');
   }
-
-  patchStaff(id, patch) {
-    this.setState({ staff: this.state.staff.map(s => (s.id === id ? { ...s, ...patch } : s)) });
-  }
-
-  async saveStaff(id) {
-    const s = this.state.staff.find(x => x.id === id);
-    if (!s) return;
-    try {
-      const { error } = await this.sb.from('staff').update({
-        position_id: s.position_id || null,
-        pay_kind: s.pay_kind || null,
-        pay_rate: s.pay_rate === '' || s.pay_rate == null ? null : Number(s.pay_rate),
-        phone: s.phone || null,
-      }).eq('id', id);
-      if (error) throw error;
-      this.say('Saved');
-    } catch (e) { this.oops(e); }
-  }
-
   async saveOt() {
-    const o = this.state.ot;
-    try {
-      const { error } = await this.sb.from('restaurants').update({
-        ot_after_hours: Number(o.hours) || 9, ot_multiplier: Number(o.mult) || 1.5,
-      }).eq('id', this.rid);
-      if (error) throw error;
-      this.setState({ house: { ...this.state.house, ot_after_hours: Number(o.hours) || 9, ot_multiplier: Number(o.mult) || 1.5 } });
-      this.say('House policy saved');
-    } catch (e) { this.oops(e); }
+    const o = this.state.ot, hrs = Number(o.hours) || 9, mult = Number(o.mult) || 1.5;
+    const { error } = await this.sb.from('restaurants').update({ ot_after_hours: hrs, ot_multiplier: mult }).eq('id', this.rid);
+    if (error) return this.oops(error);
+    this.setState({ house: { ...this.state.house, ot_after_hours: hrs, ot_multiplier: mult } }); this.say('Overtime policy saved');
   }
 
-  /* ---- tabs and the manager gate ---------------------------------------- */
-  /* Wages are the one thing in here staff must not read about each other, so
-     payroll and the rate sheet ask for a manager PIN once per session. The
-     clock and the roster do not — the floor uses those. */
+  /* ---- tabs and manager gate ---- */
   go(tab) {
-    const gated = this.props.requireManagerPin !== false;
-    if (gated && (tab === 'pay' || tab === 'people') && !this.state.mgr) {
-      return this.setState({ ask: { tab, pin: '', err: '' } });
-    }
+    if (this.props.requireManagerPin !== false && (tab === 'pay' || tab === 'people') && !this.state.mgr) return this.setState({ ask: { tab, pin: '', err: '' } });
     this.enter(tab);
   }
-
   enter(tab) {
     this.setState({ tab });
     if (tab === 'today' && !this.state.dayData) this.loadDay(this.state.day);
@@ -685,7 +890,6 @@ class Component extends DCLogic {
     if (tab === 'pay' && !this.state.pay) this.runPay();
     if (tab === 'clock') this.loadFloor();
   }
-
   async askKey(k) {
     const a = this.state.ask;
     if (k === 'del') return this.setState({ ask: { ...a, pin: a.pin.slice(0, -1), err: '' } });
@@ -693,209 +897,187 @@ class Component extends DCLogic {
       try {
         const who = await this.rpc('staff_pin_login', { p_rid: this.rid, p_pin: a.pin });
         if (!who) return this.setState({ ask: { ...a, pin: '', err: 'Not a valid PIN.' } });
-        /* The owner outranks every manager, so an owner PIN opens anything a
-           manager PIN opens. Locked out of his own wage sheet was the one
-           refusal that never made sense. */
-        if (['manager', 'admin', 'owner'].indexOf(who.role) < 0) {
-          return this.setState({ ask: { ...a, pin: '', err: who.name + ' cannot open the wage sheet.' } });
-        }
-        this.setState({ mgr: who, ask: null });
-        this.enter(a.tab);
+        if (['manager', 'admin', 'owner'].indexOf(who.role) < 0) return this.setState({ ask: { ...a, pin: '', err: who.name + ' cannot open this.' } });
+        this.setState({ mgr: who, ask: null }); this.enter(a.tab);
       } catch (e) { this.setState({ ask: { ...a, pin: '', err: e.message } }); }
       return;
     }
     if (a.pin.length >= 8) return;
     this.setState({ ask: { ...a, pin: a.pin + k, err: '' } });
   }
-
   keypad(onKey) {
     return ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'del', '0', 'ok'].map(k => ({
-      label: k === 'del' ? '←' : k === 'ok' ? '✓' : k,
-      onTap: () => onKey(k),
+      label: k === 'del' ? '⌫' : k === 'ok' ? 'Enter' : k, onTap: () => onKey(k),
+      bg: k === 'ok' ? '#c8a24a' : '#16130f', fg: k === 'ok' ? '#171204' : '#efe7db', line: k === 'ok' ? '#c8a24a' : '#2a231b',
     }));
   }
+  dots(n) { return Array.from({ length: Math.max(4, n) }, (_, i) => ({ bg: i < n ? '#c8a24a' : 'transparent' })); }
 
   renderVals() {
-    const S = this.state, me = S.mgr;
+    const S = this.state, me = S.mgr, act = this.active();
     const d = S.dayData || {}, rows = d.rows || [];
-    const pay = S.pay || {}, payRows = pay.rows || [];
-    const otHours = (S.house.ot_after_hours == null ? 9 : S.house.ot_after_hours);
-    const otMult = (S.house.ot_multiplier == null ? 1.5 : S.house.ot_multiplier);
-    const tabs = [
-      { key: 'clock', label: 'Attendance' }, { key: 'today', label: 'Today' },
-      { key: 'roster', label: 'Roster' }, { key: 'pay', label: 'Payroll' },
-      { key: 'people', label: 'People' },
-    ].map(t => ({
-      label: t.label, onTap: () => this.go(t.key),
-      bg: S.tab === t.key ? '#c8a24a' : '#16130f',
-      fg: S.tab === t.key ? '#171204' : '#9a8f7f',
-      border: S.tab === t.key ? '#c8a24a' : '#2a231b',
-    }));
+    const otHours = S.house.ot_after_hours == null ? 9 : S.house.ot_after_hours, otMult = S.house.ot_multiplier == null ? 1.5 : S.house.ot_multiplier;
+    const gated = this.props.requireManagerPin !== false;
+    const tabs = [['clock', 'Clock'], ['today', 'Today'], ['roster', 'Roster'], ['pay', 'Payroll'], ['people', 'People']].map(([key, label]) => ({
+      label, lock: gated && (key === 'pay' || key === 'people') && !me ? '🔒' : '', onTap: () => this.go(key),
+      bg: S.tab === key ? '#c8a24a' : '#16130f', fg: S.tab === key ? '#171204' : '#9a8f7f', border: S.tab === key ? '#c8a24a' : '#2a231b' }));
+    const pos = {}; S.positions.forEach(p => { pos[p.id] = p; });
+    const rateOf = s => { const p = pos[s.position_id] || {}, k = s.pay_kind || p.pay_kind, r = s.pay_kind ? s.pay_rate : p.rate; return k && +r ? this.money(r) + ' ' + KIND[k] : 'no rate set'; };
+    const now = new Date(S.now);
 
-    const totalPay = payRows.reduce((a, r) => a + (Number(r.pay) || 0), 0);
-    const unpriced = payRows.filter(r => r.pay == null).length;
+    // today
+    const late = r => r.plannedFrom && r.in ? Math.round((new Date(r.in) - new Date(r.plannedFrom)) / 60000) : null;
+    const lateN = rows.filter(r => (late(r) || 0) > 5).length;
+    // payroll
+    const pc = this.payCalc();
+    const earnedT = pc.reduce((a, r) => a + (r.earned || 0), 0), advT = pc.reduce((a, r) => a + r.adv + r.ded, 0), bonT = pc.reduce((a, r) => a + r.bonus, 0), netT = pc.reduce((a, r) => a + (r.net || 0), 0);
+    // roster hours
+    const wh = {};
+    ((S.week || {}).days || []).forEach(x => (x.planned || []).forEach(s => { wh[s.staff] = (wh[s.staff] || 0) + (new Date(s.to) - new Date(s.from)) / 36e5; }));
+    const se = S.se, lg = S.lg, former = S.allStaff.filter(s => !s.active);
+    const pick = (sel, set) => act.map(s => ({ name: s.name, onTap: () => set(s.id), ...this.chip(sel === s.id) }));
 
     return {
       booting: S.phase === 'load', gateSignin: S.phase === 'signin', ready: S.phase === 'ready',
-      err: S.err, toast: S.toast, houseName: this.houseName || '',
-      needSql: !!S.needSql, needSqlMsg: S.needSql,
-      email: S.email, pass: S.pass,
-      onEmail: e => this.setState({ email: e.target.value }),
-      onPass: e => this.setState({ pass: e.target.value }),
-      doSignin: () => this.doSignin(),
-      signinLabel: S.busy === 'signin' ? 'Signing in…' : 'Sign in',
-      tabs,
-      tabClock: S.tab === 'clock', tabToday: S.tab === 'today', tabRoster: S.tab === 'roster',
-      tabPay: S.tab === 'pay', tabStaff: S.tab === 'people',
-      floorLine: S.floor.length ? S.floor.length + ' on the floor' : 'nobody clocked in',
+      err: S.err, toast: S.toast, houseName: this.houseName || '', needSql: !!S.needSql, needSqlMsg: S.needSql,
+      email: S.email, pass: S.pass, onEmail: e => this.setState({ email: e.target.value }), onPass: e => this.setState({ pass: e.target.value }),
+      doSignin: () => this.doSignin(), signinLabel: S.busy === 'signin' ? 'Signing in…' : 'Sign in',
+      tabs, tabClock: S.tab === 'clock', tabToday: S.tab === 'today', tabRoster: S.tab === 'roster', tabPay: S.tab === 'pay', tabStaff: S.tab === 'people',
+      floorLine: S.floor.length ? S.floor.length + ' on the floor' : 'Nobody in',
+      floorPillDot: S.floor.length ? '#9fc79a' : '#6b6255', floorPillFg: S.floor.length ? '#cfe3cb' : '#8d8272', floorPillLine: S.floor.length ? 'rgba(159,199,154,.35)' : '#2a231b',
 
-      /* clock */
-      pinMask: '•'.repeat(S.pin.length),
+      nowTime: now.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }), nowDate: now.toLocaleDateString([], { weekday: 'long', day: 'numeric', month: 'long' }),
+      pinDots: this.dots(S.pin.length),
       pinKeys: this.keypad(k => {
         if (k === 'del') return this.setState({ pin: S.pin.slice(0, -1), clockErr: '' });
         if (k === 'ok') return this.punch();
         if (S.pin.length >= 8) return;
-        this.setState({ pin: S.pin + k, clockErr: '' });
+        this.setState({ pin: S.pin + k, clockErr: '', clockMsg: '' });
       }),
-      breakMins: S.breakMins, onBreak: e => this.setState({ breakMins: e.target.value.replace(/[^0-9]/g, '') }),
-      clockMsg: S.clockMsg, clockErr: S.clockErr,
-      reloadFloor: () => this.loadFloor(),
-      floorEmpty: S.floor.length === 0,
-      floor: S.floor.map(p => ({
-        staff: p.staff, dur: this.dur(p.minutes),
-        sub: (p.role || '') + ' · since ' + this.hm(p.since) + (p.suspect ? ' · forgotten button?' : ''),
-        border: p.suspect ? '#5a3a20' : '#2a231b',
-      })),
+      breakChips: [0, 15, 30, 45, 60].map(m => ({ label: m ? m + ' min' : 'None', onTap: () => this.setState({ breakMins: m }), ...this.chip(S.breakMins === m) })),
+      clockMsg: S.clockMsg, clockErr: S.clockErr, reloadFloor: () => this.loadFloor(), floorEmpty: S.floor.length === 0,
+      floor: S.floor.map(p => ({ staff: p.staff, ini: this.ini(p.staff), av: this.av(p.staff), dur: this.dur(p.minutes), sub: (p.role || '') + ' · since ' + this.hm(p.since) + (p.suspect ? ' · forgot to clock out?' : ''), border: p.suspect ? '#5a3a20' : '#2a231b' })),
 
-      /* today */
-      day: S.day,
-      onDay: e => { this.setState({ day: e.target.value }); this.loadDay(e.target.value); },
-      dayBack: () => { const v = this.shiftDay(S.day, -1); this.setState({ day: v }); this.loadDay(v); },
-      dayFwd: () => { const v = this.shiftDay(S.day, 1); this.setState({ day: v }); this.loadDay(v); },
+      day: S.day, onDay: e => this.setDay(e.target.value),
+      dayBack: () => this.setDay(this.shiftDay(S.day, -1)), dayFwd: () => this.setDay(this.shiftDay(S.day, 1)), dayToday: () => this.setDay(this.todayStr()),
       openAdd: () => this.openEdit(null),
       dayTiles: [
         { label: 'PRESENT', value: String(d.present || 0), tone: '#efe7db' },
-        { label: 'ON THE CLOCK', value: this.dur(d.minutes || 0), tone: '#c8a24a' },
-        { label: 'STILL OPEN', value: String(d.openStints || 0), tone: (d.openStints ? '#e0bd6a' : '#6b6255') },
+        { label: 'LATE', value: String(lateN), tone: lateN ? '#e0bd6a' : '#6b6255' },
+        { label: 'NOT IN', value: String((d.rosteredAway || []).length), tone: (d.rosteredAway || []).length ? '#d98a6f' : '#6b6255' },
+        { label: 'HOURS', value: this.dur(d.minutes || 0), tone: '#c8a24a' },
       ],
       dayEmpty: rows.length === 0,
-      dayRows: rows.map(r => ({
-        staff: r.staff, role: r.role || '',
-        span: this.hm(r.in) + ' → ' + (r.out ? this.hm(r.out) : 'still in'),
-        planned: r.plannedFrom ? 'rostered ' + this.hm(r.plannedFrom) + '–' + this.hm(r.plannedTo) : 'not rostered',
-        breakLine: (r.break ? r.break + ' min break' : 'no break') + (r.source === 'manager' ? ' · by hand' : ''),
-        dur: this.dur(r.minutes), border: r.open ? '#3f3115' : '#2a231b',
-        onEdit: () => this.openEdit(r),
-      })),
-      away: (d.rosteredAway || []).map(a => ({ line: a.staff + ' · ' + this.hm(a.plannedFrom) + '–' + this.hm(a.plannedTo) })),
-      awayAny: (d.rosteredAway || []).length > 0,
+      dayRows: rows.map(r => { const l = late(r), st = r.open ? ['Still in', 'rgba(224,189,106,.14)', '#e0bd6a'] : l == null ? ['Not rostered', '#1b1712', '#8d8272'] : l > 5 ? ['Late ' + l + 'm', 'rgba(217,138,111,.14)', '#e8a58c'] : ['On time', 'rgba(159,199,154,.14)', '#9fc79a'];
+        return { staff: r.staff, ini: this.ini(r.staff), av: this.av(r.staff), role: r.role || '', span: this.hm(r.in) + ' → ' + (r.out ? this.hm(r.out) : 'now'),
+          planned: r.plannedFrom ? 'Rostered ' + this.hm(r.plannedFrom) + '–' + this.hm(r.plannedTo) : '', breakLine: (r.break ? r.break + ' min break' : '') + (r.source === 'manager' ? (r.break ? ' · ' : '') + 'added by hand' : ''),
+          dur: this.dur(r.minutes), border: r.open ? '#3f3115' : '#2a231b', chip: st[0], chipBg: st[1], chipFg: st[2], open: !!r.open,
+          onEdit: () => this.openEdit(r), onOut: () => this.clockOutNow(r) }; }),
+      away: (d.rosteredAway || []).map(a => ({ line: a.staff + ' · ' + this.hm(a.plannedFrom) + '–' + this.hm(a.plannedTo) })), awayAny: (d.rosteredAway || []).length > 0,
 
-      /* roster */
-      weekLabel: S.week ? this.dayName(S.week.from) + ' — ' + this.dayName(S.week.to) : 'Loading the week…',
-      weekBack: () => { const v = this.shiftDay(S.weekFrom, -7); this.setState({ weekFrom: v }); this.loadWeek(v); },
-      weekFwd: () => { const v = this.shiftDay(S.weekFrom, 7); this.setState({ weekFrom: v }); this.loadWeek(v); },
+      weekLabel: S.week ? this.dayName(S.week.from) + ' – ' + this.dayName(S.week.to) : 'Loading…',
+      weekBack: () => this.setWeek(this.shiftDay(S.weekFrom, -7)), weekFwd: () => this.setWeek(this.shiftDay(S.weekFrom, 7)),
+      copyWeek: () => this.copyWeek(), copyLabel: S.copying ? 'Copying…' : 'Copy last week',
       weekDays: ((S.week || {}).days || []).map(x => ({
-        label: this.dayName(x.day),
-        tone: x.day === this.todayStr() ? '#c8a24a' : '#9a8f7f',
-        border: x.day === this.todayStr() ? '#3f3115' : '#2a231b',
-        worked: x.workedMinutes ? this.dur(x.workedMinutes) : '',
-        planned: (x.planned || []).map(s => ({
-          staff: s.staff, span: this.hm(s.from) + '–' + this.hm(s.to) + (s.note ? ' · ' + s.note : ''),
-          onClear: () => this.clearShift(s.shiftId),
-        })),
-        onAdd: () => this.setState({ sh: { staffId: '', day: x.day, from: '17:00', to: '23:00', note: '', err: '' } }),
+        label: this.dayName(x.day), tone: x.day === this.todayStr() ? '#c8a24a' : '#9a8f7f', border: x.day === this.todayStr() ? '#3f3115' : '#2a231b',
+        worked: x.workedMinutes ? this.dur(x.workedMinutes) + ' worked' : '',
+        planned: (x.planned || []).map(s => ({ staff: s.staff, ini: this.ini(s.staff), av: this.av(s.staff), span: this.hm(s.from) + '–' + this.hm(s.to) + (s.note ? ' · ' + s.note : ''), onClear: () => this.clearShift(s.shiftId) })),
+        onAdd: () => this.setState({ sh: { staffId: '', day: x.day, from: '11:00', to: '20:00', note: '', err: '' } }),
       })),
+      weekHours: Object.entries(wh).sort((a, b) => b[1] - a[1]).map(([name, h]) => ({ name, h: (Math.round(h * 10) / 10) + ' h' })), weekHoursAny: Object.keys(wh).length > 0,
 
-      /* payroll */
+      payPresets: [['30', 'Last 30 days'], ['this', 'This month'], ['last', 'Last month'], ['week', 'This week']].map(([k, label]) => ({ label, onTap: () => this.preset(k), ...this.chip(S.preset === k) })),
       payFrom: S.payFrom, payTo: S.payTo,
-      onPayFrom: e => this.setState({ payFrom: e.target.value }),
-      onPayTo: e => this.setState({ payTo: e.target.value }),
-      runPay: () => this.runPay(),
-      payLabel: S.payBusy ? 'Reading…' : 'Show',
-      otLine: 'overtime after ' + otHours + ' h at ' + otMult + '×',
+      onPayFrom: e => this.setState({ payFrom: e.target.value, preset: '' }), onPayTo: e => this.setState({ payTo: e.target.value, preset: '' }),
+      runPay: () => this.runPay(), payLabel: S.payBusy ? 'Reading…' : 'Show', exportCsv: () => this.exportCsv(),
+      toggleMonthly: () => this.setState({ countMonthly: !S.countMonthly }), monthlyTrack: S.countMonthly ? '#c8a24a' : '#2a231b', monthlyKnob: S.countMonthly ? 21 : 3,
       otHours: String(otHours), otMult: String(otMult),
-      payRows: payRows.map(r => ({
-        staff: r.staff, position: r.position, kind: r.pay_kind,
-        rate: Number(r.rate) ? this.money(r.rate) : '—',
-        days: String(r.days || 0), hours: String(r.hours || 0),
-        ot: r.ot_hours ? String(r.ot_hours) : '—',
-        otTone: r.ot_hours ? '#e0bd6a' : '#6b6255',
-        pay: r.pay == null ? 'monthly' : this.money(r.pay),
-        payTone: r.pay == null ? '#6b6255' : '#efe7db',
+      payTiles: [
+        { label: 'EARNED', value: this.money(earnedT), tone: '#efe7db', line: '#2a231b' },
+        { label: 'BONUSES', value: this.money(bonT), tone: bonT ? '#9fc79a' : '#6b6255', line: '#2a231b' },
+        { label: 'ADVANCES & CUTS', value: this.money(advT), tone: advT ? '#e8a58c' : '#6b6255', line: '#2a231b' },
+        { label: 'NET PAYABLE', value: this.money(netT), tone: '#c8a24a', line: 'rgba(200,162,74,.45)' },
+      ],
+      payRows: pc.map(r => ({
+        staff: r.staff, ini: this.ini(r.staff), av: this.av(r.staff_id),
+        sub: (r.position && r.position !== '—' ? r.position + ' · ' : '') + (+r.rate ? this.money(r.rate) + ' ' + (KIND[r.pay_kind] || '') : 'no rate set'),
+        net: r.net == null ? '—' : this.money(r.net), netTone: r.net == null ? '#6b6255' : r.net < 0 ? '#e8a58c' : '#efe7db',
+        stats: [{ k: 'DAYS', v: String(r.days || 0), c: '#efe7db' }, { k: 'HOURS', v: String(r.hours || 0), c: '#efe7db' }, { k: 'OT', v: r.ot_hours ? r.ot_hours + ' h' : '—', c: r.ot_hours ? '#e0bd6a' : '#6b6255' }, { k: 'EARNED', v: r.earned == null ? 'Not counted' : this.money(r.earned), c: r.earned == null ? '#6b6255' : '#efe7db' }],
+        ledger: r.mine.map(l => ({ kind: l.kind === 'bonus' ? '+ Bonus' : l.kind === 'advance' ? '− Advance' : '− Deduction', note: (l.note ? l.note + ' · ' : '') + this.dayName(l.day), amt: this.money(l.amount), c: l.kind === 'bonus' ? '#9fc79a' : '#e8a58c', onDel: () => this.delLg(l.id) })),
+        hasLedger: r.mine.length > 0,
+        onLedger: () => this.setState({ lg: { staffId: r.staff_id, staff: r.staff, kind: 'advance', amt: '', day: this.todayStr() <= S.payTo && this.todayStr() >= S.payFrom ? this.todayStr() : S.payTo, note: '', err: '' } }),
+        slip: this.slip(r), canSlip: !!this.slip(r),
       })),
-      payFoot: unpriced ? unpriced + ' on a monthly salary, not computed here' : 'computed pay for the window',
-      payTotal: this.money(totalPay),
 
-      /* people */
-      positions: S.positions.map(p => ({
-        name: p.name, kind: p.pay_kind, rate: p.rate == null ? '' : String(p.rate),
+      teamLine: act.length + (act.length === 1 ? ' person' : ' people') + (former.length ? ' · ' + former.length + ' former' : ''),
+      openNewStaff: () => this.openSe(null), noStaff: act.length === 0,
+      staffRows: act.map(s => ({ name: s.name, ini: this.ini(s.name), av: this.av(s.id), role: (ROLES.find(r => r[0] === s.role) || [0, s.role || 'staff'])[1],
+        sub: ((pos[s.position_id] || {}).name ? pos[s.position_id].name + ' · ' : '') + rateOf(s),
+        meta: [s.phone, s.joined_on ? 'joined ' + new Date(s.joined_on + 'T12:00').toLocaleDateString([], { month: 'short', year: 'numeric' }) : ''].filter(Boolean).join(' · ') || 'Tap to add phone and joining date',
+        onEdit: () => this.openSe(s) })),
+      formerAny: former.length > 0, showFormer: S.showFormer, toggleFormer: () => this.setState({ showFormer: !S.showFormer }),
+      formerLabel: (S.showFormer ? 'Hide' : 'Show') + ' former staff (' + former.length + ')',
+      formerRows: former.map(s => ({ name: s.name, sub: s.left_on ? 'left ' + this.dayName(s.left_on) : 'inactive', onBack: () => this.setActive(s.id, true) })),
+      positions: S.positions.map(p => ({ name: p.name, kind: p.pay_kind, rate: p.rate == null ? '' : String(p.rate),
+        count: (n => n ? n + (n === 1 ? ' person' : ' people') : 'nobody yet')(act.filter(s => s.position_id === p.id).length),
         onKind: e => { this.patchPosition(p.id, { pay_kind: e.target.value }); setTimeout(() => this.savePosition(p.id), 0); },
-        onRate: e => this.patchPosition(p.id, { rate: e.target.value.replace(/[^0-9.]/g, '') }),
-        onSave: () => this.savePosition(p.id),
-      })),
-      positionOpts: S.positions.map(p => ({ id: p.id, name: p.name })),
+        onRate: e => this.patchPosition(p.id, { rate: e.target.value.replace(/[^0-9.]/g, '') }), onSave: () => this.savePosition(p.id) })),
       npName: S.np.name, npKind: S.np.kind,
-      onNpName: e => this.setState({ np: { ...S.np, name: e.target.value } }),
-      onNpKind: e => this.setState({ np: { ...S.np, kind: e.target.value } }),
+      onNpName: e => this.setState({ np: { ...S.np, name: e.target.value } }), onNpKind: e => this.setState({ np: { ...S.np, kind: e.target.value } }),
       addPosition: () => this.addPosition(),
-      staffRows: S.staff.map(s => ({
-        name: s.name, sub: s.role || '',
-        positionId: s.position_id || '', payKind: s.pay_kind || '',
-        payRate: s.pay_rate == null ? '' : String(s.pay_rate), phone: s.phone || '',
-        onPosition: e => { this.patchStaff(s.id, { position_id: e.target.value }); setTimeout(() => this.saveStaff(s.id), 0); },
-        onKind: e => { this.patchStaff(s.id, { pay_kind: e.target.value }); setTimeout(() => this.saveStaff(s.id), 0); },
-        onRate: e => this.patchStaff(s.id, { pay_rate: e.target.value.replace(/[^0-9.]/g, '') }),
-        onPhone: e => this.patchStaff(s.id, { phone: e.target.value }),
-        onSave: () => this.saveStaff(s.id),
-      })),
       otHoursIn: S.ot.hours, otMultIn: S.ot.mult,
-      onOtHours: e => this.setState({ ot: { ...S.ot, hours: e.target.value.replace(/[^0-9.]/g, '') } }),
-      onOtMult: e => this.setState({ ot: { ...S.ot, mult: e.target.value.replace(/[^0-9.]/g, '') } }),
+      onOtHours: e => this.setState({ ot: { ...S.ot, hours: e.target.value.replace(/[^0-9.]/g, '') } }), onOtMult: e => this.setState({ ot: { ...S.ot, mult: e.target.value.replace(/[^0-9.]/g, '') } }),
       saveOt: () => this.saveOt(),
 
-      /* stint editor */
-      editOpen: !!S.ed,
-      editTitle: S.ed && S.ed.id ? 'Correct the hour' : 'Write a stint',
-      editSub: S.ed && S.ed.id ? S.ed.staff + ' · ' + this.dayName(S.day) : 'For ' + this.dayName(S.day) + (me ? ', signed ' + me.name : ''),
-      editPickStaff: !!(S.ed && !S.ed.id),
-      edStaff: (S.ed && S.ed.staffId) || '',
-      edIn: (S.ed && S.ed.in) || '', edOut: (S.ed && S.ed.out) || '',
-      edBreak: (S.ed && S.ed.brk) || '', edNote: (S.ed && S.ed.note) || '',
-      edErr: (S.ed && S.ed.err) || '',
-      edSaveLabel: S.ed && S.ed.id ? 'Correct' : 'Write it',
-      onEdStaff: e => this.setState({ ed: { ...S.ed, staffId: e.target.value } }),
-      onEdIn: e => this.setState({ ed: { ...S.ed, in: e.target.value } }),
-      onEdOut: e => this.setState({ ed: { ...S.ed, out: e.target.value } }),
-      onEdBreak: e => this.setState({ ed: { ...S.ed, brk: e.target.value.replace(/[^0-9]/g, '') } }),
-      onEdNote: e => this.setState({ ed: { ...S.ed, note: e.target.value } }),
-      closeEdit: () => this.setState({ ed: null }),
-      saveEdit: () => this.saveEdit(),
-      staffOpts: S.staff.map(s => ({ id: s.id, name: s.name })),
+      seOpen: !!se, seTitle: se && se.id ? 'Edit ' + (se.name || 'staff') : 'Add staff',
+      seName: (se && se.name) || '', onSeName: e => this.setState({ se: { ...S.se, name: e.target.value } }),
+      seRoles: ROLES.map(([k, label]) => ({ label, onTap: () => this.setState({ se: { ...S.se, role: k } }), ...this.chip(se && se.role === k) })).concat(se && se.role === 'owner' ? [{ label: 'Owner', onTap: () => {}, ...this.chip(true) }] : []),
+      seRoleHint: se ? (se.role === 'owner' ? 'Full access.' : (ROLES.find(r => r[0] === se.role) || [])[2] || '') : '',
+      sePositions: [{ label: 'None', onTap: () => this.setState({ se: { ...S.se, positionId: '' } }), ...this.chip(se && !se.positionId) }].concat(S.positions.map(p => ({ label: p.name, onTap: () => this.setState({ se: { ...S.se, positionId: p.id } }), ...this.chip(se && se.positionId === p.id) }))),
+      seKind: (se && se.kind) || '', onSeKind: e => this.setState({ se: { ...S.se, kind: e.target.value } }),
+      seRate: (se && se.rate) || '', onSeRate: e => this.setState({ se: { ...S.se, rate: e.target.value.replace(/[^0-9.]/g, '') } }),
+      sePhone: (se && se.phone) || '', onSePhone: e => this.setState({ se: { ...S.se, phone: e.target.value } }),
+      seJoined: (se && se.joined) || '', onSeJoined: e => this.setState({ se: { ...S.se, joined: e.target.value } }),
+      sePin: (se && se.pin) || '', onSePin: e => this.setState({ se: { ...S.se, pin: e.target.value.replace(/\D/g, '').slice(0, 8) } }),
+      sePinGen: () => this.setState({ se: { ...S.se, pin: String(Math.floor(1000 + Math.random() * 9000)) } }),
+      sePinLabel: se && se.id ? 'NEW PIN (OPTIONAL)' : 'CLOCK PIN',
+      sePinHint: se && se.id ? 'Leave empty to keep their current PIN.' : 'They type this on the Clock tab to punch in and out.',
+      seErr: (se && se.err) || '', seSaveLabel: se && se.busy ? 'Saving…' : se && se.id ? 'Save changes' : 'Add to team',
+      seCanRemove: !!(se && se.id && se.role !== 'owner'),
+      seRemoveLabel: se && se.confirm ? 'Tap again to remove ' + se.name : 'Remove from team',
+      removeSe: () => { if (!S.se.confirm) return this.setState({ se: { ...S.se, confirm: true } }); this.setActive(S.se.id, false); },
+      closeSe: () => this.setState({ se: null }), saveSe: () => this.saveSe(),
 
-      /* shift editor */
-      shiftOpen: !!S.sh,
-      shiftDayLabel: S.sh ? this.dayName(S.sh.day) : '',
-      shStaff: (S.sh && S.sh.staffId) || '', shFrom: (S.sh && S.sh.from) || '',
-      shTo: (S.sh && S.sh.to) || '', shNote: (S.sh && S.sh.note) || '', shErr: (S.sh && S.sh.err) || '',
-      onShStaff: e => this.setState({ sh: { ...S.sh, staffId: e.target.value } }),
-      onShFrom: e => this.setState({ sh: { ...S.sh, from: e.target.value } }),
-      onShTo: e => this.setState({ sh: { ...S.sh, to: e.target.value } }),
-      onShNote: e => this.setState({ sh: { ...S.sh, note: e.target.value } }),
-      closeShift: () => this.setState({ sh: null }),
-      saveShift: () => this.saveShift(),
+      lgOpen: !!lg, lgTitle: lg ? lg.staff : '',
+      lgKinds: [['advance', 'Advance'], ['bonus', 'Bonus'], ['deduction', 'Deduction']].map(([k, label]) => ({ label, onTap: () => this.setState({ lg: { ...S.lg, kind: k } }), ...this.chip(lg && lg.kind === k) })),
+      lgAmt: (lg && lg.amt) || '', onLgAmt: e => this.setState({ lg: { ...S.lg, amt: e.target.value.replace(/[^0-9.]/g, '') } }),
+      lgDay: (lg && lg.day) || '', onLgDay: e => this.setState({ lg: { ...S.lg, day: e.target.value } }),
+      lgNote: (lg && lg.note) || '', onLgNote: e => this.setState({ lg: { ...S.lg, note: e.target.value } }),
+      lgErr: (lg && lg.err) || '', closeLg: () => this.setState({ lg: null }), saveLg: () => this.saveLg(),
 
-      /* manager gate */
-      askOpen: !!S.ask,
-      askTitle: 'Manager PIN',
-      askBody: S.ask && S.ask.tab === 'pay' ? 'Wages are not for the floor to read. A manager or the owner opens this.' : 'Rates and positions are changed by a manager.',
-      askMask: '•'.repeat((S.ask && S.ask.pin.length) || 0),
-      askErr: (S.ask && S.ask.err) || '',
-      askKeys: this.keypad(k => this.askKey(k)),
-      closeAsk: () => this.setState({ ask: null }),
+      editOpen: !!S.ed, editTitle: S.ed && S.ed.id ? 'Correct hours' : 'Add hours by hand',
+      editSub: S.ed && S.ed.id ? S.ed.staff + ' · ' + this.dayName(S.day) : this.dayName(S.day) + (me ? ' · signed ' + me.name : ''),
+      editPickStaff: !!(S.ed && !S.ed.id), edPick: pick(S.ed && S.ed.staffId, id => this.setState({ ed: { ...this.state.ed, staffId: id } })),
+      edIn: (S.ed && S.ed.in) || '', edOut: (S.ed && S.ed.out) || '', edBreak: (S.ed && S.ed.brk) || '', edNote: (S.ed && S.ed.note) || '', edErr: (S.ed && S.ed.err) || '',
+      edSaveLabel: S.ed && S.ed.id ? 'Save correction' : 'Add hours',
+      onEdIn: e => this.setState({ ed: { ...S.ed, in: e.target.value } }), onEdOut: e => this.setState({ ed: { ...S.ed, out: e.target.value } }),
+      onEdBreak: e => this.setState({ ed: { ...S.ed, brk: e.target.value.replace(/[^0-9]/g, '') } }), onEdNote: e => this.setState({ ed: { ...S.ed, note: e.target.value } }),
+      closeEdit: () => this.setState({ ed: null }), saveEdit: () => this.saveEdit(),
+
+      shiftOpen: !!S.sh, shiftDayLabel: S.sh ? this.dayName(S.sh.day) : '',
+      shPick: pick(S.sh && S.sh.staffId, id => this.setState({ sh: { ...this.state.sh, staffId: id } })),
+      shPresets: [['Morning', '07:00', '15:00'], ['Lunch', '11:00', '16:00'], ['Full day', '11:00', '23:00'], ['Evening', '17:00', '23:30']].map(([label, f, t]) => ({ label: label + ' ' + f + '–' + t, onTap: () => this.setState({ sh: { ...this.state.sh, from: f, to: t } }), ...this.chip(S.sh && S.sh.from === f && S.sh.to === t) })),
+      shFrom: (S.sh && S.sh.from) || '', shTo: (S.sh && S.sh.to) || '', shNote: (S.sh && S.sh.note) || '', shErr: (S.sh && S.sh.err) || '',
+      onShFrom: e => this.setState({ sh: { ...S.sh, from: e.target.value } }), onShTo: e => this.setState({ sh: { ...S.sh, to: e.target.value } }), onShNote: e => this.setState({ sh: { ...S.sh, note: e.target.value } }),
+      closeShift: () => this.setState({ sh: null }), saveShift: () => this.saveShift(),
+
+      askOpen: !!S.ask, askTitle: 'Manager PIN',
+      askBody: S.ask && S.ask.tab === 'pay' ? 'Wages are private. A manager or the owner opens this.' : 'Adding staff and changing rates needs a manager.',
+      askDots: this.dots((S.ask && S.ask.pin.length) || 0), askErr: (S.ask && S.ask.err) || '',
+      askKeys: this.keypad(k => this.askKey(k)), closeAsk: () => this.setState({ ask: null }),
     };
   }
 }
-
 </script>
 </body>
 </html>
