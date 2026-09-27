@@ -1948,8 +1948,11 @@ export async function intoLanguage(key, text, lang, geminiKey) {
  * need changing when Google retires it; the caller falls back to the browser
  * voice rather than going silent if it 404s.
  */
-const GEMINI_TTS = 'gemini-2.5-flash-preview-tts';
-const GEMINI_TTS_MODELS = [GEMINI_TTS, 'gemini-2.5-pro-preview-tts'];
+/* Newest first. The 2.5 preview voices were retired in 2026 and every reply
+   silently fell to the phone voice. 3.8 takes voiceConfig.voice; the older
+   ones take prebuiltVoiceConfig. Each is tried until one answers. */
+const GEMINI_TTS_MODELS = ['gemini-3.8-flash-tts', 'gemini-3.8-flash-lite-tts', 'gemini-3.1-flash-tts', 'gemini-3.1-flash-tts-preview', 'gemini-2.5-flash-preview-tts'];
+let TTS_OK = null;
 /* Kore is the steady, unhurried one. A counter reply is information, not
    performance, and the bright voices oversell a sales figure. */
 const TTS_VOICE = 'Kore';
@@ -1998,7 +2001,9 @@ export async function nativeAudio(geminiKey, text, lang, translate) {
   /* The free tier gives the TTS model a small daily allowance. When it is
      spent Google answers 429 and the voice silently dropped to the phone's own
      — which on an iPhone has no Tamil at all. Try the second model's pool. */
-  for (const model of GEMINI_TTS_MODELS) {
+  const order = TTS_OK ? [TTS_OK].concat(GEMINI_TTS_MODELS.filter(m => m !== TTS_OK)) : GEMINI_TTS_MODELS;
+  for (const model of order) {
+    const voiceConfig = /^gemini-3\.8/.test(model) ? { voice: TTS_VOICE } : { prebuiltVoiceConfig: { voiceName: TTS_VOICE } };
     res = await fetch(
       GEMINI_NATIVE + '/models/' + model + ':generateContent?key=' + encodeURIComponent(geminiKey),
       {
@@ -2008,15 +2013,16 @@ export async function nativeAudio(geminiKey, text, lang, translate) {
           contents: [{ parts: [{ text: say }] }],
           generationConfig: {
             responseModalities: ['AUDIO'],
-            speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: TTS_VOICE } } },
+            speechConfig: { voiceConfig },
           },
         }),
       },
     );
-    if (res.ok) break;
-    lastErr = new Error(await res.text().catch(() => 'HTTP ' + res.status));
+    if (res.ok) { TTS_OK = model; break; }
+    lastErr = new Error(model + ': ' + (await res.text().catch(() => 'HTTP ' + res.status)).slice(0, 200));
     lastErr.status = res.status;
-    if (res.status !== 429 && res.status !== 404 && res.status !== 503) throw lastErr;
+    console.info('[assistant] Gemini voice ' + model + ' → ' + res.status);
+    if (res.status === 401 || res.status === 403) throw lastErr;
   }
   if (!res.ok) throw lastErr;
   const j = await res.json();

@@ -979,7 +979,7 @@ class Component extends DCLogic {
           URL.revokeObjectURL(url);
           if (ok || !live()) return this.doneTalking(tok);
         }
-      } catch (e) { console.info('[assistant] Gemini voice unavailable: ' + ((e && e.status) || '') + ' ' + String((e && e.message) || e).slice(0, 160)); }
+      } catch (e) { this._ttsWhy = (e && e.status) === 429 ? 'Gemini voice limit reached' : 'Gemini voice error ' + ((e && e.status) || ''); console.info('[assistant] Gemini voice unavailable: ' + ((e && e.status) || '') + ' ' + String((e && e.message) || e).slice(0, 200)); }
       if (!live()) return;
     }
 
@@ -1058,7 +1058,7 @@ class Component extends DCLogic {
         window.speechSynthesis.cancel();
         u.onend = u.onerror = fin;
         this._finish = fin;
-        this.setState({ voicing: false, talk: true, voice: 'Phone voice' });
+        this.setState({ voicing: false, talk: true, voice: this._ttsWhy ? 'Phone voice (' + this._ttsWhy + ')' : 'Phone voice' }); this._ttsWhy = '';
         console.info('[assistant] voice: phone speechSynthesis (' + u.lang + ')');
         clearTimeout(this._dog);
         this._dog = setTimeout(fin, 4000 + text.length * 85);
