@@ -1744,6 +1744,14 @@ const LISTEN = `A restaurant staff member is speaking to the counter system, in
 Tamil, Telugu, or English with an Indian accent. Identify the language actually
 spoken and give the meaning in English.
 
+"english" is always a proper English translation in English words, never the
+Tamil or Telugu sounds written in Latin letters. "Indha vaaram evlo sales
+aachu" becomes "How much did we sell this week", not the romanised words.
+
+"lang" is the language the person spoke in. Tamil mixed with English words
+(Tanglish) is "ta"; Telugu mixed with English is "te". Only a sentence spoken
+wholly in English is "en".
+
 Dish names stay as spoken — biryani, faluda, porotta, parotta are names, not
 words to translate. Numbers are quantities; a table number is "table 7".
 
@@ -1987,6 +1995,13 @@ function unb64(s) {
 export async function nativeAudio(geminiKey, text, lang, translate) {
   if (!geminiKey || !text) return null;
   const name = LANG_NAME[lang];
+  /* The current voice models read their whole input aloud, instructions
+     included, so they get only the words to say. Tamil and Telugu are
+     written first by the chat model, then voiced as they are. */
+  if (name && translate) {
+    try { const t = String((((await geminiChat(geminiKey, { temperature: 0.3, max_tokens: 700, messages: [{ role: 'user', content: speakPrompt(name, text) }] })).choices || [])[0] || {}).message?.content || '').trim(); if (t) text = t; } catch (e) {}
+  }
+  const plain = String(text).replace(/[*_#`>]+/g, ' ').replace(/\s+/g, ' ').trim();
   const exact = 'Say exactly these words and nothing else: no greeting, no introduction, no extra sentence before or after.';
   /* translate: one call instead of two. The reply goes out in English and the
      voice model says it in the staff member's language itself — the separate
@@ -2010,7 +2025,7 @@ export async function nativeAudio(geminiKey, text, lang, translate) {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
-          contents: [{ parts: [{ text: say }] }],
+          contents: [{ role: 'user', parts: [{ text: /^gemini-2\.5/.test(model) ? say : plain }] }],
           generationConfig: {
             responseModalities: ['AUDIO'],
             speechConfig: { voiceConfig },
@@ -2036,7 +2051,9 @@ export async function nativeAudio(geminiKey, text, lang, translate) {
      mime type; read it rather than assuming, in case a model ships at 16 kHz. */
   const mime = inline.mimeType || inline.mime_type || '';
   const rate = Number((mime.match(/rate=(\d+)/) || [])[1]) || 24000;
-  return wavFromPcm(unb64(inline.data), rate);
+  const out = wavFromPcm(unb64(inline.data), rate);
+  if (name && translate) out.spoken = plain;
+  return out;
 }
 
 /* Second rung for Tamil and Telugu when Gemini's voice is out of quota: Google

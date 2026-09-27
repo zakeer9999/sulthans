@@ -990,6 +990,11 @@ class Component extends DCLogic {
           const { nativeAudio } = await this.mod();
           const wav = await nativeAudio(this.geminiKey(), text, lang, true);
           if (!live()) return;
+          if (wav && wav.spoken && wav.spoken !== text) {
+            const log = this.state.log.slice();
+            for (let k = log.length - 1; k >= 0; k--) if (log[k].role !== 'you' && log[k].text) { log[k] = { ...log[k], spoken: wav.spoken }; break; }
+            this.setState({ log });
+          }
           if (wav) {
             const url = URL.createObjectURL(wav);
             this.setState({ voicing: false, talk: true, voice: 'Gemini voice' });
@@ -1245,7 +1250,7 @@ class Component extends DCLogic {
       engine: '8B',
       engineShown: st.engine === '8b',
 
-      log: st.log.filter(m => m.text).map(m => ({ ...ROLE[m.role], text: m.text })),
+      log: st.log.filter(m => m.text).map(m => ({ ...ROLE[m.role], text: m.spoken ? m.spoken + '\n\n' + m.text : m.text })),
       empty: !st.log.some(m => m.text),
       prompts: (Array.isArray(this.props.seeds) && this.props.seeds.length ? this.props.seeds : SEEDS).map(text => ({ text, go: () => this.ask(text) })),
 
