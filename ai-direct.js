@@ -1615,21 +1615,35 @@ function geminiOnce(key, body, model) {
 /* Groq's free per-minute input cap (7-8k tokens) is smaller than a tool
    round late in a conversation. Long tool results are cut first, then the
    oldest turns, then — only if still too big — the tools themselves. */
+/* Old turns go first, whole (a tool result without its call is rejected);
+   the current question and this turn's own tool round are never dropped —
+   losing the question is what produced "I didn't catch a request". Tools are
+   never stripped: without them gpt-oss still emits a call and Groq refuses
+   with "Tool choice is none, but model called a tool". */
 function fit(body, chars) {
   const size = b => JSON.stringify(b.messages).length + (b.tools ? JSON.stringify(b.tools).length : 0);
   if (size(body) <= chars) return body;
-  let b = { ...body, messages: body.messages.map(m => m.role === 'tool' && m.content && m.content.length > 1500 ? { ...m, content: m.content.slice(0, 1500) + ' …(cut)' } : m) };
-  while (size(b) > chars && b.messages.length > 3) {
-    const rest = b.messages.slice(2);
-    while (rest.length > 1 && rest[0].role === 'tool') rest.shift();
-    b = { ...b, messages: [b.messages[0], ...rest] };
+  const cut = (ms, n) => ms.map(m => m.role === 'tool' && m.content && m.content.length > n ? { ...m, content: m.content.slice(0, n) + ' …(cut)' } : m);
+  const msgs = body.messages;
+  let lastUser = msgs.length - 1;
+  while (lastUser > 0 && msgs[lastUser].role !== 'user') lastUser--;
+  const head = msgs[0], now = msgs.slice(lastUser);
+  let old = msgs.slice(1, lastUser);
+  let b = { ...body, messages: [head, ...cut(old, 1500), ...cut(now, 1500)] };
+  while (size(b) > chars && old.length) {
+    let i = 1;
+    while (i < old.length && old[i].role !== 'user') i++;
+    old = old.slice(i);
+    b = { ...body, messages: [head, ...cut(old, 1500), ...cut(now, 1500)] };
   }
-  if (size(b) > chars) { const { tools, tool_choice, ...t } = b; b = t; }
+  for (const n of [900, 500]) if (size(b) > chars) b = { ...b, messages: [head, ...cut(now, n)] };
   return b;
 }
 
 async function chatWithFallback(key, body, geminiKey) {
-  const busy = e => e.status === 429 || e.status === 413 || e.status === 503;
+  /* A 400 "model called a tool" is one model misfiring, not a bad request:
+     the next rung answers it. */
+  const busy = e => e.status === 429 || e.status === 413 || e.status === 503 || e.status === 500 || (e.status === 400 && /called a tool|tool_use_failed|failed to call a function/i.test(e.message || ''));
   /* Groq's free per-minute token cap trips on the second tool round (system
      prompt + tools + results) and says "try again in 6.2s". Waiting that out
      beats handing the answer to Gemini while Gemini is also overloaded. */
@@ -1863,11 +1877,26 @@ async function hearGemini(key, blob) {
   let wav = blob;
   try { wav = await toWav(blob); } catch (e) { console.info('[assistant] could not convert recording: ' + String((e && e.message) || e).slice(0, 80)); }
   const data = await b64(wav), mime = (wav.type || 'audio/wav').split(';')[0];
+  /* Every Gemini model is tried before Whisper. A 503/500 means that model is
+     overloaded for a few seconds, so those get a second pass after a short
+     wait; only a 429 (allowance spent) or 404 benches a model for later. */
   let last;
-  for (const model of GEMINI_LITE) {
-    if (cooling(model)) continue;
+  const again = [];
+  const one = async model => {
     try { return await hearGeminiOnce(key, model, mime, data); }
-    catch (e) { last = e; console.info('[assistant] Gemini hearing ' + model + ': ' + ((e && e.status) || '') + ' ' + String((e && e.message) || e).slice(0, 140)); if (e.message === 'nothing heard') throw e; if (e.status && ![429, 503, 500, 404].includes(e.status)) throw e; cool(model, e); }
+    catch (e) {
+      last = e;
+      console.info('[assistant] Gemini hearing ' + model + ': ' + ((e && e.status) || '') + ' ' + String((e && e.message) || e).slice(0, 140));
+      if (e.message === 'nothing heard') throw e;
+      if (e.status && ![429, 503, 500, 404].includes(e.status)) throw e;
+      if (e.status === 503 || e.status === 500 || !e.status) again.push(model); else cool(model, e);
+      return null;
+    }
+  };
+  for (const model of GEMINI_LITE) { if (cooling(model)) continue; const r = await one(model); if (r) return r; }
+  if (again.length) {
+    await new Promise(r => setTimeout(r, 1200));
+    for (const model of again.splice(0)) { const r = await one(model); if (r) return r; }
   }
   if (!last) { last = new Error('Gemini free limit reached'); last.status = 429; }
   throw last;
@@ -1934,7 +1963,11 @@ async function hearWhisper(key, blob) {
   ]);
   const said = String((tr && tr.text) || '').trim();
   if (!said || GHOST.test(said)) throw new Error('nothing heard');
-  return { text: said, lang: WHISPER_LANG[String((tx && tx.language) || '').toLowerCase()] || 'und', via: 'whisper' };
+  /* Whisper's language guess calls Indian-accented English "tamil", which made
+     English questions get Tamil answers. The script it wrote decides instead. */
+  const raw = String((tx && tx.text) || '');
+  const lang = /[\u0B80-\u0BFF]/.test(raw) ? 'ta' : /[\u0C00-\u0C7F]/.test(raw) ? 'te' : /[a-z]/i.test(raw) ? 'en' : WHISPER_LANG[String((tx && tx.language) || '').toLowerCase()] || 'und';
+  return { text: said, lang, via: 'whisper' };
 }
 
 /** Returns { text, lang, via }. Gemini first, Whisper when it cannot answer. */
