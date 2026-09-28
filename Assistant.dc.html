@@ -537,7 +537,9 @@ class Component extends DCLogic {
       this.setState({
         note: /401|invalid api key/i.test(msg)
           ? 'Groq refused the key. Check groqKey in config.js.'
-          : 'That did not go through. ' + msg,
+          : /\b(413|429)\b|too large|rate limit|tokens per (minute|day)|quota|limit reached/i.test(msg)
+            ? 'The free AI allowance is used up for the moment. Try again in a minute, or ask a shorter question.'
+            : 'That did not go through. ' + msg,
       });
       return '';
     }
@@ -887,7 +889,7 @@ class Component extends DCLogic {
         const { hear } = await this.mod();
         const h = await hear(this.groqKey(), blob, this.geminiKey());
         english = h.text;
-        ear = h.via === 'whisper' ? 'Whisper' : 'Gemini';
+        ear = h.via === 'whisper' ? 'Whisper' + (h.why ? ' (' + h.why + ')' : '') : 'Gemini';
         if (h.lang && h.lang !== 'und') this._heardLang = h.lang;
       } else {
         const b64 = await this.b64(blob);
@@ -988,7 +990,7 @@ class Component extends DCLogic {
       if (this.mode() === 'direct' && this.geminiKey()) {
         try {
           const { nativeAudio } = await this.mod();
-          const wav = await nativeAudio(this.geminiKey(), text, lang, true);
+          const wav = await nativeAudio(this.geminiKey(), text, lang, true, this.groqKey());
           if (!live()) return;
           if (wav && wav.spoken && wav.spoken !== text) {
             const log = this.state.log.slice();

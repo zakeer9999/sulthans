@@ -1555,13 +1555,39 @@ const groqChat = (key, body) => chatCall(GROQ, key, {
    reasoning_effort is Groq's own field and is dropped on the way. */
 /* "High demand" 503s hit one Gemini model at a time; the lite model sits on a
    separate pool. Try flash, then lite, then flash once more after a pause. */
-async function geminiChat(key, body) {
+/* Each model has its own free pool. A model that answered 429 is benched for
+   as long as Google says (or a minute; half an hour for a daily cap), so the
+   next turn skips it without a round trip. Before this, every turn paid for
+   the same refused calls plus 7 s of waits before reaching a model that works. */
+const GEMINI_TEXT = [GEMINI_CHAT, 'gemini-flash-lite-latest', 'gemini-2.5-flash-lite', 'gemini-2.5-flash'];
+/* Hearing and translating are short, plain jobs. Flash-Lite does them as well
+   and has ~25x Flash's free daily allowance, so it goes first there and Flash
+   is kept for the long writing (Enhance, chat fallback). */
+const GEMINI_LITE = ['gemini-flash-lite-latest', 'gemini-2.5-flash-lite', GEMINI_CHAT, 'gemini-2.5-flash'];
+/* Benches survive a reload (and are shared by tabs on this phone), so a model
+   whose daily cap is spent is not asked again on every page open. */
+const COOL = (() => { try { return JSON.parse(localStorage.getItem('sulthans.aiCool') || '{}') || {}; } catch (e) { return {}; } })();
+const cooling = m => (COOL[m] || 0) > Date.now();
+function cool(model, e) {
+  const msg = String((e && e.message) || ''), st = e && e.status;
+  const save = () => { try { localStorage.setItem('sulthans.aiCool', JSON.stringify(COOL)); } catch (e) {} };
+  if (st === 404 || st === 400 && /not found|not supported/i.test(msg)) { COOL[model] = Date.now() + 864e5; return save(); }
+  if (st === 503 || st === 500) { COOL[model] = Date.now() + 20e3; return save(); }
+  const m = /retry in ([\d.]+)\s*s|"retryDelay":\s*"(\d+)s"/i.exec(msg);
+  const daily = /per ?day|PerDay|RPD/i.test(msg);
+  const ms = daily ? 30 * 60e3 : m ? Number(m[1] || m[2]) * 1000 + 500 : 60e3;
+  COOL[model] = Date.now() + Math.min(ms, 60 * 60e3);
+  try { localStorage.setItem('sulthans.aiCool', JSON.stringify(COOL)); } catch (e) {}
+}
+export const geminiState = () => GEMINI_TEXT.every(cooling) ? 'Gemini limit reached' : '';
+async function geminiChat(key, body, order) {
   let last;
-  for (const [model, wait] of [[GEMINI_CHAT, 0], ['gemini-flash-lite-latest', 0], [GEMINI_CHAT, 4000], ['gemini-flash-lite-latest', 3000]]) {
-    if (wait) await new Promise(r => setTimeout(r, wait));
+  for (const model of order || GEMINI_TEXT) {
+    if (cooling(model)) continue;
     try { return await geminiOnce(key, body, model); }
-    catch (e) { last = e; if (e.status !== 503 && e.status !== 429 && e.status !== 500) throw e; }
+    catch (e) { last = e; if ([429, 404, 503, 500].includes(e.status) || (e.status === 400 && /not found|not supported/i.test(e.message || ''))) cool(model, e); else throw e; }
   }
+  if (!last) { last = new Error('Gemini free limit reached'); last.status = 429; }
   throw last;
 }
 
@@ -1586,6 +1612,22 @@ function geminiOnce(key, body, model) {
 
    Stateless on purpose: nothing remembers the failure, so the step back up to
    the big model needs no timer and no counter. */
+/* Groq's free per-minute input cap (7-8k tokens) is smaller than a tool
+   round late in a conversation. Long tool results are cut first, then the
+   oldest turns, then — only if still too big — the tools themselves. */
+function fit(body, chars) {
+  const size = b => JSON.stringify(b.messages).length + (b.tools ? JSON.stringify(b.tools).length : 0);
+  if (size(body) <= chars) return body;
+  let b = { ...body, messages: body.messages.map(m => m.role === 'tool' && m.content && m.content.length > 1500 ? { ...m, content: m.content.slice(0, 1500) + ' …(cut)' } : m) };
+  while (size(b) > chars && b.messages.length > 3) {
+    const rest = b.messages.slice(2);
+    while (rest.length > 1 && rest[0].role === 'tool') rest.shift();
+    b = { ...b, messages: [b.messages[0], ...rest] };
+  }
+  if (size(b) > chars) { const { tools, tool_choice, ...t } = b; b = t; }
+  return b;
+}
+
 async function chatWithFallback(key, body, geminiKey) {
   const busy = e => e.status === 429 || e.status === 413 || e.status === 503;
   /* Groq's free per-minute token cap trips on the second tool round (system
@@ -1596,23 +1638,28 @@ async function chatWithFallback(key, body, geminiKey) {
     try { return await groqChat(key, { ...body, model, reasoning_effort: EFFORT }); }
     catch (e) {
       const ms = waitFor(e);
-      if (!busy(e) || !ms || ms > 20000) throw e;
+      if (!busy(e) || !ms || ms > 8000 || (geminiKey && !geminiState())) throw e;
       await new Promise(r => setTimeout(r, ms + 300));
       return groqChat(key, { ...body, model, reasoning_effort: EFFORT });
     }
   };
+  const qwen = () => groqChat(key, { ...fit(body, 19000), model: NATIVE, reasoning_effort: EFFORT });
   try {
     return await groq(CHAT);
   } catch (e) {
     if (!busy(e)) throw e;
-    try {
-      return await groq(CHAT_SMALL);
-    } catch (e2) {
-      if (!geminiKey || !busy(e2)) return groq(NATIVE);
-      /* Last rung: Qwen on Groq has its own daily quota, so it is often still
-         free when both gpt-oss models and every Gemini pool are spent. */
+    /* Gemini's pools are much larger than Groq's per-minute cap, so it goes
+       second now; skipped instantly while every Gemini model is benched. */
+    if (geminiKey && !geminiState()) {
       try { return await geminiChat(geminiKey, body); }
-      catch (e3) { if (!busy(e3) && e3.status !== 500) throw e3; return groq(NATIVE); }
+      catch (e3) { if (!busy(e3) && e3.status !== 500 && e3.status !== 404) throw e3; }
+    }
+    try {
+      return await groqChat(key, { ...fit(body, 21000), model: CHAT_SMALL, reasoning_effort: EFFORT });
+    } catch (e2) {
+      if (!busy(e2)) throw e2;
+      /* Last rung: Qwen on Groq has its own daily quota. */
+      return qwen();
     }
   }
 }
@@ -1620,14 +1667,15 @@ async function chatWithFallback(key, body, geminiKey) {
 /* One tool-free completion for long creative JSON (Content Studio). Gemini goes
    first: its free per-minute budget fits the long brief that trips Groq's 8k
    cap, and it writes the long reply without being cut off. Groq is the fallback. */
-export async function creativeChat(key, geminiKey, system, prompt) {
+export async function creativeChat(key, geminiKey, system, prompt, groqPrompt) {
   const messages = [{ role: 'system', content: system }, { role: 'user', content: prompt }];
+  const groqMessages = groqPrompt ? [{ role: 'system', content: system }, { role: 'user', content: groqPrompt }] : messages;
   const pick = j => (j && j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content) || '';
   let last;
-  if (geminiKey) try { const t = pick(await geminiChat(geminiKey, { messages, max_tokens: 16000, temperature: 0.9 })); if (t) return t; } catch (e) { last = e; }
+  if (geminiKey && !geminiState()) try { const t = pick(await geminiChat(geminiKey, { messages, max_tokens: 16000, temperature: 0.9 })); if (t) return t; } catch (e) { last = e; }
   for (const model of [CHAT, CHAT_SMALL]) {
     if (!key) break;
-    try { const t = pick(await groqChat(key, { model, messages, max_tokens: 4000, temperature: 0.9, reasoning_effort: 'low' })); if (t) return t; } catch (e) { last = e; }
+    try { const t = pick(await groqChat(key, { model, messages: groqMessages, max_tokens: 3000, temperature: 0.9, reasoning_effort: 'low' })); if (t) return t; } catch (e) { last = e; }
   }
   throw last || new Error('no reply');
 }
@@ -1816,10 +1864,12 @@ async function hearGemini(key, blob) {
   try { wav = await toWav(blob); } catch (e) { console.info('[assistant] could not convert recording: ' + String((e && e.message) || e).slice(0, 80)); }
   const data = await b64(wav), mime = (wav.type || 'audio/wav').split(';')[0];
   let last;
-  for (const model of [GEMINI_CHAT, 'gemini-flash-lite-latest', GEMINI_CHAT]) {
+  for (const model of GEMINI_LITE) {
+    if (cooling(model)) continue;
     try { return await hearGeminiOnce(key, model, mime, data); }
-    catch (e) { last = e; console.info('[assistant] Gemini hearing ' + model + ': ' + ((e && e.status) || '') + ' ' + String((e && e.message) || e).slice(0, 140)); if (e.message === 'nothing heard') throw e; if (e.status && e.status !== 429 && e.status !== 503 && e.status !== 500 && e.status !== 404) throw e; }
+    catch (e) { last = e; console.info('[assistant] Gemini hearing ' + model + ': ' + ((e && e.status) || '') + ' ' + String((e && e.message) || e).slice(0, 140)); if (e.message === 'nothing heard') throw e; if (e.status && ![429, 503, 500, 404].includes(e.status)) throw e; cool(model, e); }
   }
+  if (!last) { last = new Error('Gemini free limit reached'); last.status = 429; }
   throw last;
 }
 
@@ -1859,39 +1909,46 @@ async function hearGeminiOnce(key, model, mime, data) {
   return { text: english, lang: out.lang || 'und', via: 'gemini' };
 }
 
-async function hearWhisper(key, blob) {
+async function whisper(key, blob, path, extra) {
   const form = new FormData();
   form.append('file', blob, 'audio.webm');
   form.append('model', 'whisper-large-v3');
-  // /translations, not /transcriptions: this leg exists to produce English.
-  const res = await fetch(GROQ + '/audio/translations', {
-    method: 'POST',
-    headers: { authorization: 'Bearer ' + key },
-    body: form,
-  });
+  Object.entries(extra || {}).forEach(([k, v]) => form.append(k, v));
+  const res = await fetch(GROQ + '/audio/' + path, { method: 'POST', headers: { authorization: 'Bearer ' + key }, body: form });
   if (!res.ok) {
     const err = new Error(await res.text().catch(() => 'HTTP ' + res.status));
     err.status = res.status;
     throw err;
   }
-  const { text } = await res.json();
-  /* Whisper does not report the source language on this endpoint, so 'und'
-     sends the caller back to the mic button's own setting. */
-  const said = String(text || '').trim();
+  return res.json();
+}
+/* /translations gives English for the tool loop but not the language, which
+   left every Whisper turn answering in English. /transcriptions in
+   verbose_json reports it; both run at once, so it adds no wait. A language
+   other than the three is Whisper guessing, and the mic setting wins. */
+const WHISPER_LANG = { tamil: 'ta', telugu: 'te', english: 'en', ta: 'ta', te: 'te', en: 'en' };
+async function hearWhisper(key, blob) {
+  const [tr, tx] = await Promise.all([
+    whisper(key, blob, 'translations'),
+    whisper(key, blob, 'transcriptions', { response_format: 'verbose_json' }).catch(() => null),
+  ]);
+  const said = String((tr && tr.text) || '').trim();
   if (!said || GHOST.test(said)) throw new Error('nothing heard');
-  return { text: said, lang: 'und', via: 'whisper' };
+  return { text: said, lang: WHISPER_LANG[String((tx && tx.language) || '').toLowerCase()] || 'und', via: 'whisper' };
 }
 
 /** Returns { text, lang, via }. Gemini first, Whisper when it cannot answer. */
 export async function hear(key, blob, geminiKey) {
+  let why = geminiKey ? '' : 'no Gemini key';
   if (geminiKey) {
     try {
       return await hearGemini(geminiKey, blob);
     } catch (e) {
       if (!key || e.message === 'nothing heard') throw e;
+      why = e.status === 429 ? 'Gemini limit reached' : 'Gemini error ' + (e.status || '');
     }
   }
-  return hearWhisper(key, blob);
+  return { ...(await hearWhisper(key, blob)), why };
 }
 
 const LANG_NAME = { ta: 'Tamil', te: 'Telugu' };
@@ -1992,14 +2049,19 @@ function unb64(s) {
  * text should already be in the target language: this leg is a voice, not a
  * translator, and asking it to do both makes it paraphrase.
  */
-export async function nativeAudio(geminiKey, text, lang, translate) {
+export async function nativeAudio(geminiKey, text, lang, translate, groqKey) {
   if (!geminiKey || !text) return null;
   const name = LANG_NAME[lang];
   /* The current voice models read their whole input aloud, instructions
      included, so they get only the words to say. Tamil and Telugu are
      written first by the chat model, then voiced as they are. */
   if (name && translate) {
-    try { const t = String((((await geminiChat(geminiKey, { temperature: 0.3, max_tokens: 700, messages: [{ role: 'user', content: speakPrompt(name, text) }] })).choices || [])[0] || {}).message?.content || '').trim(); if (t) text = t; } catch (e) {}
+    const body = { temperature: 0.3, max_tokens: 700, messages: [{ role: 'user', content: speakPrompt(name, text) }] };
+    const pick = j => String((((j || {}).choices || [])[0] || {}).message?.content || '').trim();
+    let t = '';
+    try { t = pick(await geminiChat(geminiKey, body, GEMINI_LITE)); } catch (e) {}
+    if (!t && groqKey) try { t = pick(await groqChat(groqKey, { ...body, model: NATIVE })); } catch (e) {}
+    if (t) text = t;
   }
   const plain = String(text).replace(/[*_#`>]+/g, ' ').replace(/\s+/g, ' ').trim();
   const exact = 'Say exactly these words and nothing else: no greeting, no introduction, no extra sentence before or after.';
@@ -2016,7 +2078,11 @@ export async function nativeAudio(geminiKey, text, lang, translate) {
   /* The free tier gives the TTS model a small daily allowance. When it is
      spent Google answers 429 and the voice silently dropped to the phone's own
      — which on an iPhone has no Tamil at all. Try the second model's pool. */
-  const order = TTS_OK ? [TTS_OK].concat(GEMINI_TTS_MODELS.filter(m => m !== TTS_OK)) : GEMINI_TTS_MODELS;
+  /* Each voice model has its own daily pool. One that answers 429 (limit) or
+     404 (retired) is benched like the text models, so the next reply goes
+     straight to a voice that still has allowance instead of re-asking. */
+  const order = (TTS_OK && !cooling(TTS_OK) ? [TTS_OK].concat(GEMINI_TTS_MODELS.filter(m => m !== TTS_OK)) : GEMINI_TTS_MODELS).filter(m => !cooling(m));
+  if (!order.length) { const e = new Error('Gemini voice limit reached'); e.status = 429; throw e; }
   for (const model of order) {
     const voiceConfig = /^gemini-3\.8/.test(model) ? { voice: TTS_VOICE } : { prebuiltVoiceConfig: { voiceName: TTS_VOICE } };
     res = await fetch(
@@ -2038,6 +2104,8 @@ export async function nativeAudio(geminiKey, text, lang, translate) {
     lastErr.status = res.status;
     console.info('[assistant] Gemini voice ' + model + ' → ' + res.status);
     if (res.status === 401 || res.status === 403) throw lastErr;
+    cool(model, lastErr);
+    if (TTS_OK === model) TTS_OK = null;
   }
   if (!res.ok) throw lastErr;
   const j = await res.json();
