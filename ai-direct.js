@@ -1650,7 +1650,7 @@ function fit(body, chars) {
 async function chatWithFallback(key, body, geminiKey) {
   /* A 400 "model called a tool" is one model misfiring, not a bad request:
      the next rung answers it. */
-  const busy = e => e.status === 429 || e.status === 413 || e.status === 503 || e.status === 500 || (e.status === 400 && /called a tool|tool_use_failed|failed to call a function/i.test(e.message || ''));
+  const busy = e => e.status === 429 || e.status === 413 || e.status === 503 || e.status === 500 || e.status === 408 || (e.status === 400 && /called a tool|tool_use_failed|failed to call a function/i.test(e.message || ''));
   /* Groq's free per-minute token cap trips on the second tool round (system
      prompt + tools + results) and says "try again in 6.2s". Waiting that out
      beats handing the answer to Gemini while Gemini is also overloaded. */
@@ -1708,6 +1708,34 @@ export async function creativeChat(key, geminiKey, system, prompt, groqPrompt) {
  * rid  — restaurant uuid (db.remote.rid)
  * onPhase — called with 'thinking' | a tool name, for the status line
  */
+/* All 28 tool definitions are ~15k characters: with the system prompt that is
+   ~7k tokens before the question, and Groq's free tier allows ~8k a minute,
+   so a second tool round always hit the limit. Each turn now carries only the
+   tools its question needs (plus any already used in this conversation). */
+const TOOL_GROUPS = [
+  [/sale|revenue|takings|earn|profit|bill|turnover|business|how (did|was|is) (we|it|today)|week|month|yesterday|today|compare|busy|hour|peak|slow|quiet|rush|expense|spent|cost|unpaid|pending|due/i, ['salesSummary', 'topDishes', 'slowMovers', 'daypartMix', 'expenses', 'unpaidOrders']],
+  [/dish|biri?yani|mandi|food|taste|recipe|improv|enhance|better|worst|best|rating|rated|complain|feedback|comment|review|quality|menu|price|item|cook|make/i, ['dishRatings', 'feedbackComments', 'dishDetails', 'expertTips', 'aiEngine', 'menu', 'onlineReviews']],
+  [/service|waiter|call|table|order|pending|open|seat|occupied|parcel|kitchen|late|delay|wait|slow|station|ticket|serve/i, ['openOrders', 'unpaidOrders', 'serviceRatings', 'serviceLog', 'kitchenBottlenecks', 'kitchenStations']],
+  [/staff|employee|worker|team|roster|attend|late|absent|leave|shift|clock|punch|hours|salary|pay|perform|who (is|was|came)/i, ['staffRoster', 'staffPerformance', 'attendanceHours']],
+  [/stock|ingredient|inventory|reorder|ran out|sold out|sell ?out|finished|off the menu|unavailable|tray|pot|bulk|prep/i, ['stock', 'sellouts', 'dishesOff', 'bulkCooking']],
+  [/post|instagram|reel|social|trend|campaign|market|promot|advert|festival|event|customer|guest list|whatsapp|google|research|idea/i, ['webResearch', 'aiEngine', 'customers', 'onlineReviews', 'topDishes']],
+  [/open(ing)?|clos(e|ing)|address|phone|location|timing|when do we/i, ['restaurantInfo']],
+];
+const TOOL_DEFAULT = ['salesSummary', 'topDishes', 'openOrders', 'dishRatings', 'feedbackComments', 'staffRoster', 'restaurantInfo', 'menu'];
+function toolsFor(all, messages) {
+  const lastUser = [...messages].reverse().find(m => m.role === 'user');
+  const q = String((lastUser && lastUser.content) || '');
+  const want = new Set();
+  TOOL_GROUPS.forEach(([re, names]) => { if (re.test(q)) names.forEach(n => want.add(n)); });
+  if (!want.size) TOOL_DEFAULT.forEach(n => want.add(n));
+  messages.forEach(m => (m.tool_calls || []).forEach(c => want.add(c.function && c.function.name)));
+  const names = new Set(all.map(t => t.function.name));
+  /* Tools not in the list above (cart/order dictation etc.) always stay. */
+  const known = new Set([].concat(...TOOL_GROUPS.map(g => g[1]), TOOL_DEFAULT));
+  const picked = all.filter(t => want.has(t.function.name) || !known.has(t.function.name));
+  return picked.length && [...want].some(n => names.has(n)) ? picked : all;
+}
+
 export async function runDirect({ key, geminiKey, sb, rid, system, messages, onPhase, scope, ctx, house, tables, maxSteps = 6 }) {
   ctx = { ...(ctx || {}), house: house || {}, tables };
   const msgs = [{ role: 'system', content: system + await expertInstructions().catch(() => '') }, ...messages];
@@ -1717,7 +1745,7 @@ export async function runDirect({ key, geminiKey, sb, rid, system, messages, onP
 
     const json = await chatWithFallback(key, {
       messages: msgs,
-      tools: wireFor(scope),
+      tools: toolsFor(wireFor(scope), msgs),
       tool_choice: 'auto',
       temperature: 0.4,
       max_tokens: 900,
