@@ -70,6 +70,15 @@
      address bar, and a two-finger pinch is never a scroll. Set from a rule
      rather than inline because React rewrites inline styles on every render. */
   html[data-touch-engine] [data-nscroll] { touch-action: pinch-zoom !important; }
+  /* Android repaints every backdrop blur on each scroll frame; over the dark
+     menu ground the card blur is invisible anyway. */
+  html[data-android] [data-carousel-row] [role="button"], html[data-android] [data-carousel-row] [role="button"] span { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+  /* Remaining Android cost: each card's 44px soft shadow is re-rasterised as it
+     moves, and cards were not on their own layers. Tighter shadow, one GPU layer
+     per card, paint contained to the card. */
+  html[data-android] [data-carousel-row] { will-change: scroll-position; }
+  html[data-android] [data-carousel-row] > [role="button"] { box-shadow: inset 0 1px 0 rgba(255,214,160,.12), 0 8px 18px rgba(0,0,0,.38) !important; transform: translateZ(0); contain: layout paint; }
+  html[data-android] [data-carousel-row] > [role="button"]:active { transform: translateZ(0) scale(.97); }
   /* Reel paging by root scroll — iOS only. Safari retracts its address bar for
      the ROOT scroller and nothing else, so a reel driven by a custom pointer
      engine on a fixed pane could never collapse it however the guest swiped.
@@ -590,41 +599,121 @@
             </div>
             <button onClick="{{ backToCategories }}" style="font-size: 9px; letter-spacing: .22em; color: rgba(239,231,219,.5); text-transform: uppercase; padding-bottom: 6px">{{ L_switch }}</button>
           </div>
-          <sc-for list="{{ cats }}" as="cat" hint-placeholder-count="3">
-            <div style="margin-bottom: 26px">
-              <div style="padding: 0 20px 12px; display: flex; align-items: center; gap: 10px">
-                <div style="font-family: 'Cormorant Garamond', serif; font-size: 21px; font-weight: 400; color: #f0e8dc">{{ cat.title }}</div>
-                <div style="flex: 1; height: 1px; background: linear-gradient(90deg, rgba(240,160,60,.22), transparent)"></div>
-                <div style="font-size: 9px; letter-spacing: .2em; color: #6f665c; text-transform: uppercase">{{ cat.count }}</div>
+          <div style="padding: 0 20px 18px; display: flex; flex-direction: column; gap: 12px">
+            <div style="position: relative; display: flex; align-items: center">
+              <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="rgba(240,160,60,.75)" stroke-width="1.7" stroke-linecap="round" aria-hidden="true" style="position: absolute; left: 15px; pointer-events: none"><circle cx="11" cy="11" r="6.5"></circle><path d="m16 16 4 4"></path></svg>
+              <input type="search" value="{{ menuQ }}" onInput="{{ onMenuQ }}" placeholder="{{ L_searchDish }}" aria-label="{{ L_searchDish }}" enterkeyhint="search" style="width: 100%; min-width: 0; height: 48px; box-sizing: border-box; padding: 0 46px 0 42px; border-radius: 14px; font: inherit; font-size: 14px; color: #f4eee4; background: rgba(28,22,17,.62); border: 1px solid rgba(240,160,60,.22); outline: none; box-shadow: inset 0 1px 0 rgba(255,214,160,.08); -webkit-appearance: none; appearance: none" style-focus="border-color: rgba(240,160,60,.6)" />
+              <sc-if value="{{ menuHasQ }}" hint-placeholder-val="{{ false }}">
+                <button onClick="{{ clearMenuQ }}" aria-label="Clear search" style="position: absolute; right: 4px; width: 40px; height: 40px; border-radius: 11px; display: flex; align-items: center; justify-content: center; border: 0; background: transparent">
+                  <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="rgba(239,231,219,.7)" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"></path></svg>
+                </button>
+              </sc-if>
+            </div>
+            <div data-nscroll="x" style="display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; overscroll-behavior-x: contain; touch-action: pan-x pan-y pinch-zoom; margin: 0 -20px; padding: 0 20px">
+              <sc-for list="{{ menuChips }}" as="chip" hint-placeholder-count="4">
+                <button onClick="{{ chip.toggle }}" aria-pressed="{{ chip.on }}" style="flex: 0 0 auto; height: 36px; padding: 0 14px; border-radius: 999px; display: flex; align-items: center; gap: 7px; white-space: nowrap; font-size: 11.5px; letter-spacing: .03em; color: {{ chip.ink }}; background: {{ chip.bg }}; border: 1px solid {{ chip.edge }}; transition: background 180ms, color 180ms, transform 150ms" style-active="transform: scale(.95)">
+                  <span style="width: 6px; height: 6px; border-radius: 50%; background: {{ chip.dot }}"></span>{{ chip.label }}
+                </button>
+              </sc-for>
+            </div>
+          </div>
+
+          <sc-if value="{{ menuSearching }}" hint-placeholder-val="{{ false }}">
+            <div style="padding: 0 20px 28px">
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px">
+                <div style="font-size: 9px; letter-spacing: .3em; text-transform: uppercase; color: rgba(240,160,60,.7)">{{ menuResultLabel }}</div>
+                <button onClick="{{ clearMenuAll }}" style="min-height: 36px; padding: 0 4px; font-size: 9px; letter-spacing: .22em; text-transform: uppercase; color: rgba(239,231,219,.55); background: transparent; border: 0">{{ L_clearAll }}</button>
               </div>
-              <div data-nscroll="x" ref="{{ bindRow }}" style="display: flex; gap: 12px; overflow-x: auto; scrollbar-width: none; overscroll-behavior-x: contain; touch-action: pan-x pan-y pinch-zoom; cursor: grab; padding: 4px 20px 8px">
-                <sc-for list="{{ cat.items }}" as="item" hint-placeholder-count="3">
-                  <button onClick="{{ item.open }}" style="flex: 0 0 auto; width: 208px; scroll-snap-align: start; text-align: left; padding: 16px; border-radius: 16px; background: linear-gradient(150deg, rgba(255,255,255,.055), rgba(20,17,14,.66)); backdrop-filter: blur(18px) saturate(160%); -webkit-backdrop-filter: blur(18px) saturate(160%); border: 1px solid rgba(240,160,60,.16); box-shadow: inset 0 1px 0 rgba(255,214,160,.12), 0 16px 44px rgba(0,0,0,.42); transition: transform 180ms cubic-bezier(.23,1,.32,1)" style-active="transform: scale(.97)">
-                    <span style="display: block; height: 96px; border-radius: 11px; margin-bottom: 13px; position: relative; overflow: hidden; background: linear-gradient(155deg, #2a1d12, #120d09 62%, #1d1409)">
-                      <span style="position: absolute; inset: 0; background: radial-gradient(80% 60% at 30% 20%, rgba(255,150,50,.22), transparent 70%)"></span>
-                      <span style="position: absolute; left: 10px; bottom: 9px; font-size: 7.5px; letter-spacing: .26em; color: rgba(240,160,60,.5); text-transform: uppercase">{{ item.mediaTag }}</span>
-                    </span>
-                    <span style="display: flex; align-items: center; gap: 7px; margin-bottom: 6px">
-                      <span style="width: 10px; height: 10px; flex: 0 0 auto; border: 1.2px solid {{ item.dietColor }}; display: flex; align-items: center; justify-content: center"><span style="width: 5px; height: 5px; border-radius: 50%; background: {{ item.dietColor }}"></span></span>
-                      <span style="font-size: 13.5px; font-weight: 400; color: #f0e8dc; line-height: 1.25">{{ item.name }}</span>
-                      <!-- Was the ⛔ emoji, which rendered as a flat platform glyph and
-                           sat oddly beside the serif name. A drawn crossed circle takes
-                           the card's own colour and line weight. -->
+              <sc-if value="{{ menuNoResults }}" hint-placeholder-val="{{ false }}">
+                <div style="padding: 36px 20px; border-radius: 18px; text-align: center; border: 1px dashed rgba(240,160,60,.22); display: flex; flex-direction: column; align-items: center; gap: 8px">
+                  <div style="font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 300; color: #f0e8dc">{{ L_noMatch }}</div>
+                  <div style="font-size: 12px; font-weight: 300; color: rgba(239,231,219,.55); text-wrap: pretty">{{ L_noMatchSub }}</div>
+                </div>
+              </sc-if>
+              <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px">
+                <sc-for list="{{ menuResults }}" as="item" hint-placeholder-count="0">
+                  <div role="button" tabindex="0" onClick="{{ item.open }}" style="position: relative; width: auto; min-width: 0; scroll-snap-align: start; text-align: left; padding: 10px 10px 14px; border-radius: 18px; cursor: pointer; opacity: {{ item.dim }}; background: linear-gradient(160deg, rgba(255,255,255,.06), rgba(20,17,14,.7)); backdrop-filter: blur(18px) saturate(160%); -webkit-backdrop-filter: blur(18px) saturate(160%); border: 1px solid {{ item.edge }}; box-shadow: inset 0 1px 0 rgba(255,214,160,.12), 0 16px 44px rgba(0,0,0,.42); transition: transform 180ms cubic-bezier(.23,1,.32,1), border-color 200ms" style-active="transform: scale(.97)">
+                    <span style="display: block; height: 118px; border-radius: 12px; margin-bottom: 12px; position: relative; overflow: hidden; background-color: #1a120b; background-image: {{ item.poster }}; background-size: cover; background-position: center">
+                      <span style="position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0) 45%, rgba(8,6,4,.72) 100%), radial-gradient(80% 60% at 30% 20%, rgba(255,150,50,.16), transparent 70%)"></span>
+                      <span style="position: absolute; left: 9px; bottom: 9px; display: flex; align-items: center; gap: 5px; padding: 4px 8px; border-radius: 999px; font-size: 9.5px; letter-spacing: .04em; color: #f4eee4; background: rgba(10,8,6,.55); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px)">
+                        <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="#ffc27a" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"></circle><path d="M12 7.5V12l3 2"></path></svg>{{ item.minsLabel }}
+                      </span>
+                      <sc-if value="{{ item.qtyShow }}" hint-placeholder-val="{{ false }}">
+                        <span style="position: absolute; left: 9px; top: 9px; min-width: 26px; height: 22px; padding: 0 8px; border-radius: 999px; display: flex; align-items: center; justify-content: center; font-size: 10.5px; font-weight: 500; font-variant-numeric: tabular-nums; color: #1a1005; background: linear-gradient(180deg, #ffc27a, #f0a03c)">{{ item.qtyLabel }}</span>
+                      </sc-if>
+                      <sc-if value="{{ item.canAdd }}" hint-placeholder-val="{{ true }}">
+                        <button onClick="{{ item.quickAdd }}" aria-label="{{ item.addLabel }}" title="{{ item.addLabel }}" style="position: absolute; right: 7px; bottom: 7px; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 0; background: linear-gradient(180deg, #ffc27a, #f0a03c); box-shadow: 0 6px 18px rgba(240,140,40,.45), inset 0 1px 0 rgba(255,240,215,.6); transition: transform 150ms cubic-bezier(.23,1,.32,1)" style-active="transform: scale(.88)">
+                          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#1a1005" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5.5v13M5.5 12h13"></path></svg>
+                        </button>
+                      </sc-if>
                       <sc-if value="{{ item.soldOut }}" hint-placeholder-val="{{ false }}">
-                        <span style="flex: 0 0 auto; display: flex; align-items: center" title="Unavailable" aria-label="Unavailable">
-                          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="6.1" stroke="#d4674a" stroke-width="1.5" /><path d="M4.3 11.7 11.7 4.3" stroke="#d4674a" stroke-width="1.5" stroke-linecap="round" /></svg>
-                        </span>
+                        <span style="position: absolute; right: 9px; top: 9px; padding: 4px 9px; border-radius: 999px; font-size: 8.5px; letter-spacing: .18em; text-transform: uppercase; color: #ffd9cc; background: rgba(120,40,24,.78)">{{ item.soldLabel }}</span>
                       </sc-if>
                     </span>
-                    <span style="display: flex; align-items: center; justify-content: space-between; gap: 8px">
-                      <span style="font-size: 12px; font-weight: 400; color: #f0a03c">{{ item.priceLabel }}</span>
+                    <span style="display: flex; align-items: flex-start; gap: 7px; margin-bottom: 7px; padding: 0 3px">
+                      <span style="width: 10px; height: 10px; margin-top: 3px; flex: 0 0 auto; border: 1.2px solid {{ item.dietColor }}; display: flex; align-items: center; justify-content: center"><span style="width: 5px; height: 5px; border-radius: 50%; background: {{ item.dietColor }}"></span></span>
+                      <span style="font-size: 13.5px; font-weight: 400; color: #f0e8dc; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 35px">{{ item.name }}</span>
+                    </span>
+                    <span style="display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 3px">
+                      <span style="font-size: 13px; font-weight: 400; color: #f0a03c">{{ item.priceLabel }}</span>
                       <span style="font-size: 10px; color: #8d8479">{{ item.ratingLabel }}</span>
                     </span>
-                  </button>
+                  </div>
                 </sc-for>
               </div>
             </div>
-          </sc-for>
+          </sc-if>
+
+          <sc-if value="{{ menuBrowsing }}" hint-placeholder-val="{{ true }}">
+            <div data-nscroll="x" style="display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; overscroll-behavior-x: contain; touch-action: pan-x pan-y pinch-zoom; padding: 0 20px 22px">
+              <sc-for list="{{ jumpCats }}" as="j" hint-placeholder-count="5">
+                <button onClick="{{ j.go }}" style="flex: 0 0 auto; height: 34px; padding: 0 13px; border-radius: 10px; white-space: nowrap; font-size: 11px; letter-spacing: .04em; color: rgba(239,231,219,.78); background: rgba(28,22,17,.5); border: 1px solid rgba(240,160,60,.14); transition: transform 150ms" style-active="transform: scale(.95)">{{ j.label }}</button>
+              </sc-for>
+            </div>
+            <sc-for list="{{ cats }}" as="cat" hint-placeholder-count="3">
+              <div data-cat-i="{{ cat.idx }}" style="margin-bottom: 26px">
+                <div style="padding: 0 20px 12px; display: flex; align-items: center; gap: 10px">
+                  <sc-if value="{{ cat.special }}" hint-placeholder-val="{{ false }}">
+                    <span style="width: 22px; height: 22px; flex: 0 0 auto; border-radius: 7px; display: flex; align-items: center; justify-content: center; background: rgba(240,160,60,.14); border: 1px solid rgba(240,160,60,.3); font-size: 11px; color: #ffc27a">{{ cat.glyph }}</span>
+                  </sc-if>
+                  <div style="font-family: 'Cormorant Garamond', serif; font-size: 21px; font-weight: 400; color: {{ cat.ink }}">{{ cat.title }}</div>
+                  <div style="flex: 1; height: 1px; background: linear-gradient(90deg, rgba(240,160,60,.22), transparent)"></div>
+                  <div style="font-size: 9px; letter-spacing: .2em; color: #6f665c; text-transform: uppercase">{{ cat.count }}</div>
+                </div>
+                <div data-nscroll="x" ref="{{ bindRow }}" style="display: flex; gap: 12px; overflow-x: auto; scrollbar-width: none; overscroll-behavior-x: contain; touch-action: pan-x pan-y pinch-zoom; cursor: grab; padding: 4px 20px 8px">
+                  <sc-for list="{{ cat.items }}" as="item" hint-placeholder-count="3">
+                  <div role="button" tabindex="0" onClick="{{ item.open }}" style="position: relative; flex: 0 0 auto; width: 196px; scroll-snap-align: start; text-align: left; padding: 10px 10px 14px; border-radius: 18px; cursor: pointer; opacity: {{ item.dim }}; background: linear-gradient(160deg, rgba(255,255,255,.06), rgba(20,17,14,.7)); backdrop-filter: blur(18px) saturate(160%); -webkit-backdrop-filter: blur(18px) saturate(160%); border: 1px solid {{ item.edge }}; box-shadow: inset 0 1px 0 rgba(255,214,160,.12), 0 16px 44px rgba(0,0,0,.42); transition: transform 180ms cubic-bezier(.23,1,.32,1), border-color 200ms" style-active="transform: scale(.97)">
+                    <span style="display: block; height: 118px; border-radius: 12px; margin-bottom: 12px; position: relative; overflow: hidden; background-color: #1a120b; background-image: {{ item.poster }}; background-size: cover; background-position: center">
+                      <span style="position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0) 45%, rgba(8,6,4,.72) 100%), radial-gradient(80% 60% at 30% 20%, rgba(255,150,50,.16), transparent 70%)"></span>
+                      <span style="position: absolute; left: 9px; bottom: 9px; display: flex; align-items: center; gap: 5px; padding: 4px 8px; border-radius: 999px; font-size: 9.5px; letter-spacing: .04em; color: #f4eee4; background: rgba(10,8,6,.55); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px)">
+                        <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="#ffc27a" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"></circle><path d="M12 7.5V12l3 2"></path></svg>{{ item.minsLabel }}
+                      </span>
+                      <sc-if value="{{ item.qtyShow }}" hint-placeholder-val="{{ false }}">
+                        <span style="position: absolute; left: 9px; top: 9px; min-width: 26px; height: 22px; padding: 0 8px; border-radius: 999px; display: flex; align-items: center; justify-content: center; font-size: 10.5px; font-weight: 500; font-variant-numeric: tabular-nums; color: #1a1005; background: linear-gradient(180deg, #ffc27a, #f0a03c)">{{ item.qtyLabel }}</span>
+                      </sc-if>
+                      <sc-if value="{{ item.canAdd }}" hint-placeholder-val="{{ true }}">
+                        <button onClick="{{ item.quickAdd }}" aria-label="{{ item.addLabel }}" title="{{ item.addLabel }}" style="position: absolute; right: 7px; bottom: 7px; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 0; background: linear-gradient(180deg, #ffc27a, #f0a03c); box-shadow: 0 6px 18px rgba(240,140,40,.45), inset 0 1px 0 rgba(255,240,215,.6); transition: transform 150ms cubic-bezier(.23,1,.32,1)" style-active="transform: scale(.88)">
+                          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#1a1005" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5.5v13M5.5 12h13"></path></svg>
+                        </button>
+                      </sc-if>
+                      <sc-if value="{{ item.soldOut }}" hint-placeholder-val="{{ false }}">
+                        <span style="position: absolute; right: 9px; top: 9px; padding: 4px 9px; border-radius: 999px; font-size: 8.5px; letter-spacing: .18em; text-transform: uppercase; color: #ffd9cc; background: rgba(120,40,24,.78)">{{ item.soldLabel }}</span>
+                      </sc-if>
+                    </span>
+                    <span style="display: flex; align-items: flex-start; gap: 7px; margin-bottom: 7px; padding: 0 3px">
+                      <span style="width: 10px; height: 10px; margin-top: 3px; flex: 0 0 auto; border: 1.2px solid {{ item.dietColor }}; display: flex; align-items: center; justify-content: center"><span style="width: 5px; height: 5px; border-radius: 50%; background: {{ item.dietColor }}"></span></span>
+                      <span style="font-size: 13.5px; font-weight: 400; color: #f0e8dc; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 35px">{{ item.name }}</span>
+                    </span>
+                    <span style="display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 3px">
+                      <span style="font-size: 13px; font-weight: 400; color: #f0a03c">{{ item.priceLabel }}</span>
+                      <span style="font-size: 10px; color: #8d8479">{{ item.ratingLabel }}</span>
+                    </span>
+                  </div>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-for>
+          </sc-if>
         </div>
       </sc-if>
 
@@ -2811,25 +2900,51 @@
               <sc-if value="{{ hasChefNote }}" hint-placeholder-val="{{ true }}">
                 <div style="position: relative; display: grid; grid-template-columns: minmax(0, 1fr); gap: 11px; padding: 20px 18px 21px; border-radius: 16px; background: linear-gradient(158deg, rgba(255,178,96,.075), rgba(255,255,255,.012) 62%, rgba(255,255,255,0)); border: 1px solid rgba(240,160,60,.16); box-shadow: inset 0 1px 0 rgba(255,214,160,.09)">
                   <div style="display: flex; align-items: center; gap: 10px">
-                    <svg viewBox="0 0 24 28" width="19" height="22" fill="none" stroke-width=".9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <svg viewBox="-0.6 0 25 28" width="34" height="38" fill="none" stroke-width=".9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: 0 0 auto">
                       <defs>
                         <linearGradient id="scrollEdge" x1="2" y1="2" x2="22" y2="26" gradientUnits="userSpaceOnUse">
                           <stop offset="0" stop-color="#fbeec2"></stop>
                           <stop offset=".44" stop-color="#e3b05c"></stop>
                           <stop offset="1" stop-color="#a5732a"></stop>
                         </linearGradient>
-                        <linearGradient id="scrollPipe" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0" stop-color="rgba(251,238,194,.62)"></stop>
-                          <stop offset=".45" stop-color="rgba(227,176,92,.34)"></stop>
-                          <stop offset="1" stop-color="rgba(150,102,34,.6)"></stop>
+                        <linearGradient id="scrollCyl" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0" stop-color="#8a5a1c"></stop>
+                          <stop offset=".2" stop-color="#f3d28c"></stop>
+                          <stop offset=".34" stop-color="#fff4d6"></stop>
+                          <stop offset=".56" stop-color="#d9a24c"></stop>
+                          <stop offset=".85" stop-color="#94621f"></stop>
+                          <stop offset="1" stop-color="#5c3a10"></stop>
                         </linearGradient>
+                        <radialGradient id="scrollCap" cx=".4" cy=".35" r=".8">
+                          <stop offset="0" stop-color="#fff1c9"></stop>
+                          <stop offset=".5" stop-color="#d9a24c"></stop>
+                          <stop offset="1" stop-color="#7d5118"></stop>
+                        </radialGradient>
+                        <radialGradient id="scrollVelvet" cx=".42" cy=".38" r=".75">
+                          <stop offset="0" stop-color="#b3263a"></stop>
+                          <stop offset=".55" stop-color="#7d1024"></stop>
+                          <stop offset="1" stop-color="#4a0714"></stop>
+                        </radialGradient>
                       </defs>
-                      <path d="M4.7 5.4C4.1 10 5.5 16 6.9 20.2h12.5C18 16 16.6 10 17.2 5.4Z" fill="rgba(227,176,92,.13)" stroke="none"></path>
+                      <path d="M4.7 5.4C4.1 10 5.5 16 6.9 20.2h12.5C18 16 16.6 10 17.2 5.4Z" fill="url(#scrollVelvet)" stroke="none"></path>
                       <path d="M4.7 5.4C4.1 10 5.5 16 6.9 20.2M17.2 5.4C16.6 10 18 16 19.4 20.2" stroke="url(#scrollEdge)" opacity=".9"></path>
-                      <path d="M5.1 9.1h10.5M5.7 12.9h10.6M6.4 16.7h6.2" stroke="url(#scrollEdge)" opacity=".48" stroke-width=".78"></path>
-                      <rect x="2.1" y="2.1" width="17.6" height="3.4" rx="1.7" fill="url(#scrollPipe)" stroke="url(#scrollEdge)"></rect>
-                      <rect x="4.3" y="19.9" width="17.6" height="3.4" rx="1.7" fill="url(#scrollPipe)" stroke="url(#scrollEdge)"></rect>
-                      <path d="M5.3 2.5v2.6M16.5 2.5v2.6M7.5 20.3v2.6M18.7 20.3v2.6" stroke="url(#scrollEdge)" opacity=".45" stroke-width=".7"></path>
+                      <path d="M5.2 9.2c.2-.7.5-.8.6-.1s.3.3.5-.2.4-.4.5.1.5.1.7-.3M8.3 9c.2-.6.4-.5.5.1s.4-.5.6-.2.2.5.5.2M10.6 9.3c.3-.8.5-.6.6-.1s.2.2.4-.3.5-.2.6.2.3-.1.6-.4.4.3.7.2M5.8 13c.2-.7.4-.6.6 0s.3-.4.6-.1.4.2.6-.2M8.3 12.8c.2-.5.5-.7.6-.1s.3.4.5-.1.3-.5.6 0 .4.2.7-.2M11.8 13c.2-.7.4-.4.5.1s.3-.3.6-.3.3.4.5.2.4-.3.6.1M6.5 16.8c.2-.6.4-.7.6-.1s.3.2.5-.3.4-.2.6.2.3-.2.5-.1M9.6 16.6c.2-.5.4-.4.5.2s.4-.4.6-.3.2.3.4.1" stroke="url(#scrollEdge)" opacity=".95" stroke-width=".42"></path>
+                      <rect x="2.1" y="2.1" width="17.6" height="3.4" rx="1.7" fill="url(#scrollCyl)" stroke="#8a5a1c" stroke-width=".35"></rect>
+                      <path d="M3.6 2.95h14.6" stroke="#fff6dc" stroke-width=".5" opacity=".8"></path>
+                      <path d="M4.1 3.8l.62 0.6l.62 -0.6l.62 0.6l.62 -0.6l.62 0.6l.62 -0.6l.62 0.6l.62 -0.6l.62 0.6l.62 -0.6l.62 0.6l.62 -0.6l.62 0.6l.62 -0.6l.62 0.6l.62 -0.6l.62 0.6l.62 -0.6l.62 0.6l.62 -0.6l.62 0.6l.62 -0.6" stroke="#6e4413" stroke-width=".3" opacity=".85"></path>
+                      <path d="M4.1 4.7h13.6" stroke="#5a360e" stroke-width=".28" stroke-dasharray=".45 .45" opacity=".7"></path>
+                      <ellipse cx="3.05" cy="3.8" rx=".95" ry="1.7" fill="url(#scrollCap)" stroke="#7d5118" stroke-width=".3"></ellipse>
+                      <ellipse cx="18.75" cy="3.8" rx=".95" ry="1.7" fill="url(#scrollCap)" stroke="#7d5118" stroke-width=".3"></ellipse>
+                      <circle cx="3.05" cy="3.8" r=".36" fill="#fff1c9" opacity=".75"></circle>
+                      <circle cx="18.75" cy="3.8" r=".36" fill="#fff1c9" opacity=".75"></circle>
+                      <rect x="4.3" y="19.9" width="17.6" height="3.4" rx="1.7" fill="url(#scrollCyl)" stroke="#8a5a1c" stroke-width=".35"></rect>
+                      <path d="M5.8 20.75h14.6" stroke="#fff6dc" stroke-width=".5" opacity=".8"></path>
+                      <path d="M6.3 21.6l.62 0.6l.62 -0.6l.62 0.6l.62 -0.6l.62 0.6l.62 -0.6l.62 0.6l.62 -0.6l.62 0.6l.62 -0.6l.62 0.6l.62 -0.6l.62 0.6l.62 -0.6l.62 0.6l.62 -0.6l.62 0.6l.62 -0.6l.62 0.6l.62 -0.6l.62 0.6l.62 -0.6" stroke="#6e4413" stroke-width=".3" opacity=".85"></path>
+                      <path d="M6.3 22.5h13.6" stroke="#5a360e" stroke-width=".28" stroke-dasharray=".45 .45" opacity=".7"></path>
+                      <ellipse cx="5.25" cy="21.6" rx=".95" ry="1.7" fill="url(#scrollCap)" stroke="#7d5118" stroke-width=".3"></ellipse>
+                      <ellipse cx="20.95" cy="21.6" rx=".95" ry="1.7" fill="url(#scrollCap)" stroke="#7d5118" stroke-width=".3"></ellipse>
+                      <circle cx="5.25" cy="21.6" r=".36" fill="#fff1c9" opacity=".75"></circle>
+                      <circle cx="20.95" cy="21.6" r=".36" fill="#fff1c9" opacity=".75"></circle>
                       <path d="M3.2 5.6c-2.4 2.3-1.1 4.9.5 7.1 1.6 2.2 2.4 4.7.3 6.9-1.6 1.7-2 3.1-1.4 4.4" stroke="url(#scrollEdge)" opacity=".9" stroke-width=".62"></path>
                       <path d="M2.6 24c1.3 1 1.9 2.1 1.7 3.3M2.6 24c-1.2.9-1.8 1.9-1.8 3.1" stroke="url(#scrollEdge)" opacity=".82" stroke-width=".55"></path>
                       <circle cx="4.4" cy="27.5" r=".72" fill="url(#scrollEdge)" stroke="none"></circle>
@@ -4289,6 +4404,7 @@ class Component extends DCLogic {
     if (window.top !== window.self && !iosTouch) {
       document.documentElement.setAttribute('data-touch-engine', '1');
     }
+    if (/android/i.test(navigator.userAgent || '')) document.documentElement.setAttribute('data-android', '1');
     /* Page scrolling, on by default. Android Chrome collapses its address bar
        only when the ROOT document scrolls — a swipe inside a fixed overlay's own
        scroller gives it nothing to collapse against, which is why the bar stayed
@@ -5221,6 +5337,12 @@ class Component extends DCLogic {
     const iosTouch = /iP(hone|ad|od)/.test(navigator.userAgent) ||
       (/Mac/.test(navigator.userAgent) && (navigator.maxTouchPoints || 0) > 1);
     if (iosTouch) el.style.webkitOverflowScrolling = 'touch';
+    /* Android had the same problem as iOS: touch-action already lets Chrome pan
+       the rows natively, so the engine and the compositor were both moving the
+       row and fighting each frame. Touch goes to the platform everywhere; the
+       engine keeps touch only when framed (data-touch-engine), where the host
+       blocks native panning. */
+    const nativeTouch = () => !document.documentElement.hasAttribute('data-touch-engine');
 
     const F = 0.94;        // per-frame friction
     const MIN_V = 0.04;    // px/ms floor before inertia stops
@@ -5265,7 +5387,7 @@ class Component extends DCLogic {
 
     el.addEventListener('pointerdown', e => {
       // Never claimed, so pointermove/up fall through on their id check too.
-      if (iosTouch && e.pointerType === 'touch') return;
+      if (e.pointerType === 'touch' && (iosTouch || nativeTouch())) return;
       if (e.pointerType === 'mouse' && e.button !== 0) return;
       stopInertia(); stopWrite();
       id = e.pointerId; axis = null; moved = false; vel = 0;
@@ -8473,6 +8595,7 @@ class Component extends DCLogic {
       else cart.push({ id: d.id, qty: 1 });
       return { cart };
     });
+    try { const a = JSON.parse(localStorage.getItem('sul_again') || '[]').filter(x => x !== d.id); a.unshift(d.id); localStorage.setItem('sul_again', JSON.stringify(a.slice(0, 12))); } catch (e) {}
     this.say(this.L().added);
   }
 
@@ -11706,19 +11829,83 @@ class Component extends DCLogic {
       };
     });
 
-    const cats = this.routeCats().map(({ c, items }) => ({
-      title: st.lang === 'ta' ? c.ta : c.en,
-      count: items.length + (c.veg ? ' veg' : ''),
-      items: items.map(d => ({
+    const ta = st.lang === 'ta';
+    const qtyIn = {}; st.cart.forEach(l => { qtyIn[l.id] = (qtyIn[l.id] || 0) + l.qty; });
+    const posterOf = d => { const m = MEDIA.dishes[d.id]; return m && m.poster ? 'url("' + m.poster + '")' : 'none'; };
+    const toCard = d => {
+      const lr = this.liveRating(d), avail = this.availOf(d), q = qtyIn[d.id] || 0;
+      return {
         name: this.nameOf(d),
         priceLabel: money(this.priceOf(d)),
-        ratingLabel: '\u2605 ' + this.liveRating(d).r + ' (' + votes(this.liveRating(d).v) + ')',
-        mediaTag: MEDIA.dishes[d.id] ? 'reel' : L.mediaSlot,
+        ratingLabel: '\u2605 ' + lr.r + ' (' + votes(lr.v) + ')',
+        minsLabel: this.minsOf(d) + ' min',
+        poster: posterOf(d),
         dietColor: d.egg ? '#d7a13a' : d.veg ? '#7fae63' : '#b0472f',
-        soldOut: !this.availOf(d),
+        soldOut: !avail, soldLabel: ta ? '\u0b87\u0bb2\u0bcd\u0bb2\u0bc8' : 'Sold out',
+        canAdd: avail, dim: avail ? 1 : .55,
+        qtyShow: q > 0, qtyLabel: '\u00d7' + q,
+        edge: q > 0 ? 'rgba(255,194,122,.55)' : 'rgba(240,160,60,.16)',
+        addLabel: (ta ? '\u0b9a\u0bc7\u0bb0\u0bcd ' : 'Add ') + this.nameOf(d),
+        quickAdd: e => { if (e) { e.stopPropagation(); e.preventDefault(); } this.add(d); },
         open: () => { this.chime('tap'); this.openFeedAt(d); },
-      })),
-    }));
+      };
+    };
+    const routed = this.routeCats();
+    const pool = [].concat(...routed.map(x => x.items));
+    const score = d => { const lr = this.liveRating(d); return Number(lr.r) * Math.log10(Number(lr.v || 0) + 10); };
+    let again = [];
+    try { again = JSON.parse(localStorage.getItem('sul_again') || '[]'); } catch (e) {}
+    const againDishes = again.map(id => pool.find(d => d.id === id)).filter(Boolean).slice(0, 10);
+    const loved = pool.filter(d => this.availOf(d)).sort((a, b) => score(b) - score(a)).slice(0, 8);
+    const shelves = [];
+    if (againDishes.length) shelves.push({ special: true, glyph: '\u21bb', ink: '#ffd9a8', title: ta ? '\u0bae\u0bc0\u0ba3\u0bcd\u0b9f\u0bc1\u0bae\u0bcd \u0b86\u0bb0\u0bcd\u0b9f\u0bb0\u0bcd' : 'Order again', count: againDishes.length, items: againDishes });
+    if (loved.length >= 4) shelves.push({ special: true, glyph: '\u2605', ink: '#ffd9a8', title: ta ? '\u0b85\u0ba4\u0bbf\u0b95\u0bae\u0bcd \u0bb5\u0bbf\u0bb0\u0bc1\u0bae\u0bcd\u0baa\u0bbf\u0baf\u0ba4\u0bc1' : 'Most loved', count: ta ? '' : 'top ' + loved.length, items: loved });
+    const firstReal = shelves.length;
+    routed.forEach(({ c, items }) => shelves.push({ special: false, glyph: '', ink: '#f0e8dc', title: ta ? c.ta : c.en, count: items.length + (c.veg ? ' veg' : ''), items }));
+    const cats = shelves.map((sh, idx) => ({ ...sh, idx, items: sh.items.map(toCard) }));
+    const jumpTo = idx => {
+      const pane = this.menuScroller; if (!pane) return;
+      const el = pane.querySelector('[data-cat-i="' + idx + '"]'); if (!el) return;
+      this.chime('tap');
+      if (document.documentElement.hasAttribute('data-pagescroll')) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 84, behavior: 'smooth' });
+      else pane.scrollTo({ top: el.offsetTop - 90, behavior: 'smooth' });
+    };
+    const jumpCats = cats.slice(firstReal).map(c => ({ label: c.title, go: () => jumpTo(c.idx) }));
+    const CHIPS = [
+      ['top', ta ? '\u0b89\u0baf\u0bb0\u0bcd \u0bae\u0ba4\u0bbf\u0baa\u0bcd\u0baa\u0bc0\u0b9f\u0bc1' : 'Top rated', d => Number(this.liveRating(d).r) >= 4.5],
+      ['quick', ta ? '15 \u0ba8\u0bbf\u0bae\u0bbf\u0b9f\u0ba4\u0bcd\u0ba4\u0bbf\u0bb2\u0bcd' : 'Ready in 15 min', d => Number(this.minsOf(d)) <= 15],
+      ['mild', ta ? '\u0b95\u0bbe\u0bb0\u0bae\u0bcd \u0b95\u0bc1\u0bb1\u0bc8\u0bb5\u0bc1' : 'Mild', d => Number((d.base && d.base.s) || 0) <= 1],
+      ['budget', ta ? '\u20b9150 \u0b95\u0bc0\u0bb4\u0bcd' : 'Under \u20b9150', d => Number(this.priceOf(d)) <= 150],
+      ['avail', ta ? '\u0b87\u0baa\u0bcd\u0baa\u0bcb\u0ba4\u0bc1 \u0b95\u0bbf\u0b9f\u0bc8\u0b95\u0bcd\u0b95\u0bc1\u0bae\u0bcd' : 'Available now', d => this.availOf(d)],
+    ];
+    const mf = st.menuF || {};
+    const q = String(st.menuQ || '').trim().toLowerCase();
+    const onChips = CHIPS.filter(c => mf[c[0]]);
+    const menuSearching = !!q || onChips.length > 0;
+    const results = menuSearching ? pool.filter(d => {
+      if (q) { const hay = [d.base.n, d.base.t, d.catEn, d.catTa].join(' ').toLowerCase(); if (q.split(/\s+/).some(w => hay.indexOf(w) < 0)) return false; }
+      return onChips.every(c => c[2](d));
+    }) : [];
+    const menuVals = {
+      menuQ: st.menuQ || '', menuHasQ: !!q,
+      onMenuQ: e => this.setState({ menuQ: e.target.value }),
+      clearMenuQ: () => this.setState({ menuQ: '' }),
+      clearMenuAll: () => { this.chime('tap'); this.setState({ menuQ: '', menuF: {} }); },
+      menuChips: CHIPS.map(([k, label]) => { const on = !!mf[k]; return {
+        label, on: on ? 'true' : 'false',
+        ink: on ? '#1a1005' : 'rgba(239,231,219,.8)', bg: on ? 'linear-gradient(180deg, #ffc27a, #f0a03c)' : 'rgba(28,22,17,.55)',
+        edge: on ? 'rgba(255,194,122,.8)' : 'rgba(240,160,60,.2)', dot: on ? '#1a1005' : 'rgba(240,160,60,.6)',
+        toggle: () => { this.chime('tap'); this.setState(s2 => ({ menuF: { ...(s2.menuF || {}), [k]: !(s2.menuF || {})[k] } })); },
+      }; }),
+      menuSearching, menuBrowsing: !menuSearching,
+      menuResults: results.map(toCard), menuNoResults: menuSearching && !results.length,
+      menuResultLabel: results.length === 1 ? (ta ? '1 \u0b89\u0ba3\u0bb5\u0bc1' : '1 dish') : results.length + (ta ? ' \u0b89\u0ba3\u0bb5\u0bc1\u0b95\u0bb3\u0bcd' : ' dishes'),
+      L_searchDish: ta ? '\u0b89\u0ba3\u0bb5\u0bc1 \u0ba4\u0bc7\u0b9f\u0bc1\u0b95' : 'Search dishes',
+      L_clearAll: ta ? '\u0b85\u0bb4\u0bbf' : 'Clear',
+      L_noMatch: ta ? '\u0baa\u0bca\u0bb0\u0bc1\u0ba8\u0bcd\u0ba4\u0bc1\u0bae\u0bcd \u0b89\u0ba3\u0bb5\u0bc1 \u0b87\u0bb2\u0bcd\u0bb2\u0bc8' : 'Nothing matches',
+      L_noMatchSub: ta ? '\u0bb5\u0bc7\u0bb1\u0bc1 \u0bb5\u0bbe\u0bb0\u0bcd\u0ba4\u0bcd\u0ba4\u0bc8 \u0b85\u0bb2\u0bcd\u0bb2\u0ba4\u0bc1 \u0b95\u0bc1\u0bb1\u0bc8\u0bb5\u0bbe\u0ba9 \u0bb5\u0b9f\u0bbf\u0b95\u0b9f\u0bcd\u0b9f\u0bbf\u0b95\u0bb3\u0bc8 \u0bae\u0bc1\u0baf\u0bb2\u0bb5\u0bc1\u0bae\u0bcd.' : 'Try another word, or turn off a filter.',
+      jumpCats,
+    };
 
     // Progress reads against the current dish's own subcategory, not the whole feed,
     // and recomputes when admin hides a dish.
@@ -12677,6 +12864,7 @@ class Component extends DCLogic {
       showGuestBar: st.screen !== 'hero' && st.screen !== 'tv' && st.screen !== 'admin',
 
       bindRow: this._bindRow || (this._bindRow = el => this.bindRow(el)),
+      ...menuVals,
       bindMenuScroll: this._bindMenu || (this._bindMenu = el => this.bindMenuScroll(el)),
       bindPaneScroll: this._bindPane || (this._bindPane = el => { if (el) this.bindGestures(el); }),
       // The sheet is a scroller like any other — it was the one pane never bound,
