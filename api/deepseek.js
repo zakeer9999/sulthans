@@ -37,3 +37,4 @@ export default async function handler(req, res) {
   }
   return res.status(last.status).json({ error: last.error });
 }
+"29 Sep: quota fixes + DeepSeek relay"
