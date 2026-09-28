@@ -1566,7 +1566,7 @@ const GEMINI_TEXT = [GEMINI_CHAT, 'gemini-3.6-flash', 'gemini-3.8-flash', 'gemin
 /* Hearing and translating are short, plain jobs. Flash-Lite does them as well
    and has ~25x Flash's free daily allowance, so it goes first there and Flash
    is kept for the long writing (Enhance, chat fallback). */
-const GEMINI_LITE = ['gemini-3.5-flash-lite', 'gemini-3.1-flash-lite', 'gemini-flash-lite-latest', 'gemini-3.6-flash', 'gemini-3.5-flash', 'gemini-3.7-flash', 'gemini-3-flash-preview', GEMINI_CHAT, 'gemini-3.8-flash'];
+const GEMINI_LITE = ['gemini-3.5-flash-lite', 'gemini-3.6-flash', 'gemini-3.1-flash-lite', 'gemini-flash-lite-latest', 'gemini-3.5-flash', 'gemini-3.7-flash', 'gemini-3-flash-preview', GEMINI_CHAT, 'gemini-3.8-flash'];
 /* Benches survive a reload (and are shared by tabs on this phone), so a model
    whose daily cap is spent is not asked again on every page open. */
 const COOL = (() => { try { return JSON.parse(localStorage.getItem('sulthans.aiCool') || '{}') || {}; } catch (e) { return {}; } })();
@@ -2130,7 +2130,10 @@ export async function intoLanguage(key, text, lang, geminiKey) {
 /* Newest first. The 2.5 preview voices were retired in 2026 and every reply
    silently fell to the phone voice. 3.8 takes voiceConfig.voice; the older
    ones take prebuiltVoiceConfig. Each is tried until one answers. */
-const GEMINI_TTS_MODELS = ['gemini-3.8-flash-tts', 'gemini-3.8-flash-lite-tts', 'gemini-3.1-flash-tts', 'gemini-3.1-flash-tts-preview', 'gemini-2.5-flash-preview-tts'];
+/* Tested 28 Sep: 3.1-flash-tts does not exist (404) and 3.1-flash-tts-preview
+   hangs, which used up the reply's time before the working 2.5 voice was
+   reached — so the phone voice played. */
+const GEMINI_TTS_MODELS = ['gemini-3.8-flash-tts', 'gemini-3.8-flash-lite-tts', 'gemini-2.5-flash-preview-tts', 'gemini-3.1-flash-tts-preview'];
 let TTS_OK = null;
 /* Kore is the steady, unhurried one. A counter reply is information, not
    performance, and the bright voices oversell a sales figure. */
