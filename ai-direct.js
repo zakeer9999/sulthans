@@ -1570,16 +1570,55 @@ const GEMINI_LITE = ['gemini-3.5-flash-lite', 'gemini-3.6-flash', 'gemini-3.1-fl
 /* Benches survive a reload (and are shared by tabs on this phone), so a model
    whose daily cap is spent is not asked again on every page open. */
 const COOL = (() => { try { return JSON.parse(localStorage.getItem('sulthans.aiCool') || '{}') || {}; } catch (e) { return {}; } })();
-const cooling = m => (COOL[m] || 0) > Date.now();
+/* Only ids this key's model list actually has are called, so a retired or
+   misspelt id never costs a 404. The list call is free (not a generate
+   request) and is cached for a day. Aliases (-latest) always pass. */
+let AVAIL = null;
+async function available(key) {
+  if (AVAIL || !key) return AVAIL;
+  try { const c = JSON.parse(localStorage.getItem('sulthans.aiModels') || 'null'); if (c && Date.now() - c.at < 864e5 && c.ids.length) return AVAIL = new Set(c.ids); } catch (e) {}
+  try {
+    const ids = []; let page = '';
+    do {
+      const tm = timed(5000);
+      const r = await fetch(GEMINI_NATIVE + '/models?pageSize=1000&key=' + encodeURIComponent(key) + (page ? '&pageToken=' + page : ''), { signal: tm.signal }).finally(() => tm.done());
+      if (!r.ok) return null;
+      const j = await r.json();
+      (j.models || []).forEach(m => ids.push(String(m.name || '').replace(/^models\//, '')));
+      page = j.nextPageToken || '';
+    } while (page);
+    if (ids.length) { AVAIL = new Set(ids); try { localStorage.setItem('sulthans.aiModels', JSON.stringify({ at: Date.now(), ids })); } catch (e) {} }
+  } catch (e) {}
+  return AVAIL;
+}
+const listed = m => !AVAIL || /-latest$/.test(m) || AVAIL.has(m);
+/* Free daily allowances reset at midnight Pacific; a spent model waits for that. */
+function resetAt() {
+  const now = new Date(), pt = new Date(now.toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }));
+  const next = new Date(pt); next.setHours(24, 0, 0, 0);
+  const ms = next - pt;
+  return now.getTime() + (ms > 0 && ms <= 864e5 ? ms : 3600e3) + 60e3;
+}
+const BUSY = [];
+const cooling = m => { const now = Date.now(); return (COOL[m] || 0) > now || (COOL['*'] || 0) > now || !listed(m); };
+/* Failed 503s appear to count against the free daily allowance (Google forum,
+   Sep 2026), and overloads usually last 30-120 min. So a busy model is benched
+   10 min (30 if it was busy within the hour), and when three different models
+   are busy within two minutes Google is overloaded as a whole: every Gemini
+   call is skipped for 5 min and Whisper/Groq answer instead. A timeout counts
+   as busy: the request still reached Google and likely still counted. */
 function cool(model, e) {
-  const msg = String((e && e.message) || ''), st = e && e.status;
-  const save = () => { try { localStorage.setItem('sulthans.aiCool', JSON.stringify(COOL)); } catch (e) {} };
-  if (st === 404 || st === 400 && /not found|not supported/i.test(msg)) { COOL[model] = Date.now() + 864e5; return save(); }
-  if (st === 503 || st === 500 || st === 408) { COOL[model] = Date.now() + 120e3; return save(); }
-  const m = /retry in ([\d.]+)\s*s|"retryDelay":\s*"(\d+)s"/i.exec(msg);
-  const daily = /per ?day|PerDay|RPD/i.test(msg);
-  const ms = daily ? 30 * 60e3 : m ? Number(m[1] || m[2]) * 1000 + 500 : 60e3;
-  COOL[model] = Date.now() + Math.min(ms, 60 * 60e3);
+  const msg = String((e && e.message) || ''), st = e && e.status, now = Date.now();
+  if (st === 404 || st === 400 && /not found|not supported/i.test(msg)) COOL[model] = now + 7 * 864e5;
+  else if (st === 503 || st === 500 || st === 504 || st === 408) {
+    COOL[model] = now + ((COOL['503:' + model] || 0) > now - 3600e3 ? 30 : 10) * 60e3;
+    COOL['503:' + model] = now;
+    BUSY.push({ model, at: now }); if (BUSY.length > 20) BUSY.shift();
+    if (new Set(BUSY.filter(b => b.at > now - 120e3).map(b => b.model)).size >= 3) COOL['*'] = now + 5 * 60e3;
+  } else {
+    const m = /retry in ([\d.]+)\s*s|"retryDelay":\s*"(\d+)s"/i.exec(msg);
+    COOL[model] = /per ?day|PerDay|RPD/i.test(msg) ? resetAt() : now + Math.min(m ? Number(m[1] || m[2]) * 1000 + 500 : 60e3, 60 * 60e3);
+  }
   try { localStorage.setItem('sulthans.aiCool', JSON.stringify(COOL)); } catch (e) {}
 }
 export const geminiState = () => GEMINI_TEXT.every(cooling) ? 'Gemini limit reached' : '';
@@ -1587,12 +1626,16 @@ async function geminiChat(key, body, order) {
   let last;
   /* 15 s across the whole ladder: when Google is overloaded every model
      hangs before its 503, and nine of them would be two minutes. */
+  await available(key);
   const t0 = Date.now();
+  let tries = 0;
+  /* At most three models per question: every attempt spends allowance. */
   for (const model of order || GEMINI_TEXT) {
-    if (Date.now() - t0 > 15000) break;
+    if (Date.now() - t0 > 15000 || tries >= 3) break;
     if (cooling(model)) continue;
+    tries++;
     try { return await Promise.race([geminiOnce(key, body, model), new Promise((_, no) => setTimeout(() => { const e = new Error('timed out'); e.status = 408; no(e); }, 9000))]); }
-    catch (e) { last = e; if ([429, 404, 503, 500, 408].includes(e.status) || (e.status === 400 && /not found|not supported/i.test(e.message || ''))) cool(model, e); else throw e; }
+    catch (e) { last = e; if ([429, 404, 503, 500, 504, 408].includes(e.status) || (e.status === 400 && /not found|not supported/i.test(e.message || ''))) cool(model, e); else throw e; }
   }
   if (!last) { last = new Error('Gemini free limit reached'); last.status = 429; }
   throw last;
@@ -1688,6 +1731,51 @@ async function chatWithFallback(key, body, geminiKey) {
 /* One tool-free completion for long creative JSON (Content Studio). Gemini goes
    first: its free per-minute budget fits the long brief that trips Groq's 8k
    cap, and it writes the long reply without being cut off. Groq is the fallback. */
+/* Background jobs (feedback tags, feedback summary, Enhance) stay off the two
+   models hearing uses (3.5-flash-lite, 3.6-flash) and off the flash-latest
+   alias, which may point at one of them. */
+const GEMINI_JOBS = ['gemini-3.8-flash', 'gemini-3.5-flash', 'gemini-3.7-flash', 'gemini-3-flash-preview'];
+/* DeepSeek on SambaNova, through the app's own Vercel relay (api/deepseek.js):
+   SambaNova refuses browser calls, and the relay keeps its key server-side. */
+async function deepChat(messages, max_tokens, temperature) {
+  const now = Date.now();
+  if ((COOL.deepseek || 0) > now) { const e = new Error('DeepSeek resting'); e.status = 429; throw e; }
+  const rest = ms => { COOL.deepseek = now + ms; try { localStorage.setItem('sulthans.aiCool', JSON.stringify(COOL)); } catch (e) {} };
+  const tm = timed(60000);
+  let r;
+  try { r = await fetch('/api/deepseek', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ messages, max_tokens, temperature }), signal: tm.signal }); }
+  catch (e) { rest(10 * 60e3); const err = new Error('DeepSeek unreachable'); err.status = 408; throw err; } finally { tm.done(); }
+  if (!r.ok) {
+    const err = new Error('DeepSeek ' + r.status + ': ' + (await r.text().catch(() => '')).slice(0, 200)); err.status = r.status;
+    /* 404: relay not deployed. 503: key not set. Both wait a day. */
+    rest(r.status === 404 || r.status === 503 ? 864e5 : r.status === 429 ? (/per ?day|daily/i.test(err.message) ? resetAt() : 10 * 60e3) : 10 * 60e3);
+    throw err;
+  }
+  const j = await r.json();
+  return String(j.text || '').replace(/<think>[\s\S]*?<\/think>/g, '').trim();
+}
+/* DeepSeek first (feedback), or Gemini first (Enhance, the long writing);
+   then the other; Groq only last, so these never spend the chat's allowance
+   while either still answers. */
+export async function jobChat(key, geminiKey, system, prompt, opts) {
+  const { deepFirst = true, groqPrompt, temperature = 0.3 } = opts || {};
+  const messages = [{ role: 'system', content: system }, { role: 'user', content: prompt }];
+  const pick = j => (j && j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content) || '';
+  let last;
+  const deep = async () => { try { return await deepChat(messages, 6000, temperature); } catch (e) { last = e; return ''; } };
+  const gem = async () => {
+    if (!geminiKey || GEMINI_JOBS.every(cooling)) return '';
+    try { return pick(await geminiChat(geminiKey, { messages, max_tokens: 16000, temperature }, GEMINI_JOBS)); } catch (e) { last = e; return ''; }
+  };
+  for (const step of deepFirst ? [deep, gem] : [gem, deep]) { const t = await step(); if (t) return t; }
+  const gm = groqPrompt ? [{ role: 'system', content: system }, { role: 'user', content: groqPrompt }] : messages;
+  for (const model of [CHAT, CHAT_SMALL]) {
+    if (!key) break;
+    try { const t = pick(await groqChat(key, { model, messages: gm, max_tokens: 3000, temperature, reasoning_effort: 'low' })); if (t) return t; } catch (e) { last = e; }
+  }
+  throw last || new Error('no reply');
+}
+
 export async function creativeChat(key, geminiKey, system, prompt, groqPrompt) {
   const messages = [{ role: 'system', content: system }, { role: 'user', content: prompt }];
   const groqMessages = groqPrompt ? [{ role: 'system', content: system }, { role: 'user', content: groqPrompt }] : messages;
@@ -1912,11 +2000,10 @@ async function hearGemini(key, blob) {
   let wav = blob;
   try { wav = await toWav(blob); } catch (e) { console.info('[assistant] could not convert recording: ' + String((e && e.message) || e).slice(0, 80)); }
   const data = await b64(wav), mime = (wav.type || 'audio/wav').split(';')[0];
-  /* Every Gemini model is tried before Whisper. A 503/500 means that model is
-     overloaded for a few seconds, so those get a second pass after a short
-     wait; only a 429 (allowance spent) or 404 benches a model for later. */
+  /* Two hearing models, then the transcribe model (its own pool), then
+     Whisper. No second pass on a busy model: retries during an overload
+     spend the daily allowance and turn tonight's 503s into tomorrow's 429s. */
   let last, empty = 0;
-  const again = [];
   const one = async model => {
     try { return await hearGeminiOnce(key, model, mime, data); }
     catch (e) {
@@ -1926,22 +2013,19 @@ async function hearGemini(key, blob) {
          That read as "you said nothing" and ended the turn; the next model
          (and Whisper after it) gets the same clip instead. */
       if (e.message === 'nothing heard') { empty++; return null; }
-      if (e.status && ![429, 503, 500, 404, 408].includes(e.status)) throw e;
-      if ((e.status === 503 || e.status === 500) && !again.includes(model)) again.push(model);
+      if (e.status && ![429, 503, 500, 504, 404, 408].includes(e.status)) throw e;
       cool(model, e);
       return null;
     }
   };
+  await available(key);
   const t0 = Date.now(), left = () => Date.now() - t0 < 16000;
-  for (const model of GEMINI_LITE) { if (!left()) break; if (cooling(model)) continue; const r = await one(model); if (r) return r; }
+  let tries = 0;
+  for (const model of GEMINI_LITE) { if (!left() || tries >= 2) break; if (cooling(model)) continue; tries++; const r = await one(model); if (r) return r; }
   /* Gemini's dedicated speech-to-text model: separate pool, plain text only. */
   if (left() && !cooling(TRANSCRIBE)) {
     try { return await hearTranscribe(key, mime, data); }
     catch (e) { last = e; if (e.message === 'nothing heard') empty++; else cool(TRANSCRIBE, e); }
-  }
-  if (again.length && left()) {
-    await new Promise(r => setTimeout(r, 1200));
-    for (const model of again.splice(0, 2)) { delete COOL[model]; const r = await one(model); if (r) return r; }
   }
   if (empty >= 2) throw new Error('nothing heard');
   if (!last || last.message === 'nothing heard') { last = new Error(empty ? 'Gemini heard nothing' : 'Gemini free limit reached'); last.status = empty ? 204 : 429; }
@@ -2133,7 +2217,8 @@ export async function intoLanguage(key, text, lang, geminiKey) {
 /* Tested 28 Sep: 3.1-flash-tts does not exist (404) and 3.1-flash-tts-preview
    hangs, which used up the reply's time before the working 2.5 voice was
    reached — so the phone voice played. */
-const GEMINI_TTS_MODELS = ['gemini-3.8-flash-tts', 'gemini-3.8-flash-lite-tts', 'gemini-2.5-flash-preview-tts', 'gemini-3.1-flash-tts-preview'];
+/* 3.1-flash-tts-preview removed: it only ever hung. */
+const GEMINI_TTS_MODELS = ['gemini-3.8-flash-tts', 'gemini-3.8-flash-lite-tts', 'gemini-2.5-flash-preview-tts'];
 let TTS_OK = null;
 /* Kore is the steady, unhurried one. A counter reply is information, not
    performance, and the bright voices oversell a sales figure. */
@@ -2202,7 +2287,9 @@ export async function nativeAudio(geminiKey, text, lang, translate, groqKey) {
   /* Each voice model has its own daily pool. One that answers 429 (limit) or
      404 (retired) is benched like the text models, so the next reply goes
      straight to a voice that still has allowance instead of re-asking. */
-  const order = (TTS_OK && !cooling(TTS_OK) ? [TTS_OK].concat(GEMINI_TTS_MODELS.filter(m => m !== TTS_OK)) : GEMINI_TTS_MODELS).filter(m => !cooling(m));
+  await available(geminiKey);
+  /* Two voices at most, then the Translate voice / phone voice. */
+  const order = (TTS_OK && !cooling(TTS_OK) ? [TTS_OK].concat(GEMINI_TTS_MODELS.filter(m => m !== TTS_OK)) : GEMINI_TTS_MODELS).filter(m => !cooling(m)).slice(0, 2);
   if (!order.length) { const e = new Error('Gemini voice limit reached'); e.status = 429; throw e; }
   for (const model of order) {
     const tm = timed(9000);
@@ -2227,7 +2314,7 @@ export async function nativeAudio(geminiKey, text, lang, translate, groqKey) {
     lastErr.status = res.status;
     console.info('[assistant] Gemini voice ' + model + ' → ' + res.status);
     if (res.status === 401 || res.status === 403) throw lastErr;
-    if (res.status !== 408) cool(model, lastErr);
+    cool(model, lastErr);
     if (TTS_OK === model) TTS_OK = null;
   }
   if (!res.ok) throw lastErr;

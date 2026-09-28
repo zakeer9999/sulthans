@@ -535,11 +535,15 @@ class Component extends DCLogic {
       this.patchLast('');
       const msg = String((e && e.message) || e);
       this.setState({
-        note: /401|invalid api key/i.test(msg)
+        /* Status first: Groq's limit messages carry usage counts ("Used 199401")
+           that a bare /401/ read as a refused key. */
+        note: (e && e.status) === 401 || /invalid api key|invalid_api_key/i.test(msg)
           ? 'Groq refused the key. Check groqKey in config.js.'
-          : /\b(413|429)\b|too large|rate limit|tokens per (minute|day)|quota|limit reached/i.test(msg)
-            ? 'The free AI allowance is used up for the moment. Try again in a minute, or ask a shorter question.'
-            : 'That did not go through. ' + msg,
+          : /per day|\(TPD\)|\(RPD\)|daily/i.test(msg)
+            ? 'Today\'s free AI allowance is used up. It frees up gradually over the next few hours; short questions may still go through.'
+            : (e && (e.status === 413 || e.status === 429)) || /\b(413|429)\b|too large|rate limit|tokens per minute|quota|limit reached/i.test(msg)
+              ? 'The free AI allowance is used up for the moment. Try again in a minute, or ask a shorter question.'
+              : 'That did not go through. ' + msg,
       });
       return '';
     }

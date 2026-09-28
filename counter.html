@@ -1233,7 +1233,7 @@
                     <sc-if value="{{ gtrHid }}" hint-placeholder-val="{{ false }}"><div style="margin-top:10px;display:flex;gap:8px;align-items:baseline;flex-wrap:wrap;font-size:11.5px;color:#8d8272"><span>Hidden: {{ gtrHid }}</span><button onClick="{{ gtrUnhide }}" style="border:0;background:transparent;padding:0;color:#e2c06a;font-size:11.5px;cursor:pointer">Restore</button></div></sc-if>
                     <sc-if value="{{ gtrLow }}" hint-placeholder-val="{{ false }}"><div style="margin-top:10px;font-size:11.5px;color:#8d8272;line-height:1.5;text-wrap:pretty">No measurable Google searches: {{ gtrLow }}</div></sc-if>
                   </sc-if>
-                  <sc-if value="{{ gtrEmpty }}" hint-placeholder-val="{{ false }}"><div style="font-size:12.5px;color:#8d8272">The first ranking of your menu ({{ gtrCount }} search terms) is being measured in the background. Dishes appear here as they are measured.</div></sc-if>
+                  <sc-if value="{{ gtrEmpty }}" hint-placeholder-val="{{ false }}"><div style="font-size:12.5px;color:#8d8272">No ranking saved yet. Tap Update now to measure your menu ({{ gtrCount }} search terms).</div></sc-if>
                 </div>
                 <div style="min-width:0;padding:12px 13px;border:1px solid #221d16;border-radius:11px;background:#12100c">
                   <div style="font-size:13.5px;color:#efe7db;margin-bottom:2px">Your dishes gaining searches</div>
@@ -3316,10 +3316,20 @@ class Component extends DCLogic {
      every 3 hours the counter reads sales, computes, and publishes. */
   miAutoPub() {
     if (!this.sb) return;
-    this.miTagFeedback(false);
+    this.miTagQuiet();
     const last = +(localStorage.getItem('ai:miPubAt') || 0);
     if (Date.now() - last > 3 * 3600e3) { this._miPubDue = true; this.loadIntel(); }
     this.insPub();
+  }
+  /* Guest comments are tagged once a day, all at once, in the afternoon lull
+     (15:00-17:30): not at opening (stock checks) or closing (sales checks),
+     and not one by one as they arrive. Opening a dish's feedback still tags
+     whatever is new, because its counts need it. */
+  miTagQuiet() {
+    const now = new Date(), m = now.getHours() * 60 + now.getMinutes(), day = now.toLocaleDateString('en-CA');
+    if (m < 15 * 60 || m > 17 * 60 + 30 || localStorage.getItem('ai:fbTagDay') === day) return;
+    try { localStorage.setItem('ai:fbTagDay', day); } catch (e) {}
+    this.miTagFeedback(true);
   }
   insPub() {
     if (!this.sb || Date.now() - (this._insPubAt || 0) < 3 * 3600e3) return;
@@ -6073,7 +6083,9 @@ class Component extends DCLogic {
     this.setState({ aiPerf: perf, aiDishStats: { top30, top7, rated } });
     let live = null;
     try {
-      live = await this.aiCached('ins', async () => this.aiObj(await this.aiAsk(this.aiSys().replace('a JSON array of objects', 'one JSON object'),
+      /* The web research is the heaviest AI call in the app: Refresh only.
+         Opening the panel shows the last saved events (insV2). */
+      if (force) live = await this.aiCached('ins', async () => this.aiObj(await this.aiAsk(this.aiSys().replace('a JSON array of objects', 'one JSON object'),
         'Today is ' + new Date().toDateString() + '. Call webResearch to find everything in the next 30 days that will move food orders in our town and Tamil Nadu: ' +
         '(a) do NOT list festivals or public holidays: the app takes those only from the Tamil Nadu Government holiday order; (b) sports: every India cricket match in any format, men and women, with IST start time, plus IPL, ISL, Pro Kabaddi or a Tamil Nadu team if in season; ' +
         '(c) film releases: big Tamil releases AND major global, Hollywood and pan-Indian releases in Tamil Nadu theatres (a global franchise usually moves more people than a small local film, so never drop it for a local one); ' +
@@ -6581,7 +6593,7 @@ class Component extends DCLogic {
     const c = this.cfg(); if (!c.groqKey && !c.geminiKey) return 0;
     this._fbTagging = true; let done = 0;
     try {
-      for (let round = 0; round < (force ? 5 : 2); round++) {
+      for (let round = 0; round < (force ? 10 : 2); round++) {
         const { data } = await this.sb.from('dish_feedback').select('id,comment,stars,dish_id,dishes!inner(restaurant_id,name_en)').eq('dishes.restaurant_id', this.rid).is('ai_tagged_at', null).not('comment', 'is', null).order('created_at', { ascending: false }).limit(30);
         const rows = (data || []).filter(r => String(r.comment || '').trim());
         if (!rows.length) break;
@@ -6590,7 +6602,7 @@ class Component extends DCLogic {
           rows.map((r, i) => (i + 1) + '. [' + ((r.dishes || {}).name_en || 'dish') + ', ' + (r.stars || '?') + ' stars] ' + String(r.comment).slice(0, 400)).join('\n') +
           '\n\nReply JSON only: {"items":[{"n":1,"gist":"its meaning in plain English, max 12 words","tags":["1 to 3 categories exactly from the list"],"new":"only if it is a complaint none of the categories fit: a 2 to 3 word label, else empty"}]}. Judge meaning, not words: "not enough salt" is Bland, "uppu jaasthi" is Too salty. A comment that only praises is Loved it.';
         let j = null;
-        try { const t = await (await this.aiMod()).creativeChat(c.groqKey, c.geminiKey, 'You classify restaurant guest comments by meaning. JSON only.', prompt); const m = String(t || '').match(/\{[\s\S]*\}/); j = m ? JSON.parse(m[0]) : null; } catch (e) { break; }
+        try { const t = await (await this.aiMod()).jobChat(c.groqKey, c.geminiKey, 'You classify restaurant guest comments by meaning. JSON only.', prompt); const m = String(t || '').match(/\{[\s\S]*\}/); j = m ? JSON.parse(m[0]) : null; } catch (e) { break; }
         const ok = new Set(cats), items = (j && j.items) || [];
         const up = rows.map((r, i) => { const it = items.find(x => +x.n === i + 1) || {};
           let tags = (it.tags || []).filter(t => ok.has(t)).slice(0, 3); const nw = String(it.new || '').trim().replace(/\s+/g, ' ').slice(0, 28);
@@ -6623,7 +6635,7 @@ class Component extends DCLogic {
       const prompt = 'Dish: ' + d.name_en + '. ' + base + ' plates sold, ' + total + ' written feedbacks, ' + start + ' to ' + end + '.\n' +
         rows.map(r => r.label + ': ' + r.n + '. What guests meant: ' + (ex[r.label] || []).join(' | ')).join('\n') +
         '\n\nReply JSON only: {"summary":"one or two plain sentences on what guests say overall","fixes":{"<category exactly as given>":"one short concrete kitchen or service fix for that complaint, max 18 words"}}. No fix for praise categories.';
-      const t = await (await this.aiMod()).creativeChat(c.groqKey, c.geminiKey, 'You summarise restaurant guest feedback for the owner. Use only what is given. Never change the counts. JSON only.', prompt);
+      const t = await (await this.aiMod()).jobChat(c.groqKey, c.geminiKey, 'You summarise restaurant guest feedback for the owner. Use only what is given. Never change the counts. JSON only.', prompt);
       const m = String(t || '').match(/\{[\s\S]*\}/), j = m ? JSON.parse(m[0]) : {};
       set({ busy: false, summary: String(j.summary || '').trim(), fix: j.fixes || {} });
     } catch (e) { set({ busy: false }); }
@@ -6678,7 +6690,7 @@ class Component extends DCLogic {
     let j = null;
     try {
       const c = this.cfg(); if (!c.groqKey && !c.geminiKey) throw new Error('off');
-      const t = await (await this.aiMod()).creativeChat(c.groqKey, c.geminiKey, sys, prompt, groqPrompt);
+      const t = await (await this.aiMod()).jobChat(c.groqKey, c.geminiKey, sys, prompt, { deepFirst: false, groqPrompt, temperature: 0.9 });
       const m = String(t || '').match(/\{[\s\S]*\}/); j = m ? JSON.parse(m[0]) : null;
     } catch (e) { fail({ err: /off/.test(String(e && e.message)) ? 'The assistant is off (no AI key).' : /\b(413|429)\b|limit|quota|too large/i.test(String(e && e.message)) ? 'The free AI allowance is used up for the moment. Try again in a few minutes.' : 'The AI did not answer. Try again.' }); return; }
     const nq = x => String(x || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
@@ -7301,7 +7313,6 @@ class Component extends DCLogic {
         const groups = {};
         all.forEach(d => { const hit = KEYS.find(([, re]) => re.test(d)); const t = hit ? hit[0] : d; (groups[t] = groups[t] || []).push(d); });
         this._gtrAll = Object.keys(groups);
-        if (!this._gtrSyncAt && this.sb) setTimeout(() => this.gtrSync(), 0);
         const PG = S.gtrProg;
         const R = S.gtrRank || this.gtrCached(), HID = this.gtrHidden();
         const ranked = R ? Object.entries(R.score).filter(([k, v]) => v > 0 && !HID.includes(k)).sort((x, y) => y[1] - x[1]) : [];
@@ -7316,7 +7327,7 @@ class Component extends DCLogic {
           gtrBtnOp: S.gtrManual || (PG && !PG.running && PG.pct === 100) ? .5 : 1,
           gtrBtnOff: !!(S.gtrManual || (PG && !PG.running && PG.pct === 100)),
           gtrPrevNote: R && R.partial ? 'First ranking in progress: ' + R.partial + ' of ' + R.total + ' search terms measured so far.' : PG && PG.running && R ? 'Showing the last ranking (' + ago(R.at) + ') until the new one is ready.' : '',
-          gtrStamp: R ? 'Tamil Nadu \u00b7 past ' + (R.win === 'today 1-m' ? 30 : 90) + ' days \u00b7 ' + (R.partial ? 'partial' : 'updated ' + ago(R.at)) : 'Tamil Nadu \u00b7 updates once a day',
+          gtrStamp: R ? 'Tamil Nadu \u00b7 past ' + (R.win === 'today 1-m' ? 30 : 90) + ' days \u00b7 ' + (R.partial ? 'partial' : 'updated ' + ago(R.at)) : 'Tamil Nadu \u00b7 tap Update now to measure',
           gtrHasRank: !!(R && ranked.length), gtrEmpty: !R && !(PG && PG.running) && !S.gtrErr,
           gtrMore: ranked.length > 15, gtrMoreT: S.gtrOpen ? 'Show top 15' : 'Show all ' + ranked.length, gtrMoreTap: () => this.setState({ gtrOpen: !S.gtrOpen }),
           gtrHid: HID.join(', '), gtrUnhide: () => this.gtrSetHidden([]),
