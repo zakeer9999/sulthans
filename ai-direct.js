@@ -1915,14 +1915,17 @@ async function hearGemini(key, blob) {
   /* Every Gemini model is tried before Whisper. A 503/500 means that model is
      overloaded for a few seconds, so those get a second pass after a short
      wait; only a 429 (allowance spent) or 404 benches a model for later. */
-  let last;
+  let last, empty = 0;
   const again = [];
   const one = async model => {
     try { return await hearGeminiOnce(key, model, mime, data); }
     catch (e) {
       last = e;
       console.info('[assistant] Gemini hearing ' + model + ': ' + ((e && e.status) || '') + ' ' + String((e && e.message) || e).slice(0, 140));
-      if (e.message === 'nothing heard') throw e;
+      /* An overloaded model sometimes answers 200 with an empty transcript.
+         That read as "you said nothing" and ended the turn; the next model
+         (and Whisper after it) gets the same clip instead. */
+      if (e.message === 'nothing heard') { empty++; return null; }
       if (e.status && ![429, 503, 500, 404, 408].includes(e.status)) throw e;
       if ((e.status === 503 || e.status === 500) && !again.includes(model)) again.push(model);
       cool(model, e);
@@ -1934,13 +1937,14 @@ async function hearGemini(key, blob) {
   /* Gemini's dedicated speech-to-text model: separate pool, plain text only. */
   if (left() && !cooling(TRANSCRIBE)) {
     try { return await hearTranscribe(key, mime, data); }
-    catch (e) { last = e; if (e.message === 'nothing heard') throw e; cool(TRANSCRIBE, e); }
+    catch (e) { last = e; if (e.message === 'nothing heard') empty++; else cool(TRANSCRIBE, e); }
   }
   if (again.length && left()) {
     await new Promise(r => setTimeout(r, 1200));
     for (const model of again.splice(0, 2)) { delete COOL[model]; const r = await one(model); if (r) return r; }
   }
-  if (!last) { last = new Error('Gemini free limit reached'); last.status = 429; }
+  if (empty >= 2) throw new Error('nothing heard');
+  if (!last || last.message === 'nothing heard') { last = new Error(empty ? 'Gemini heard nothing' : 'Gemini free limit reached'); last.status = empty ? 204 : 429; }
   throw last;
 }
 
@@ -2055,7 +2059,7 @@ export async function hear(key, blob, geminiKey) {
       return h;
     } catch (e) {
       if (!key || e.message === 'nothing heard') throw e;
-      why = e.status === 429 ? 'Gemini limit reached' : 'Gemini error ' + (e.status || '');
+      why = e.status === 429 ? 'Gemini limit reached' : e.status === 204 ? 'Gemini heard nothing' : e.status === 408 ? 'Gemini slow' : 'Gemini error ' + (e.status || '');
     }
   }
   return { ...(await hearWhisper(key, blob)), why };
@@ -2159,6 +2163,8 @@ function unb64(s) {
  * text should already be in the target language: this leg is a voice, not a
  * translator, and asking it to do both makes it paraphrase.
  */
+const within = (p, ms) => Promise.race([p, new Promise((_, no) => setTimeout(() => { const e = new Error('timed out'); e.status = 408; no(e); }, ms))]);
+
 export async function nativeAudio(geminiKey, text, lang, translate, groqKey) {
   if (!geminiKey || !text) return null;
   const name = LANG_NAME[lang];
@@ -2169,8 +2175,10 @@ export async function nativeAudio(geminiKey, text, lang, translate, groqKey) {
     const body = { temperature: 0.3, max_tokens: 700, messages: [{ role: 'user', content: speakPrompt(name, text) }] };
     const pick = j => String((((j || {}).choices || [])[0] || {}).message?.content || '').trim();
     let t = '';
-    try { t = pick(await geminiChat(geminiKey, body, GEMINI_LITE)); } catch (e) {}
-    if (!t && groqKey) try { t = pick(await groqChat(groqKey, { ...body, model: NATIVE })); } catch (e) {}
+    /* Groq first: it answers in about a second, while an overloaded Gemini
+       hung here with no deadline and the reply was never voiced. */
+    if (groqKey) try { t = pick(await within(groqChat(groqKey, { ...body, model: NATIVE }), 6000)); } catch (e) {}
+    if (!t) try { t = pick(await within(geminiChat(geminiKey, body, GEMINI_LITE), 6000)); } catch (e) {}
     if (t) text = t;
   }
   const plain = String(text).replace(/[*_#`>]+/g, ' ').replace(/\s+/g, ' ').trim();
@@ -2194,6 +2202,7 @@ export async function nativeAudio(geminiKey, text, lang, translate, groqKey) {
   const order = (TTS_OK && !cooling(TTS_OK) ? [TTS_OK].concat(GEMINI_TTS_MODELS.filter(m => m !== TTS_OK)) : GEMINI_TTS_MODELS).filter(m => !cooling(m));
   if (!order.length) { const e = new Error('Gemini voice limit reached'); e.status = 429; throw e; }
   for (const model of order) {
+    const tm = timed(9000);
     const voiceConfig = /^gemini-3\.8/.test(model) ? { voice: TTS_VOICE } : { prebuiltVoiceConfig: { voiceName: TTS_VOICE } };
     res = await fetch(
       GEMINI_NATIVE + '/models/' + model + ':generateContent?key=' + encodeURIComponent(geminiKey),
@@ -2207,14 +2216,15 @@ export async function nativeAudio(geminiKey, text, lang, translate, groqKey) {
             speechConfig: { voiceConfig },
           },
         }),
+        signal: tm.signal,
       },
-    );
+    ).catch(() => ({ ok: false, status: 408, text: async () => 'timed out' })).finally(() => tm.done());
     if (res.ok) { TTS_OK = model; break; }
     lastErr = new Error(model + ': ' + (await res.text().catch(() => 'HTTP ' + res.status)).slice(0, 200));
     lastErr.status = res.status;
     console.info('[assistant] Gemini voice ' + model + ' → ' + res.status);
     if (res.status === 401 || res.status === 403) throw lastErr;
-    cool(model, lastErr);
+    if (res.status !== 408) cool(model, lastErr);
     if (TTS_OK === model) TTS_OK = null;
   }
   if (!res.ok) throw lastErr;
