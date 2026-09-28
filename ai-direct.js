@@ -1559,11 +1559,14 @@ const groqChat = (key, body) => chatCall(GROQ, key, {
    as long as Google says (or a minute; half an hour for a daily cap), so the
    next turn skips it without a round trip. Before this, every turn paid for
    the same refused calls plus 7 s of waits before reaching a model that works. */
-const GEMINI_TEXT = [GEMINI_CHAT, 'gemini-flash-lite-latest', 'gemini-2.5-flash-lite', 'gemini-2.5-flash'];
+/* Checked against this key's model list on 28 Sep: the 2.x ids are retired
+   ("no longer available to new users"), so the ladder is the 3.x family.
+   Each id has its own free pool; spent or overloaded ones are benched below. */
+const GEMINI_TEXT = [GEMINI_CHAT, 'gemini-3.6-flash', 'gemini-3.8-flash', 'gemini-3.5-flash', 'gemini-3.7-flash', 'gemini-3-flash-preview', 'gemini-flash-lite-latest', 'gemini-3.5-flash-lite', 'gemini-3.1-flash-lite'];
 /* Hearing and translating are short, plain jobs. Flash-Lite does them as well
    and has ~25x Flash's free daily allowance, so it goes first there and Flash
    is kept for the long writing (Enhance, chat fallback). */
-const GEMINI_LITE = ['gemini-flash-lite-latest', 'gemini-2.5-flash-lite', GEMINI_CHAT, 'gemini-2.5-flash'];
+const GEMINI_LITE = ['gemini-3.5-flash-lite', 'gemini-3.1-flash-lite', 'gemini-flash-lite-latest', 'gemini-3.6-flash', 'gemini-3.5-flash', 'gemini-3.7-flash', 'gemini-3-flash-preview', GEMINI_CHAT, 'gemini-3.8-flash'];
 /* Benches survive a reload (and are shared by tabs on this phone), so a model
    whose daily cap is spent is not asked again on every page open. */
 const COOL = (() => { try { return JSON.parse(localStorage.getItem('sulthans.aiCool') || '{}') || {}; } catch (e) { return {}; } })();
@@ -1572,7 +1575,7 @@ function cool(model, e) {
   const msg = String((e && e.message) || ''), st = e && e.status;
   const save = () => { try { localStorage.setItem('sulthans.aiCool', JSON.stringify(COOL)); } catch (e) {} };
   if (st === 404 || st === 400 && /not found|not supported/i.test(msg)) { COOL[model] = Date.now() + 864e5; return save(); }
-  if (st === 503 || st === 500) { COOL[model] = Date.now() + 20e3; return save(); }
+  if (st === 503 || st === 500 || st === 408) { COOL[model] = Date.now() + 120e3; return save(); }
   const m = /retry in ([\d.]+)\s*s|"retryDelay":\s*"(\d+)s"/i.exec(msg);
   const daily = /per ?day|PerDay|RPD/i.test(msg);
   const ms = daily ? 30 * 60e3 : m ? Number(m[1] || m[2]) * 1000 + 500 : 60e3;
@@ -1582,10 +1585,14 @@ function cool(model, e) {
 export const geminiState = () => GEMINI_TEXT.every(cooling) ? 'Gemini limit reached' : '';
 async function geminiChat(key, body, order) {
   let last;
+  /* 15 s across the whole ladder: when Google is overloaded every model
+     hangs before its 503, and nine of them would be two minutes. */
+  const t0 = Date.now();
   for (const model of order || GEMINI_TEXT) {
+    if (Date.now() - t0 > 15000) break;
     if (cooling(model)) continue;
-    try { return await geminiOnce(key, body, model); }
-    catch (e) { last = e; if ([429, 404, 503, 500].includes(e.status) || (e.status === 400 && /not found|not supported/i.test(e.message || ''))) cool(model, e); else throw e; }
+    try { return await Promise.race([geminiOnce(key, body, model), new Promise((_, no) => setTimeout(() => { const e = new Error('timed out'); e.status = 408; no(e); }, 9000))]); }
+    catch (e) { last = e; if ([429, 404, 503, 500, 408].includes(e.status) || (e.status === 400 && /not found|not supported/i.test(e.message || ''))) cool(model, e); else throw e; }
   }
   if (!last) { last = new Error('Gemini free limit reached'); last.status = 429; }
   throw last;
@@ -1649,15 +1656,15 @@ async function chatWithFallback(key, body, geminiKey) {
      beats handing the answer to Gemini while Gemini is also overloaded. */
   const waitFor = e => { const m = /try again in (?:(\d+)m)?([\d.]+)s/i.exec(e.message || ''); return m ? (Number(m[1] || 0) * 60 + Number(m[2])) * 1000 : 0; };
   const groq = async model => {
-    try { return await groqChat(key, { ...body, model, reasoning_effort: EFFORT }); }
+    try { return await groqChat(key, { ...fit(body, 16000), model, reasoning_effort: EFFORT }); }
     catch (e) {
       const ms = waitFor(e);
-      if (!busy(e) || !ms || ms > 8000 || (geminiKey && !geminiState())) throw e;
+      if (!busy(e) || !ms || ms > 20000 || (ms > 8000 && geminiKey && !geminiState())) throw e;
       await new Promise(r => setTimeout(r, ms + 300));
-      return groqChat(key, { ...body, model, reasoning_effort: EFFORT });
+      return groqChat(key, { ...fit(body, 16000), model, reasoning_effort: EFFORT });
     }
   };
-  const qwen = () => groqChat(key, { ...fit(body, 19000), model: NATIVE, reasoning_effort: EFFORT });
+  const qwen = () => groqChat(key, { ...fit(body, 13000), model: NATIVE, reasoning_effort: EFFORT });
   try {
     return await groq(CHAT);
   } catch (e) {
@@ -1669,7 +1676,7 @@ async function chatWithFallback(key, body, geminiKey) {
       catch (e3) { if (!busy(e3) && e3.status !== 500 && e3.status !== 404) throw e3; }
     }
     try {
-      return await groqChat(key, { ...fit(body, 21000), model: CHAT_SMALL, reasoning_effort: EFFORT });
+      return await groqChat(key, { ...fit(body, 15000), model: CHAT_SMALL, reasoning_effort: EFFORT });
     } catch (e2) {
       if (!busy(e2)) throw e2;
       /* Last rung: Qwen on Groq has its own daily quota. */
@@ -1713,7 +1720,7 @@ export async function runDirect({ key, geminiKey, sb, rid, system, messages, onP
       tools: wireFor(scope),
       tool_choice: 'auto',
       temperature: 0.4,
-      max_tokens: 1400,
+      max_tokens: 900,
     }, geminiKey);
 
     const m = (json.choices && json.choices[0] && json.choices[0].message) || {};
@@ -1888,22 +1895,37 @@ async function hearGemini(key, blob) {
       last = e;
       console.info('[assistant] Gemini hearing ' + model + ': ' + ((e && e.status) || '') + ' ' + String((e && e.message) || e).slice(0, 140));
       if (e.message === 'nothing heard') throw e;
-      if (e.status && ![429, 503, 500, 404].includes(e.status)) throw e;
-      if (e.status === 503 || e.status === 500 || !e.status) again.push(model); else cool(model, e);
+      if (e.status && ![429, 503, 500, 404, 408].includes(e.status)) throw e;
+      if ((e.status === 503 || e.status === 500) && !again.includes(model)) again.push(model);
+      cool(model, e);
       return null;
     }
   };
-  for (const model of GEMINI_LITE) { if (cooling(model)) continue; const r = await one(model); if (r) return r; }
-  if (again.length) {
+  const t0 = Date.now(), left = () => Date.now() - t0 < 16000;
+  for (const model of GEMINI_LITE) { if (!left()) break; if (cooling(model)) continue; const r = await one(model); if (r) return r; }
+  /* Gemini's dedicated speech-to-text model: separate pool, plain text only. */
+  if (left() && !cooling(TRANSCRIBE)) {
+    try { return await hearTranscribe(key, mime, data); }
+    catch (e) { last = e; if (e.message === 'nothing heard') throw e; cool(TRANSCRIBE, e); }
+  }
+  if (again.length && left()) {
     await new Promise(r => setTimeout(r, 1200));
-    for (const model of again.splice(0)) { const r = await one(model); if (r) return r; }
+    for (const model of again.splice(0, 2)) { delete COOL[model]; const r = await one(model); if (r) return r; }
   }
   if (!last) { last = new Error('Gemini free limit reached'); last.status = 429; }
   throw last;
 }
 
+/* An overloaded model can hang 10 s+ before its 503; 7 s is plenty for a
+   short clip, and the next model is tried instead. */
+function timed(ms) {
+  const ac = new AbortController(), t = setTimeout(() => ac.abort(), ms);
+  return { signal: ac.signal, done: () => clearTimeout(t) };
+}
 async function hearGeminiOnce(key, model, mime, data) {
-  const res = await fetch(
+  const tm = timed(7000);
+  let res;
+  try { res = await fetch(
     GEMINI_NATIVE + '/models/' + model + ':generateContent?key=' + encodeURIComponent(key),
     {
       method: 'POST',
@@ -1923,8 +1945,9 @@ async function hearGeminiOnce(key, model, mime, data) {
           temperature: 0.2,
         },
       }),
+      signal: tm.signal,
     },
-  );
+  ); } catch (e) { const err = new Error('timed out'); err.status = 408; throw err; } finally { tm.done(); }
   if (!res.ok) {
     const err = new Error(await res.text().catch(() => 'HTTP ' + res.status));
     err.status = res.status;
@@ -1936,6 +1959,24 @@ async function hearGeminiOnce(key, model, mime, data) {
   const english = String(out.english || '').trim();
   if (!english || GHOST.test(english)) throw new Error('nothing heard');
   return { text: english, lang: out.lang || 'und', via: 'gemini' };
+}
+
+const TRANSCRIBE = 'gemini-3.5-transcribe';
+async function hearTranscribe(key, mime, data) {
+  const tm = timed(8000);
+  let res;
+  try {
+    res = await fetch(GEMINI_NATIVE + '/models/' + TRANSCRIBE + ':generateContent?key=' + encodeURIComponent(key), {
+      method: 'POST', headers: { 'content-type': 'application/json' }, signal: tm.signal,
+      body: JSON.stringify({ contents: [{ parts: [{ inline_data: { mime_type: mime, data } }, { text: 'Transcribe exactly what is said (Tamil, Telugu or English). Output only the words, in the script of the language spoken.' }] }], generationConfig: { temperature: 0 } }),
+    });
+  } catch (e) { const err = new Error('timed out'); err.status = 408; throw err; } finally { tm.done(); }
+  if (!res.ok) { const err = new Error(await res.text().catch(() => 'HTTP ' + res.status)); err.status = res.status; throw err; }
+  const j = await res.json();
+  const said = ((((j.candidates || [])[0] || {}).content || {}).parts || []).map(p => p.text || '').join(' ').trim();
+  if (!said || GHOST.test(said)) throw new Error('nothing heard');
+  const lang = /[\u0B80-\u0BFF]/.test(said) ? 'ta' : /[\u0C00-\u0C7F]/.test(said) ? 'te' : 'en';
+  return { text: said, lang, via: 'gemini', native: lang !== 'en' };
 }
 
 async function whisper(key, blob, path, extra) {
@@ -1975,7 +2016,15 @@ export async function hear(key, blob, geminiKey) {
   let why = geminiKey ? '' : 'no Gemini key';
   if (geminiKey) {
     try {
-      return await hearGemini(geminiKey, blob);
+      const h = await hearGemini(geminiKey, blob);
+      if (h.native && key) {
+        try {
+          const j = await groqChat(key, { model: CHAT_SMALL, reasoning_effort: 'low', max_tokens: 300, temperature: 0.1, messages: [{ role: 'user', content: 'Translate this restaurant staff request into plain English. Output only the translation.\n\n' + h.text }] });
+          const en = String((((j.choices || [])[0] || {}).message || {}).content || '').trim();
+          if (en) return { text: en, lang: h.lang, via: 'gemini' };
+        } catch (e) {}
+      }
+      return h;
     } catch (e) {
       if (!key || e.message === 'nothing heard') throw e;
       why = e.status === 429 ? 'Gemini limit reached' : 'Gemini error ' + (e.status || '');
