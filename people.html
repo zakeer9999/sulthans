@@ -926,7 +926,10 @@ class Component extends DCLogic {
     const now = new Date(S.now);
 
     // today
-    const late = r => r.plannedFrom && r.in ? Math.round((new Date(r.in) - new Date(r.plannedFrom)) / 60000) : null;
+    /* No shift that day: measure against opening time (11 AM unless house_open_hour is set). */
+    const openAt = new Date((d.day || S.day) + 'T00:00'); openAt.setHours(S.house.open_hour == null ? 11 : +S.house.open_hour, 0, 0, 0);
+    const late = r => r.in ? Math.round((new Date(r.in) - (r.plannedFrom ? new Date(r.plannedFrom) : openAt)) / 60000) : null;
+    const jobOf = {}; S.allStaff.forEach(s => { jobOf[s.id] = (pos[s.position_id] || {}).name || (ROLES.find(x => x[0] === s.role) || [0, s.role || ''])[1]; });
     const lateN = rows.filter(r => (late(r) || 0) > 5).length;
     // payroll
     const pc = this.payCalc();
@@ -968,9 +971,9 @@ class Component extends DCLogic {
         { label: 'HOURS', value: this.dur(d.minutes || 0), tone: '#c8a24a' },
       ],
       dayEmpty: rows.length === 0,
-      dayRows: rows.map(r => { const l = late(r), st = r.open ? ['Still in', 'rgba(224,189,106,.14)', '#e0bd6a'] : l == null ? ['Not rostered', '#1b1712', '#8d8272'] : l > 5 ? ['Late ' + l + 'm', 'rgba(217,138,111,.14)', '#e8a58c'] : ['On time', 'rgba(159,199,154,.14)', '#9fc79a'];
-        return { staff: r.staff, ini: this.ini(r.staff), av: this.av(r.staff), role: r.role || '', span: this.hm(r.in) + ' → ' + (r.out ? this.hm(r.out) : 'now'),
-          planned: r.plannedFrom ? 'Rostered ' + this.hm(r.plannedFrom) + '–' + this.hm(r.plannedTo) : '', breakLine: (r.break ? r.break + ' min break' : '') + (r.source === 'manager' ? (r.break ? ' · ' : '') + 'added by hand' : ''),
+      dayRows: rows.map(r => { const l = late(r), st = r.open ? (l > 5 ? ['In · late ' + l + 'm', 'rgba(217,138,111,.14)', '#e8a58c'] : ['Still in', 'rgba(224,189,106,.14)', '#e0bd6a']) : l == null ? ['Not rostered', '#1b1712', '#8d8272'] : l > 5 ? ['Late ' + l + 'm', 'rgba(217,138,111,.14)', '#e8a58c'] : ['On time', 'rgba(159,199,154,.14)', '#9fc79a'];
+        return { staff: r.staff, ini: this.ini(r.staff), av: this.av(r.staff), role: jobOf[r.staffId] || r.role || '', span: this.hm(r.in) + ' → ' + (r.out ? this.hm(r.out) : 'now'),
+          planned: r.plannedFrom ? 'Rostered ' + this.hm(r.plannedFrom) + '–' + this.hm(r.plannedTo) : 'No shift · opens ' + this.hm(openAt), breakLine: (r.break ? r.break + ' min break' : '') + (r.source === 'manager' ? (r.break ? ' · ' : '') + 'added by hand' : ''),
           dur: this.dur(r.minutes), border: r.open ? '#3f3115' : '#2a231b', chip: st[0], chipBg: st[1], chipFg: st[2], open: !!r.open,
           onEdit: () => this.openEdit(r), onOut: () => this.clockOutNow(r) }; }),
       away: (d.rosteredAway || []).map(a => ({ line: a.staff + ' · ' + this.hm(a.plannedFrom) + '–' + this.hm(a.plannedTo) })), awayAny: (d.rosteredAway || []).length > 0,
