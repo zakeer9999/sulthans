@@ -981,9 +981,11 @@ class Component extends DCLogic {
           const url = URL.createObjectURL(wav);
           this.setState({ voicing: false, talk: true, voice: 'Gemini voice' });
           console.info('[assistant] voice: Gemini TTS (en), ready in ' + (Date.now() - t0) + ' ms');
-          const ok = await this.playSrc(url, 6000 + text.length * 110);
+          let ok = await this.playSrc(url, 6000 + text.length * 110);
           URL.revokeObjectURL(url);
+          if (!ok && live()) ok = await this.playCtx(wav, 6000 + text.length * 110);
           if (ok || !live()) return this.doneTalking(tok);
+          this._ttsWhy = 'iPhone blocked the audio';
         }
       } catch (e) { this._ttsWhy = (e && e.status) === 429 ? 'Gemini voice limit reached' : 'Gemini voice error ' + ((e && e.status) || ''); console.info('[assistant] Gemini voice unavailable: ' + ((e && e.status) || '') + ' ' + String((e && e.message) || e).slice(0, 200)); }
       if (!live()) return;
@@ -1007,8 +1009,9 @@ class Component extends DCLogic {
             console.info('[assistant] voice: Gemini TTS, ready in ' + (Date.now() - t0) + ' ms');
             /* The voice model now and then keeps talking past the text it was
                given. Playback is capped at what the words can take to say. */
-            const ok = await this.playSrc(url, 6000 + text.length * 110);
+            let ok = await this.playSrc(url, 6000 + text.length * 110);
             URL.revokeObjectURL(url);
+            if (!ok && live()) ok = await this.playCtx(wav, 6000 + text.length * 110);
             if (ok || !live()) return this.doneTalking(tok);
           }
         } catch (e) { console.info('[assistant] Gemini voice unavailable: ' + ((e && e.status) || '') + ' ' + String((e && e.message) || e).slice(0, 160)); }
@@ -1109,6 +1112,29 @@ class Component extends DCLogic {
         else started = true;
       } catch (e) { fin(false); }
     });
+  }
+
+  /* Second way to play a Gemini WAV: iOS can refuse the audio element after the
+     mic has been live, but the AudioContext resumed on the tap still plays. */
+  async playCtx(blob, maxMs) {
+    try {
+      const ac = this._ac;
+      if (!ac) return false;
+      if (ac.state !== 'running') await ac.resume();
+      if (ac.state !== 'running') return false;
+      const buf = await ac.decodeAudioData(await blob.arrayBuffer());
+      return await new Promise(resolve => {
+        const src = ac.createBufferSource();
+        src.buffer = buf; src.connect(ac.destination);
+        let done = false;
+        const fin = () => { if (done) return; done = true; clearTimeout(this._cap); if (this._finish === stop) this._finish = null; resolve(true); };
+        const stop = () => { try { src.stop(); } catch (e) {} fin(); };
+        this._finish = stop;
+        src.onended = fin;
+        this._cap = setTimeout(stop, maxMs);
+        src.start();
+      });
+    } catch (e) { return false; }
   }
 
   stopAudio() {

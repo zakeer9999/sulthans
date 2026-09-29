@@ -1386,6 +1386,10 @@ or a reading, name the source blog briefly, and tie it to this restaurant's
 dish, complaint or number. Never give filler advice such as greeting with a
 smile, keeping the place clean or training staff well unless a passage and a
 reading both point at it. Three or four concrete steps beat ten general ones.
+Never claim a result the passage does not state ("shown to raise
+satisfaction", "proven", percentages). Use Indian kitchen words: coriander,
+not cilantro. Name the source only if it came from expertTips or webResearch
+in this conversation; never name a blog from memory.
 
 For prep forecasts, festival sales patterns, which dishes are gaining or
 dipping and why, and whether a logged change worked, call aiEngine.
@@ -1600,7 +1604,8 @@ function resetAt() {
   return now.getTime() + (ms > 0 && ms <= 864e5 ? ms : 3600e3) + 60e3;
 }
 const BUSY = [];
-const cooling = m => { const now = Date.now(); return (COOL[m] || 0) > now || (COOL['*'] || 0) > now || !listed(m); };
+const fam = m => /-tts/.test(m) ? '*tts' : '*';
+const cooling = m => { const now = Date.now(); return (COOL[m] || 0) > now || (COOL[fam(m)] || 0) > now || !listed(m); };
 /* Failed 503s appear to count against the free daily allowance (Google forum,
    Sep 2026), and overloads usually last 30-120 min. So a busy model is benched
    10 min (30 if it was busy within the hour), and when three different models
@@ -1614,14 +1619,21 @@ function cool(model, e) {
     COOL[model] = now + ((COOL['503:' + model] || 0) > now - 3600e3 ? 30 : 10) * 60e3;
     COOL['503:' + model] = now;
     BUSY.push({ model, at: now }); if (BUSY.length > 20) BUSY.shift();
-    if (new Set(BUSY.filter(b => b.at > now - 120e3).map(b => b.model)).size >= 3) COOL['*'] = now + 5 * 60e3;
+    /* Voice and text models are separate capacity: each family has its own breaker. */
+    if (new Set(BUSY.filter(b => b.at > now - 120e3 && fam(b.model) === fam(model)).map(b => b.model)).size >= 3) COOL[fam(model)] = now + 5 * 60e3;
   } else {
     const m = /retry in ([\d.]+)\s*s|"retryDelay":\s*"(\d+)s"/i.exec(msg);
     COOL[model] = /per ?day|PerDay|RPD/i.test(msg) ? resetAt() : now + Math.min(m ? Number(m[1] || m[2]) * 1000 + 500 : 60e3, 60 * 60e3);
   }
   try { localStorage.setItem('sulthans.aiCool', JSON.stringify(COOL)); } catch (e) {}
 }
-export const geminiState = () => GEMINI_TEXT.every(cooling) ? 'Gemini limit reached' : '';
+export const geminiState = () => GEMINI_TEXT.every(cooling) ? geminiWhy() : '';
+function geminiWhy() {
+  const now = Date.now();
+  if ((COOL['*'] || 0) > now) return 'Gemini busy, resting ' + Math.ceil((COOL['*'] - now) / 6e4) + ' min';
+  if (GEMINI_LITE.some(m => (COOL['503:' + m] || 0) > now - 30 * 60e3)) return 'Gemini busy';
+  return 'Gemini limit reached';
+}
 async function geminiChat(key, body, order) {
   let last;
   /* 15 s across the whole ladder: when Google is overloaded every model
@@ -1708,24 +1720,19 @@ async function chatWithFallback(key, body, geminiKey) {
     }
   };
   const qwen = () => groqChat(key, { ...fit(body, 13000), model: NATIVE, reasoning_effort: EFFORT });
-  try {
-    return await groq(CHAT);
-  } catch (e) {
-    if (!busy(e)) throw e;
-    /* Gemini's pools are much larger than Groq's per-minute cap, so it goes
-       second now; skipped instantly while every Gemini model is benched. */
-    if (geminiKey && !geminiState()) {
-      try { return await geminiChat(geminiKey, body); }
-      catch (e3) { if (!busy(e3) && e3.status !== 500 && e3.status !== 404) throw e3; }
-    }
-    try {
-      return await groqChat(key, { ...fit(body, 15000), model: CHAT_SMALL, reasoning_effort: EFFORT });
-    } catch (e2) {
-      if (!busy(e2)) throw e2;
-      /* Last rung: Qwen on Groq has its own daily quota. */
-      return qwen();
-    }
+  /* All three Groq models first: each has its own per-minute and daily cap.
+     Gemini is last, because every tool round is a fresh request there (a
+     three-tool question was 6-12 Gemini calls of ~10k tokens each on the free
+     tier, 29 Sep), and only on the job models so hearing keeps its allowance. */
+  let last;
+  for (const step of [() => groq(CHAT), () => groqChat(key, { ...fit(body, 15000), model: CHAT_SMALL, reasoning_effort: EFFORT }), qwen]) {
+    try { return await step(); } catch (e) { if (!busy(e)) throw e; last = e; }
   }
+  if (geminiKey && !GEMINI_JOBS.every(cooling)) {
+    try { return await geminiChat(geminiKey, fit(body, 24000), GEMINI_JOBS.slice(0, 2)); }
+    catch (e3) { if (!busy(e3) && e3.status !== 500 && e3.status !== 404) throw e3; last = e3; }
+  }
+  throw last;
 }
 
 /* One tool-free completion for long creative JSON (Content Studio). Gemini goes
@@ -2143,7 +2150,7 @@ export async function hear(key, blob, geminiKey) {
       return h;
     } catch (e) {
       if (!key || e.message === 'nothing heard') throw e;
-      why = e.status === 429 ? 'Gemini limit reached' : e.status === 204 ? 'Gemini heard nothing' : e.status === 408 ? 'Gemini slow' : 'Gemini error ' + (e.status || '');
+      why = e.status === 429 ? geminiWhy() : e.status === 204 ? 'Gemini heard nothing' : e.status === 408 ? 'Gemini slow' : 'Gemini error ' + (e.status || '');
     }
   }
   return { ...(await hearWhisper(key, blob)), why };
@@ -2181,18 +2188,19 @@ export async function intoLanguage(key, text, lang, geminiKey) {
   const body = { temperature: 0.3, max_tokens: 700, messages: [{ role: 'user', content: speakPrompt(name, text) }] };
   const pick = j => String((((j.choices || [])[0] || {}).message || {}).content || '').trim();
   let out = '';
-  if (geminiKey) {
-    try {
-      out = pick(await geminiChat(geminiKey, body));
-    } catch (e) {
-      if (!key) throw e;
-    }
-  }
-  if (!out && key) {
+  /* Qwen first (Groq, its own allowance); Gemini job models only as backup. */
+  if (key) {
     try {
       out = pick(await groqChat(key, { ...body, model: NATIVE }));
     } catch (e) {
       if (!geminiKey) throw e;
+    }
+  }
+  if (!out && geminiKey) {
+    try {
+      out = pick(await geminiChat(geminiKey, body, GEMINI_JOBS.slice(0, 2)));
+    } catch (e) {
+      if (!key) throw e;
     }
   }
   return out || text;
@@ -2266,7 +2274,7 @@ export async function nativeAudio(geminiKey, text, lang, translate, groqKey) {
     /* Groq first: it answers in about a second, while an overloaded Gemini
        hung here with no deadline and the reply was never voiced. */
     if (groqKey) try { t = pick(await within(groqChat(groqKey, { ...body, model: NATIVE }), 6000)); } catch (e) {}
-    if (!t) try { t = pick(await within(geminiChat(geminiKey, body, GEMINI_LITE), 6000)); } catch (e) {}
+    if (!t) try { t = pick(await within(geminiChat(geminiKey, body, GEMINI_JOBS.slice(0, 2)), 6000)); } catch (e) {}
     if (t) text = t;
   }
   const plain = String(text).replace(/[*_#`>]+/g, ' ').replace(/\s+/g, ' ').trim();
