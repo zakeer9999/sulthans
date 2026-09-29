@@ -407,7 +407,7 @@ const TOOLS = [
       const ahead = new Date(Date.now() + 7 * 864e5).toISOString().slice(0, 10);
       const today = localDay();
       const [st, at, sh] = await Promise.all([
-        sb.from('staff').select('id,name,role,active').eq('restaurant_id', rid).order('name'),
+        staffWithJobs(sb, rid),
         sb.from('attendance').select('staff_id,day,in_at,out_at,break_mins,note').eq('restaurant_id', rid).gte('day', since).order('in_at', { ascending: false }).limit(400),
         sb.from('shifts').select('staff_id,day,starts_at,ends_at,note').eq('restaurant_id', rid).gte('day', today).lte('day', ahead).order('starts_at').limit(200),
       ]);
@@ -415,7 +415,7 @@ const TOOLS = [
       const who = Object.fromEntries((st.data || []).map(p => [p.id, p.name]));
       const hrs = r => r.out_at ? Math.round(((new Date(r.out_at) - new Date(r.in_at)) / 36e5 - (r.break_mins || 0) / 60) * 10) / 10 : undefined;
       return {
-        staff: (st.data || []).map(p => ({ name: p.name, role: p.role, active: p.active })),
+        staff: (st.data || []).map(p => ({ name: p.name, job: p.job, appAccess: p.role, active: p.active })),
         onFloorNow: (at.data || []).filter(r => r.day === today && !r.out_at).map(r => ({ name: who[r.staff_id], since: r.in_at })),
         attendance: (at.data || []).map(r => ({ name: who[r.staff_id], day: r.day, in: r.in_at, out: r.out_at || undefined, hoursWorked: hrs(r), note: r.note || undefined })),
         rosterNext7Days: (sh.data || []).map(r => ({ name: who[r.staff_id], day: r.day, from: r.starts_at, to: r.ends_at, note: r.note || undefined })),
@@ -640,7 +640,7 @@ const TOOLS = [
       const since = new Date(Date.now() - days * 864e5).toISOString();
       const till = ctx && ctx.scope === 'counter';
       const [st, kt, ev, bl, at] = await Promise.all([
-        sb.from('staff').select('id,name,role,active').eq('restaurant_id', rid),
+        staffWithJobs(sb, rid),
         sb.from('kots').select('staff_id,created_at,served_at,kot_items(qty)').eq('restaurant_id', rid).gte('created_at', since).neq('state', 'void').limit(4000),
         sb.from('kot_item_events').select('staff_id,mins,at,kot_items!inner(kots!inner(restaurant_id))').eq('kot_items.kots.restaurant_id', rid).gte('at', since).limit(5000),
         sb.from('bills').select('staff_id,state,total,settled_at').eq('restaurant_id', rid).gte('created_at', since).in('state', ['printed', 'settled']).limit(4000),
@@ -657,7 +657,7 @@ const TOOLS = [
         const r = p[s.id] || row(s.id);
         const hrs = Math.round(r.hours * 10) / 10;
         return {
-          name: s.name, role: s.role, active: s.active,
+          name: s.name, job: s.job, appAccess: s.role, active: s.active,
           daysWorked: r.days.size, hoursWorked: hrs,
           ticketsPunched: r.tickets, platesPunched: r.plates,
           avgMinsTheirTicketsTookToServe: avg(r.serve),
@@ -690,7 +690,7 @@ const TOOLS = [
       if (!from) from = a.days ? localDay(new Date(Date.now() - (clamp(a.days, 1, 92, 7) - 1) * 864e5)) : today.slice(0, 8) + '01';
       const [house, st, at, sh, pay] = await Promise.all([
         sb.from('restaurants').select('*').eq('id', rid).maybeSingle(),
-        sb.from('staff').select('id,name,role,active').eq('restaurant_id', rid),
+        staffWithJobs(sb, rid),
         sb.from('attendance').select('staff_id,day,in_at,out_at,break_mins,note').eq('restaurant_id', rid).gte('day', from).lte('day', to).order('in_at').limit(3000),
         sb.from('shifts').select('staff_id,day,starts_at,ends_at').eq('restaurant_id', rid).gte('day', from).lte('day', to).limit(3000),
         till ? sb.rpc('payroll_summary', { p_rid: rid, p_from: from, p_to: to }) : Promise.resolve({ data: null }),
@@ -701,6 +701,7 @@ const TOOLS = [
       const stdDay = Number(h.ot_after_hours) || 9;
       const brk = houseBreak(ctx);
       const name = Object.fromEntries((st.data || []).map(s => [s.id, s.name]));
+      const job = Object.fromEntries((st.data || []).map(s => [s.id, s.job]));
       const plan = {};
       (sh.error ? [] : sh.data || []).forEach(s => { const k = s.staff_id + '|' + s.day; (plan[k] = plan[k] || []).push(s); });
       const worked = {};
@@ -720,12 +721,14 @@ const TOOLS = [
         const expect = Math.max(0, (ps.length ? planned : stdDay) - brk / 60);
         const still = ws.some(r => !r.out_at);
         const firstIn = ws.length ? ws[0].in_at : null, lastOut = ws.length && !still ? ws[ws.length - 1].out_at : null;
-        const shiftStart = ps.length ? ps.map(s => s.starts_at).sort()[0] : null, shiftEnd = ps.length ? ps.map(s => s.ends_at).sort().slice(-1)[0] : null;
-        const late = firstIn && shiftStart ? Math.round((Date.parse(firstIn) - Date.parse(shiftStart)) / 6e4) : 0;
-        const early = lastOut && shiftEnd ? Math.round((Date.parse(shiftEnd) - Date.parse(lastOut)) / 6e4) : 0;
+        const win = houseWindow(ctx, h, day);
+        const shiftStart = ps.length ? Date.parse(ps.map(s => s.starts_at).sort()[0]) : win.open, shiftEnd = ps.length ? Date.parse(ps.map(s => s.ends_at).sort().slice(-1)[0]) : win.close;
+        const late = firstIn ? Math.round((Date.parse(firstIn) - shiftStart) / 6e4) : 0;
+        const early = lastOut ? Math.round((shiftEnd - Date.parse(lastOut)) / 6e4) : 0;
         const r1 = x => Math.round(x * 100) / 100;
         days.push({
-          staffId: sid, name: name[sid] || 'Unknown', day,
+          staffId: sid, name: name[sid] || 'Unknown', job: job[sid], day,
+          lateMeasuredFrom: ps.length ? 'rostered shift start' : 'opening time',
           clockedIn: clock(firstIn), clockedOut: still ? 'still clocked in' : clock(lastOut),
           breakMins: took || assumed || undefined,
           breakNote: assumed ? 'standard ' + brk + '-min break taken off (none recorded)' : took > brk ? 'break ran ' + (took - brk) + ' min over the ' + brk + '-min allowance' : undefined,
@@ -739,7 +742,7 @@ const TOOLS = [
       days.sort((x, y) => x.day.localeCompare(y.day) || x.name.localeCompare(y.name));
       const payRows = Object.fromEntries(((pay && pay.data && pay.data.rows) || []).map(r => [r.staff_id, r]));
       const totals = Object.values(days.reduce((m, d) => {
-        const t = m[d.staffId] = m[d.staffId] || { name: d.name, daysWorked: 0, daysAbsent: 0, hoursWorked: 0, expectedHours: 0, extraHours: 0, shortHours: 0, lateDays: 0, clockedInNow: false };
+        const t = m[d.staffId] = m[d.staffId] || { name: d.name, job: d.job, daysWorked: 0, daysAbsent: 0, hoursWorked: 0, expectedHours: 0, extraHours: 0, shortHours: 0, lateDays: 0, clockedInNow: false };
         if (d.absent) t.daysAbsent++; else t.daysWorked++;
         t.hoursWorked += d.hoursWorked; t.expectedHours += d.expectedHours;
         t.extraHours += d.extraHours || 0; t.shortHours += d.shortHours || 0;
@@ -749,7 +752,7 @@ const TOOLS = [
         return m;
       }, {})).map(t => {
         const r2 = x => Math.round(x * 100) / 100;
-        const out = { name: t.name, daysWorked: t.daysWorked, daysAbsent: t.daysAbsent || undefined, hoursWorked: r2(t.hoursWorked), expectedHours: r2(t.expectedHours), extraHours: r2(t.extraHours), shortHours: r2(t.shortHours), netHours: r2(t.extraHours - t.shortHours), lateDays: t.lateDays || undefined, clockedInNow: t.clockedInNow || undefined };
+        const out = { name: t.name, job: t.job, daysWorked: t.daysWorked, daysAbsent: t.daysAbsent || undefined, hoursWorked: r2(t.hoursWorked), expectedHours: r2(t.expectedHours), extraHours: r2(t.extraHours), shortHours: r2(t.shortHours), netHours: r2(t.extraHours - t.shortHours), lateDays: t.lateDays || undefined, clockedInNow: t.clockedInNow || undefined };
         const p = payRows[t.id];
         if (till && p) {
           out.payKind = p.pay_kind; out.rate = Number(p.rate);
@@ -765,13 +768,15 @@ const TOOLS = [
         standardDayHours: stdDay, staffBreakMins: brk,
         hoursNote: 'Expected hours are the shift (or standard day) minus the ' + brk + '-minute break.', overtimeMultiplier: Number(h.ot_multiplier) || 1.5,
         window: { from, to },
+        today: (() => { const td = days.filter(d => d.day === today && !d.absent); return { day: today, present: td.length, presentNames: td.map(d => d.name), late: td.filter(d => d.lateMins).map(d => ({ name: d.name, job: d.job, clockedIn: d.clockedIn, lateMins: d.lateMins, measuredFrom: d.lateMeasuredFrom })), absentRostered: days.filter(d => d.day === today && d.absent).map(d => d.name) }; })(),
+        lateRule: 'Late means clocking in more than 5 minutes after the rostered shift start, or after opening time when the person has no shift that day.',
         totals,
         days: days.slice(-150).map(({ staffId, ...d }) => d),
         ...(till ? { wageNote: pay && pay.error ? 'Wage sheet unreadable: ' + pay.error.message : 'Wages follow the wage sheet: hourly = regular hours x rate + overtime x rate x multiplier; daily = days x rate; monthly salary is not divided by attendance.' } : { wageNote: 'Wages are only readable in the counter app.' }),
       };
     },
     schema: {
-      description: 'Restaurant opening hours and staff attendance for a date range: per person and per day the clock-in and clock-out time, breaks, hours worked, the hours expected (rostered shift, or the standard day), extra (overtime) hours, shortage hours, absences, late arrivals and early leaving, plus totals per person' + ' and, at the counter, pay kind, rate, paid overtime and wages due. Use for restaurant timings, attendance, who came late, overtime, extra hours, short hours, and wages. Defaults to this month.',
+      description: 'Restaurant opening hours and staff attendance for a date range: per person and per day the clock-in and clock-out time, breaks, hours worked, the hours expected (rostered shift, or the standard day), extra (overtime) hours, shortage hours, absences, late arrivals and early leaving, plus totals per person' + ' and, at the counter, pay kind, rate, paid overtime and wages due. Includes a today block: how many are present and who came late. Staff with no rostered shift are measured against opening time. Use for restaurant timings, attendance, how many came today, who came late, overtime, extra hours, short hours, and wages. Defaults to this month.',
       parameters: {
         type: 'object',
         properties: {
@@ -1077,6 +1082,26 @@ const PLACE = Object.assign({ restaurantName: "Sulthan's", town: 'Aruppukottai, 
   typeof window !== 'undefined' && window.SULTHANS_CONFIG || {});
 /* Opening hours and the staff break. A value handed in by the screen (its
    Tweaks) wins, then config.js, then the restaurant row. */
+/* Staff with the job they were given (Chief cook, Tandoor…). role is only the
+   app access level; "waiter" there covers cooks and cleaners too. */
+const staffWithJobs = async (sb, rid) => {
+  const [st, pos] = await Promise.all([
+    sb.from('staff').select('id,name,role,active,position_id').eq('restaurant_id', rid).order('name'),
+    sb.from('positions').select('id,name').eq('restaurant_id', rid),
+  ]);
+  if (st.error) return sb.from('staff').select('id,name,role,active').eq('restaurant_id', rid).order('name');
+  const pn = Object.fromEntries(((pos && pos.data) || []).map(p => [p.id, p.name]));
+  return { data: (st.data || []).map(s => ({ ...s, job: pn[s.position_id] || (s.role === 'waiter' ? 'staff' : s.role) })), error: null };
+};
+/* Opening and closing time on a day, as instants. Staff with no rostered shift
+   are measured against these (11 AM to 11 PM unless set otherwise). */
+const hourOf = (t, dflt) => { const m = /(\d{1,2})(?::(\d{2}))?\s*(am|pm)?/i.exec(t || ''); if (!m) return dflt; let h = +m[1] % 12; if (/pm/i.test(m[3] || '')) h += 12; else if (!m[3] && +m[1] === 12) h = 12; return h + (+(m[2] || 0)) / 60; };
+const houseWindow = (ctx, h, day) => {
+  const txt = String(houseHours(ctx, h)), parts = txt.split(/\s+(?:to|-|–|until)\s+/i);
+  const o = hourOf(parts[0], 11), c = hourOf(parts[1], 23);
+  const at = x => Date.parse(day + 'T00:00:00+05:30') + x * 36e5;
+  return { open: at(o), close: at(c <= o ? c + 24 : c) };
+};
 const houseHours = (ctx, h) => (ctx && ctx.house && ctx.house.hours) || PLACE.openingHours || (h && h.hours) || '11 AM to 11 PM';
 const houseBreak = ctx => {
   const v = ctx && ctx.house ? ctx.house.breakMins : null;
@@ -1535,9 +1560,10 @@ async function chatCall(base, key, body) {
   if (!res.ok) {
     let msg = 'HTTP ' + res.status;
     try {
-      const j = await res.json();
-      const e = Array.isArray(j) ? j[0] && j[0].error : j.error;
-      msg = (e && e.message) || msg;
+      const raw = await res.text();
+      try { const j = JSON.parse(raw); const e = Array.isArray(j) ? j[0] && j[0].error : j.error; msg = (e && e.message) || msg; } catch (e) { msg = raw.slice(0, 300) || msg; }
+      /* Google names a daily cap only in the details (quotaId ...PerDay...). */
+      if (/PerDay/.test(raw) && !/PerDay/.test(msg)) msg += ' [PerDay]';
     } catch (e) {}
     const err = new Error(msg);
     err.status = res.status;
@@ -1705,7 +1731,7 @@ function fit(body, chars) {
 async function chatWithFallback(key, body, geminiKey) {
   /* A 400 "model called a tool" is one model misfiring, not a bad request:
      the next rung answers it. */
-  const busy = e => e.status === 429 || e.status === 413 || e.status === 503 || e.status === 500 || e.status === 408 || (e.status === 400 && /called a tool|tool_use_failed|failed to call a function/i.test(e.message || ''));
+  const busy = e => e.status === 429 || e.status === 413 || e.status === 503 || e.status === 500 || e.status === 408 || (e.status === 400 && /called a tool|tool_use_failed|failed to call a function|Parsing failed|could not be parsed|failed_generation/i.test(e.message || ''));
   /* Groq's free per-minute token cap trips on the second tool round (system
      prompt + tools + results) and says "try again in 6.2s". Waiting that out
      beats handing the answer to Gemini while Gemini is also overloaded. */
@@ -2318,7 +2344,8 @@ export async function nativeAudio(geminiKey, text, lang, translate, groqKey) {
       },
     ).catch(() => ({ ok: false, status: 408, text: async () => 'timed out' })).finally(() => tm.done());
     if (res.ok) { TTS_OK = model; break; }
-    lastErr = new Error(model + ': ' + (await res.text().catch(() => 'HTTP ' + res.status)).slice(0, 200));
+    const raw = await res.text().catch(() => 'HTTP ' + res.status);
+    lastErr = new Error(model + ': ' + raw.slice(0, 200) + (/PerDay/.test(raw) ? ' [PerDay]' : ''));
     lastErr.status = res.status;
     console.info('[assistant] Gemini voice ' + model + ' → ' + res.status);
     if (res.status === 401 || res.status === 403) throw lastErr;
