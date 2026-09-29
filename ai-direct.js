@@ -1656,9 +1656,9 @@ function cool(model, e) {
 export const geminiState = () => GEMINI_TEXT.every(cooling) ? geminiWhy() : '';
 function geminiWhy() {
   const now = Date.now();
-  if ((COOL['*'] || 0) > now) return 'Gemini busy, resting ' + Math.ceil((COOL['*'] - now) / 6e4) + ' min';
-  if (GEMINI_LITE.some(m => (COOL['503:' + m] || 0) > now - 30 * 60e3)) return 'Gemini busy';
-  return 'Gemini limit reached';
+  if ((COOL['*'] || 0) > now) return 'Gem busy, resting ' + Math.ceil((COOL['*'] - now) / 6e4) + ' min';
+  if (GEMINI_LITE.some(m => (COOL['503:' + m] || 0) > now - 30 * 60e3)) return 'Gem busy';
+  return 'Gem daily limit reached';
 }
 async function geminiChat(key, body, order) {
   let last;
@@ -1675,7 +1675,7 @@ async function geminiChat(key, body, order) {
     try { return await Promise.race([geminiOnce(key, body, model), new Promise((_, no) => setTimeout(() => { const e = new Error('timed out'); e.status = 408; no(e); }, 9000))]); }
     catch (e) { last = e; if ([429, 404, 503, 500, 504, 408].includes(e.status) || (e.status === 400 && /not found|not supported/i.test(e.message || ''))) cool(model, e); else throw e; }
   }
-  if (!last) { last = new Error('Gemini free limit reached'); last.status = 429; }
+  if (!last) { last = new Error('Gem daily limit reached'); last.status = 429; }
   throw last;
 }
 
@@ -2061,7 +2061,7 @@ async function hearGemini(key, blob) {
     catch (e) { last = e; if (e.message === 'nothing heard') empty++; else cool(TRANSCRIBE, e); }
   }
   if (empty >= 2) throw new Error('nothing heard');
-  if (!last || last.message === 'nothing heard') { last = new Error(empty ? 'Gemini heard nothing' : 'Gemini free limit reached'); last.status = empty ? 204 : 429; }
+  if (!last || last.message === 'nothing heard') { last = new Error(empty ? 'Gem heard nothing' : 'Gem daily limit reached'); last.status = empty ? 204 : 429; }
   throw last;
 }
 
@@ -2176,7 +2176,7 @@ export async function hear(key, blob, geminiKey) {
       return h;
     } catch (e) {
       if (!key || e.message === 'nothing heard') throw e;
-      why = e.status === 429 ? geminiWhy() : e.status === 204 ? 'Gemini heard nothing' : e.status === 408 ? 'Gemini slow' : 'Gemini error ' + (e.status || '');
+      why = e.status === 429 ? geminiWhy() : e.status === 204 ? 'Gem heard nothing' : e.status === 408 ? 'Gem slow' : 'Gem error ' + (e.status || '');
     }
   }
   return { ...(await hearWhisper(key, blob)), why };
@@ -2324,7 +2324,7 @@ export async function nativeAudio(geminiKey, text, lang, translate, groqKey) {
   await available(geminiKey);
   /* Two voices at most, then the Translate voice / phone voice. */
   const order = (TTS_OK && !cooling(TTS_OK) ? [TTS_OK].concat(GEMINI_TTS_MODELS.filter(m => m !== TTS_OK)) : GEMINI_TTS_MODELS).filter(m => !cooling(m)).slice(0, 2);
-  if (!order.length) { const e = new Error('Gemini voice limit reached'); e.status = 429; throw e; }
+  if (!order.length) { const e = new Error('Gem voice limit reached'); e.status = 429; throw e; }
   for (const model of order) {
     const tm = timed(9000);
     const voiceConfig = /^gemini-3\.8/.test(model) ? { voice: TTS_VOICE } : { prebuiltVoiceConfig: { voiceName: TTS_VOICE } };

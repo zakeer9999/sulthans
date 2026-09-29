@@ -572,7 +572,7 @@ class Component extends DCLogic {
 
   // The kot and close blocks are machinery, not conversation — strip them from
   // the bubble.
-  visible(t) { return t.replace(/```(?:kot|close)[\s\S]*$/, '').trim(); }
+  visible(t) { return t.replace(/```(?:kot|close)[\s\S]*$/, '').replace(/\*\*([^*\n]+)\*\*/g, '$1').replace(/(^|[\s(])\*([^*\n]+)\*(?=[\s).,;:!?]|$)/gm, '$1$2').replace(/^#{1,4}\s+/gm, '').trim(); }
 
   takeKot(raw) {
     const m = raw.match(/```kot\s*([\s\S]*?)```/);
@@ -893,7 +893,7 @@ class Component extends DCLogic {
         const { hear } = await this.mod();
         const h = await hear(this.groqKey(), blob, this.geminiKey());
         english = h.text;
-        ear = h.via === 'whisper' ? 'Whisper' + (h.why ? ' (' + h.why + ')' : '') : 'Gemini';
+        ear = h.via === 'whisper' ? 'Whisper' + (h.why ? ' (' + h.why + ')' : '') : 'Gem';
         if (h.lang && h.lang !== 'und') this._heardLang = h.lang;
       } else {
         const b64 = await this.b64(blob);
@@ -904,7 +904,7 @@ class Component extends DCLogic {
         const d = await res.json();
         if (!res.ok || !d.english) throw new Error(d.error || 'nothing heard');
         english = d.english;
-        ear = d.via === 'whisper' ? 'Whisper' : 'Gemini';
+        ear = d.via === 'whisper' ? 'Whisper' : 'Gem';
         if (d.lang && d.lang !== 'und') this._heardLang = d.lang;
       }
 
@@ -971,7 +971,10 @@ class Component extends DCLogic {
        phone's voice is only the fallback. On iPhone this also matters for
        sound at all: the reply plays on the audio element the tap unlocked,
        where speechSynthesis started after a network wait is often muted. */
-    if (!native && this.mode() === 'direct' && this.geminiKey()) {
+    /* English stays on the phone voice: Gemini's free voice allowance is 10
+       replies per model per day (29 Sep), too few to spend on a language the
+       phone already speaks. Tamil and Telugu get it. */
+    if (!native && false && this.mode() === 'direct' && this.geminiKey()) {
       this.setState({ voicing: true });
       try {
         const { nativeAudio } = await this.mod();
@@ -979,7 +982,7 @@ class Component extends DCLogic {
         if (!live()) return;
         if (wav) {
           const url = URL.createObjectURL(wav);
-          this.setState({ voicing: false, talk: true, voice: 'Gemini voice' });
+          this.setState({ voicing: false, talk: true, voice: 'Gem voice' });
           console.info('[assistant] voice: Gemini TTS (en), ready in ' + (Date.now() - t0) + ' ms');
           let ok = await this.playSrc(url, 6000 + text.length * 110);
           URL.revokeObjectURL(url);
@@ -987,7 +990,7 @@ class Component extends DCLogic {
           if (ok || !live()) return this.doneTalking(tok);
           this._ttsWhy = 'iPhone blocked the audio';
         }
-      } catch (e) { this._ttsWhy = (e && e.status) === 429 ? 'Gemini voice limit reached' : 'Gemini voice error ' + ((e && e.status) || ''); console.info('[assistant] Gemini voice unavailable: ' + ((e && e.status) || '') + ' ' + String((e && e.message) || e).slice(0, 200)); }
+      } catch (e) { this._ttsWhy = (e && e.status) === 429 ? 'Gem voice limit reached' : 'Gem voice error ' + ((e && e.status) || ''); console.info('[assistant] Gemini voice unavailable: ' + ((e && e.status) || '') + ' ' + String((e && e.message) || e).slice(0, 200)); }
       if (!live()) return;
     }
 
@@ -1005,7 +1008,7 @@ class Component extends DCLogic {
           }
           if (wav) {
             const url = URL.createObjectURL(wav);
-            this.setState({ voicing: false, talk: true, voice: 'Gemini voice' });
+            this.setState({ voicing: false, talk: true, voice: 'Gem voice' });
             console.info('[assistant] voice: Gemini TTS, ready in ' + (Date.now() - t0) + ' ms');
             /* The voice model now and then keeps talking past the text it was
                given. Playback is capped at what the words can take to say. */
@@ -1014,7 +1017,7 @@ class Component extends DCLogic {
             if (!ok && live()) ok = await this.playCtx(wav, 6000 + text.length * 110);
             if (ok || !live()) return this.doneTalking(tok);
           }
-        } catch (e) { console.info('[assistant] Gemini voice unavailable: ' + ((e && e.status) || '') + ' ' + String((e && e.message) || e).slice(0, 160)); }
+        } catch (e) { this._ttsWhy = (e && e.status) === 429 ? 'Gem voice limit reached' : 'Gem voice error ' + ((e && e.status) || ''); console.info('[assistant] Gemini voice unavailable: ' + ((e && e.status) || '') + ' ' + String((e && e.message) || e).slice(0, 160)); }
       }
       if (!live()) return;
       let spoken = '';
